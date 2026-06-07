@@ -1,6 +1,55 @@
 import type { Exercise } from "@/types/training";
 
-export const exercises: Exercise[] = [
+const defaultVideoNote =
+  "视频只作为动作参考。实际训练时以本 app 的动作要领、疼痛规则和你的身体反馈为准。";
+const highImpactVideoNote =
+  "视频只作为动作参考。不要直接模仿视频里的训练量；优先保证落地安静、膝盖轨迹稳定、跟腱和髌腱没有不适。";
+const strengthVideoNote =
+  "视频只作为动作参考。重量选择以动作质量为准，不要为了追求重量牺牲髋膝踝对齐。";
+const recoveryVideoNote =
+  "视频只作为动作参考。恢复动作不需要做到疼，保持温和、可控、舒服。";
+
+const youtubeSearchQueriesByExerciseId: Record<string, string> = {
+  "short-foot": "short foot exercise foot arch activation",
+  "toe-yoga": "toe yoga exercise foot intrinsic muscles",
+  "ankle-knee-wall": "ankle dorsiflexion knee to wall exercise",
+  "worlds-greatest-stretch": "world's greatest stretch exercise",
+  "low-pogo": "low pogo jumps ankle stiffness exercise",
+  "cmj": "countermovement jump technique arm swing",
+  "approach-jump": "basketball approach jump technique vertical jump",
+  "lateral-stop-jump": "lateral deceleration to jump basketball drill",
+  "bulgarian-split-squat-eccentric": "eccentric bulgarian split squat technique",
+  "single-leg-calf-raise": "single leg calf raise full range technique",
+  "single-leg-rdl-contralateral": "contralateral loaded single leg RDL technique",
+  "trap-bar-deadlift": "trap bar deadlift technique athletic performance",
+  "spanish-squat-isometric": "spanish squat isometric patellar tendon exercise",
+  "foot-ball-release": "lacrosse ball foot release plantar fascia",
+  "legs-up-breathing": "legs elevated breathing recovery exercise",
+  "easy-walk": "easy walk active recovery workout",
+  "easy-bike": "easy bike active recovery workout",
+  "backward-walk": "backward walking knees rehab exercise",
+  "band-lateral-walk": "mini band lateral walk glute medius exercise",
+  "step-down": "step down exercise knee control technique",
+  "calf-foam-roll": "calf foam rolling technique"
+};
+
+function getVideoNote(exercise: Exercise) {
+  if (exercise.category === "plyometric" || exercise.category === "basketball-skill") {
+    return highImpactVideoNote;
+  }
+
+  if (exercise.category === "strength" || exercise.category === "knee-tendon") {
+    return strengthVideoNote;
+  }
+
+  if (exercise.category === "recovery" || exercise.category === "mobility") {
+    return recoveryVideoNote;
+  }
+
+  return defaultVideoNote;
+}
+
+const exerciseDefinitions: Exercise[] = [
   {
     id: "short-foot",
     nameZh: "短足训练",
@@ -348,6 +397,12 @@ export const exercises: Exercise[] = [
     ]
   }
 ];
+
+export const exercises: Exercise[] = exerciseDefinitions.map((exercise) => ({
+  ...exercise,
+  youtubeSearchQuery: youtubeSearchQueriesByExerciseId[exercise.id],
+  videoNote: getVideoNote(exercise)
+}));
 
 export function getExerciseById(id: string): Exercise | undefined {
   return exercises.find((exercise) => exercise.id === id);

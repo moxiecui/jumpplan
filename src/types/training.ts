@@ -37,6 +37,9 @@ export interface Exercise {
   regressions?: string[];
   progressions?: string[];
   painRules?: string[];
+  youtubeSearchQuery?: string;
+  youtubeUrl?: string;
+  videoNote?: string;
 }
 
 export interface TrainingItem {

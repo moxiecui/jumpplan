@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { ExerciseVideoSection } from "@/components/ExerciseVideoSection";
 import type { Exercise } from "@/types/training";
 
 interface ExerciseDetailViewProps {
@@ -57,6 +58,7 @@ export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
       <DetailList title="降低难度" items={exercise.regressions} />
       <DetailList title="提高难度" items={exercise.progressions} />
       <DetailList title="疼痛 / 安全规则" items={exercise.painRules} />
+      <ExerciseVideoSection exercise={exercise} />
     </View>
   );
 }

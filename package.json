@@ -1,0 +1,29 @@
+{
+  "name": "jumpplan",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "tsc": "tsc --noEmit",
+    "export:web": "expo export -p web && node .tools/copy-gh-pages-404.js",
+    "predeploy": "npm run export:web",
+    "deploy": "gh-pages --nojekyll -d dist"
+  },
+  "dependencies": {
+    "expo": "~56.0.0",
+    "expo-router": "~56.2.8",
+    "react": "19.2.3",
+    "react-dom": "^19.2.3",
+    "react-native": "~0.85.0",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "gh-pages": "^6.3.0",
+    "typescript": "~6.0.3"
+  }
+}

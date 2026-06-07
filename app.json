@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "JumpPlan",
+    "slug": "jumpplan",
+    "scheme": "jumpplan",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "web": {
+      "output": "single"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "baseUrl": "/jumpplan",
+      "typedRoutes": true
+    }
+  }
+}

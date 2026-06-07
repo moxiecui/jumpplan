@@ -3,10 +3,12 @@ import { useRouter } from "expo-router";
 
 import { NutritionItemRow } from "@/components/NutritionItemRow";
 import {
+  getDailyBaselineNutritionItems,
   getNutritionPlanForDayType,
-  getTopNutritionItemsForToday,
+  getVisibleNutritionItems,
   isTrainingActiveForNutrition
 } from "@/logic/nutrition";
+import type { NutritionItem } from "@/types/nutrition";
 import type { DailyTrainingAdjustment, TrainingDayType } from "@/types/training";
 
 interface DailyNutritionCardProps {
@@ -19,7 +21,14 @@ export function DailyNutritionCard({ dayType, adjustment, compact = false }: Dai
   const router = useRouter();
   const trainingActive = isTrainingActiveForNutrition(dayType, adjustment);
   const plan = getNutritionPlanForDayType(dayType);
-  const topItems = getTopNutritionItemsForToday(dayType, { adjustment });
+  const visibleItems = getVisibleNutritionItems(plan.items, { trainingActive });
+  const trainingRelatedIds = trainingActive
+    ? ["collagen-vitamin-c", "hydration-electrolytes", "whey-isolate", "pre-training-light-carb"]
+    : ["whey-isolate"];
+  const eveningIds = ["magnesium-glycinate", "zinc", "glutamine"];
+  const trainingRelatedItems = pickItems(visibleItems, trainingRelatedIds).slice(0, compact ? 3 : 4);
+  const dailyBaselineItems = getDailyBaselineNutritionItems(dayType, { adjustment });
+  const eveningItems = pickItems(visibleItems, eveningIds).slice(0, compact ? 1 : 3);
 
   return (
     <View style={styles.card}>
@@ -30,9 +39,9 @@ export function DailyNutritionCard({ dayType, adjustment, compact = false }: Dai
         <Text style={styles.hiddenNote}>今天如果不训练，已自动隐藏 L-瓜氨酸和训练前碳水。</Text>
       ) : null}
 
-      {topItems.map((item) => (
-        <NutritionItemRow key={item.id} item={item} compact={compact} />
-      ))}
+      <CardGroup title="训练相关" items={trainingRelatedItems} compact={compact} />
+      <CardGroup title="日常基础" items={dailyBaselineItems} compact={compact} />
+      <CardGroup title="睡前 / 晚间" items={eveningItems} compact={compact} />
 
       {!compact
         ? plan.notes.slice(0, 2).map((note) => (
@@ -45,6 +54,25 @@ export function DailyNutritionCard({ dayType, adjustment, compact = false }: Dai
       <Pressable style={styles.button} onPress={() => router.push("/nutrition" as never)}>
         <Text style={styles.buttonText}>查看完整时间表</Text>
       </Pressable>
+    </View>
+  );
+}
+
+function pickItems(items: NutritionItem[], ids: string[]) {
+  return ids.map((id) => items.find((item) => item.id === id)).filter(Boolean) as NutritionItem[];
+}
+
+function CardGroup({ title, items, compact }: { title: string; items: NutritionItem[]; compact: boolean }) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.group}>
+      <Text style={styles.groupTitle}>{title}</Text>
+      {items.map((item) => (
+        <NutritionItemRow key={item.id} item={item} compact={compact} />
+      ))}
     </View>
   );
 }
@@ -84,6 +112,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 19,
     fontWeight: "800"
+  },
+  group: {
+    marginTop: 14
+  },
+  groupTitle: {
+    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: "900",
+    color: "#1f2328"
   },
   note: {
     marginTop: 8,

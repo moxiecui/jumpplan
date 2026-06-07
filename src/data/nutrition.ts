@@ -97,6 +97,54 @@ export const nutritionItems: NutritionItem[] = [
     ]
   },
   {
+    id: "fish-oil-epa-dha",
+    productId: "thorne-super-epa",
+    nameZh: "鱼油 EPA/DHA",
+    nameEn: "Fish Oil EPA/DHA",
+    category: "omega3",
+    priority: "useful",
+    timing: "dinner",
+    dose: "每天 1-2 粒，随午餐或晚餐吃；先从每天 1 粒开始",
+    purpose: "作为日常基础 omega-3 补充，支持整体健康、关节舒适度和训练恢复环境。",
+    whyForUser:
+      "鱼油不是直接提高弹跳的补剂，也不能代替训练、睡眠或疼痛管理。对篮球、力量和弹跳训练频率较高的人，它更适合作为日常基础补充，帮助维持更好的整体营养状态。它不需要卡在训练前后，随含脂肪的正餐吃更容易坚持，也更适合减少反酸或鱼腥味。",
+    instructions: [
+      "从每天 1 粒开始，随午餐或晚餐吃。",
+      "如果没有反酸、鱼腥味或胃不舒服，可以增加到每天 2 粒。",
+      "如果吃 2 粒，可以午餐 1 粒、晚餐 1 粒。",
+      "不需要训练前吃，也不需要训练后立刻吃。",
+      "如果当天不训练，也可以照常吃。"
+    ],
+    keyPoints: [
+      "鱼油是日常基础补剂，不是训练前兴奋剂。",
+      "重点看长期稳定摄入，不是单次时间点。",
+      "随正餐吃通常更舒服。",
+      "不要因为吃了鱼油就增加弹跳或篮球冲击量。",
+      "如果已经经常吃高脂鱼，可以根据饮食情况减少补充频率。"
+    ],
+    commonMistakes: [
+      "空腹吃导致反酸或鱼腥味。",
+      "以为鱼油能直接提高弹跳。",
+      "把鱼油当成修复跟腱或髌腱的工具。",
+      "剂量加太快导致胃不舒服。",
+      "和太多补剂堆在睡前一起吃，增加肠胃负担。"
+    ],
+    cautions: [
+      "如果正在使用抗凝药、抗血小板药、阿司匹林，或有出血风险，先咨询医生。",
+      "如果近期要手术、拔牙或有出血倾向，先咨询医生。",
+      "如果对鱼类或海鲜过敏，不要自行使用。",
+      "如果出现明显反酸、恶心、腹泻或鱼腥味，减少剂量、随餐吃或暂停。",
+      "高剂量鱼油不一定更好，不要自行长期大剂量使用。"
+    ],
+    skipOrReduceWhen: [
+      "空腹吃会反酸时，改成随餐或减少剂量。",
+      "胃不舒服时，先降到每天 1 粒或隔天吃。",
+      "如果当天已经吃了较多鱼类，可以选择跳过。",
+      "如果医生提醒你限制鱼油或 omega-3 摄入，按医生建议。"
+    ],
+    optional: true
+  },
+  {
     id: "glutamine",
     productId: "glutamine",
     nameZh: "谷氨酰胺",
@@ -229,6 +277,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
       "whey-isolate",
       "post-training-carb-meal",
       "creatine",
+      "fish-oil-epa-dha",
       "magnesium-glycinate",
       "zinc",
       "glutamine"
@@ -253,6 +302,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
       "whey-isolate",
       "post-training-carb-meal",
       "creatine",
+      "fish-oil-epa-dha",
       "magnesium-glycinate",
       "zinc",
       "glutamine"
@@ -272,6 +322,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
       "whey-isolate",
       "post-training-carb-meal",
       "creatine",
+      "fish-oil-epa-dha",
       "magnesium-glycinate",
       "zinc",
       "glutamine"
@@ -287,7 +338,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
     dayType: "recovery",
     title: "恢复日营养时间表",
     summary: "恢复日不需要复杂训练前补剂；正常饮食、睡眠和轻活动更重要。",
-    items: items(["creatine", "whey-isolate", "hydration-electrolytes", "magnesium-glycinate", "zinc", "glutamine"]),
+    items: items(["creatine", "fish-oil-epa-dha", "whey-isolate", "hydration-electrolytes", "magnesium-glycinate", "zinc", "glutamine"]),
     notes: [
       "恢复日不需要复杂训练前补剂。",
       "不需要 L-瓜氨酸。",
@@ -307,6 +358,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
       "hydration-electrolytes",
       "whey-isolate",
       "creatine",
+      "fish-oil-epa-dha",
       "magnesium-glycinate"
     ]),
     notes: [
@@ -321,7 +373,7 @@ export const dailyNutritionPlans: DailyNutritionPlan[] = [
     dayType: "rest",
     title: "休息日营养时间表",
     summary: "休息日以正常饮食为主；肌酸可以继续稳定吃。",
-    items: items(["creatine", "whey-isolate", "magnesium-glycinate", "zinc", "glutamine"]),
+    items: items(["creatine", "fish-oil-epa-dha", "whey-isolate", "magnesium-glycinate", "zinc", "glutamine"]),
     notes: ["休息日以正常饮食为主。", "肌酸继续每天稳定吃。", "不需要 L-瓜氨酸。", "蛋白粉只在蛋白质不够时使用。"]
   }
 ];

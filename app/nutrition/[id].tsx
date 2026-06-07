@@ -12,7 +12,7 @@ export default function NutritionDetailScreen() {
   if (!item) {
     return (
       <View style={styles.center}>
-        <Text style={styles.missingTitle}>找不到这个营养项目</Text>
+        <Text style={styles.missingTitle}>未知营养项目: {id ?? "missing-id"}</Text>
         <Text style={styles.missingText}>请从今日营养时间表重新选择。</Text>
       </View>
     );

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { getNutritionTimingLabel } from "@/logic/nutrition";
+import { getNutritionPriorityLabel, getNutritionTimingLabel } from "@/logic/nutrition";
 import type { NutritionItem } from "@/types/nutrition";
 
 interface NutritionItemRowProps {
@@ -24,9 +24,12 @@ export function NutritionItemRow({ item, compact = false }: NutritionItemRowProp
     >
       <View style={styles.header}>
         <Text style={styles.name}>{item.nameZh}</Text>
-        <Text style={styles.priority}>{item.priority === "core" ? "核心" : item.priority === "useful" ? "有用" : "可选"}</Text>
+        <Text style={styles.priority}>{getNutritionPriorityLabel(item.priority)}</Text>
       </View>
-      <Text style={styles.timing}>{getNutritionTimingLabel(item.timing)}</Text>
+      <Text style={styles.timing}>
+        {getNutritionTimingLabel(item.timing)}
+        {compact && item.dose ? `｜${item.dose}` : ""}
+      </Text>
       {item.dose && !compact ? <Text style={styles.dose}>{item.dose}</Text> : null}
       <Text style={styles.purpose} numberOfLines={compact ? 2 : undefined}>
         {item.purpose}

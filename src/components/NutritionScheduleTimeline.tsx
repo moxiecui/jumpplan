@@ -15,7 +15,7 @@ export function NutritionScheduleTimeline({ entries, trainingActive }: Nutrition
       <Text style={styles.title}>今日时间表</Text>
       {entries.map((entry) => {
         const items = getVisibleNutritionItems(
-          entry.itemIds.map((id) => getNutritionItemById(id)).filter(Boolean) as NutritionItem[],
+          entry.itemIds.map((id) => getNutritionItemById(id) ?? buildMissingNutritionItem(id)),
           { trainingActive }
         );
 
@@ -40,6 +40,20 @@ export function NutritionScheduleTimeline({ entries, trainingActive }: Nutrition
       })}
     </View>
   );
+}
+
+function buildMissingNutritionItem(id: string): NutritionItem {
+  return {
+    id,
+    nameZh: `未知营养项目: ${id}`,
+    category: "optional",
+    priority: "optional",
+    timing: "anytime",
+    purpose: "请检查营养时间表中的 itemId。",
+    whyForUser: "这个营养项目没有在 src/data/nutrition.ts 中定义。",
+    instructions: ["检查 itemId 是否拼写正确。"],
+    cautions: ["数据修正前不要按这个占位项目执行。"]
+  };
 }
 
 const styles = StyleSheet.create({

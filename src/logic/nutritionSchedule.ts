@@ -38,6 +38,12 @@ export function getNutritionScheduleForTrainingTime(
         notes: "优先用正常饮食达到蛋白目标；蛋白粉只在缺口明显时用。"
       },
       {
+        time: "晚餐",
+        label: "晚餐随餐",
+        itemIds: ["fish-oil-epa-dha"],
+        notes: "鱼油作为日常基础补剂，随正餐吃即可。"
+      },
+      {
         time: "晚间",
         label: "晚间 / 睡前",
         itemIds: ["magnesium-glycinate", "zinc", "glutamine"],
@@ -74,6 +80,12 @@ export function getNutritionScheduleForTrainingTime(
       label: "训练后 0-2 小时",
       itemIds: ["whey-isolate", "post-training-carb-meal"],
       notes: "可用正餐替代乳清；不需要迷信精确窗口。"
+    },
+    {
+      time: formatTime(trainingMinutes + 90),
+      label: "晚餐随餐",
+      itemIds: ["fish-oil-epa-dha"],
+      notes: "鱼油不需要卡训练前后，随晚餐吃更稳。"
     },
     {
       time: "22:30",

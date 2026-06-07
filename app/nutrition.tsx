@@ -47,7 +47,7 @@ export default function NutritionScreen() {
 
       <Text style={styles.safetyTitle}>总原则</Text>
       <Text style={styles.safetyText}>
-        补剂是辅助，不能替代训练编排、睡眠、总蛋白、碳水和疼痛管理。任何补剂让肠胃不舒服时，先减少剂量、随餐、换时间，或直接跳过。
+        补剂是辅助。训练编排、睡眠、总蛋白、碳水、水分和疼痛管理优先级更高。鱼油、谷氨酰胺、镁、锌都不应该被当作继续高冲击训练的理由。任何补剂让肠胃不舒服时，先减少剂量、随餐、换时间，或直接跳过。
       </Text>
 
       {groups.map((group) => (

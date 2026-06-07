@@ -1,11 +1,15 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { getSupplementProductById } from "@/data/supplements";
-import { getNutritionTimingLabel } from "@/logic/nutrition";
+import {
+  getNutritionCategoryLabel,
+  getNutritionPriorityLabel,
+  getNutritionTimingLabel
+} from "@/logic/nutrition";
 import type { NutritionItem } from "@/types/nutrition";
 
-function DetailList({ title, items }: { title: string; items: string[] }) {
-  if (items.length === 0) {
+function DetailList({ title, items }: { title: string; items?: string[] }) {
+  if (!items || items.length === 0) {
     return null;
   }
 
@@ -28,16 +32,22 @@ export function NutritionDetailView({ item }: { item: NutritionItem }) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.name}>{item.nameZh}</Text>
-        <Text style={styles.priority}>{item.priority === "core" ? "核心" : item.priority === "useful" ? "有用" : "可选"}</Text>
+        <Text style={styles.priority}>{getNutritionPriorityLabel(item.priority)}</Text>
       </View>
       {item.nameEn ? <Text style={styles.nameEn}>{item.nameEn}</Text> : null}
-      <Text style={styles.meta}>{getNutritionTimingLabel(item.timing)}</Text>
+      <View style={styles.metaRow}>
+        <Text style={styles.meta}>{getNutritionCategoryLabel(item.category)}</Text>
+        <Text style={styles.meta}>{getNutritionTimingLabel(item.timing)}</Text>
+      </View>
       {item.dose ? <Text style={styles.dose}>推荐剂量：{item.dose}</Text> : null}
 
       {product ? (
         <View style={styles.productBox}>
           <Text style={styles.productTitle}>你的产品</Text>
           <Text style={styles.productText}>{product.name}</Text>
+          {product.brand ? <Text style={styles.productNote}>品牌：{product.brand}</Text> : null}
+          <Text style={styles.productNote}>形式：{product.form}</Text>
+          {product.defaultDose ? <Text style={styles.productNote}>默认剂量：{product.defaultDose}</Text> : null}
           {product.servingNote ? <Text style={styles.productNote}>{product.servingNote}</Text> : null}
         </View>
       ) : null}
@@ -53,7 +63,10 @@ export function NutritionDetailView({ item }: { item: NutritionItem }) {
       </View>
 
       <DetailList title="什么时候吃 / 怎么吃" items={item.instructions} />
+      <DetailList title="关键要点" items={item.keyPoints} />
+      <DetailList title="常见错误" items={item.commonMistakes} />
       <DetailList title="注意事项" items={item.cautions} />
+      <DetailList title="什么时候减少、跳过或咨询医生" items={item.skipOrReduceWhen} />
     </View>
   );
 }
@@ -86,7 +99,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#57606a"
   },
+  metaRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
   meta: {
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#ddf4ff",
     fontSize: 14,
     color: "#0969da",
     fontWeight: "900"

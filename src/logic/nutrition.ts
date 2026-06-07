@@ -1,5 +1,11 @@
 import { dailyNutritionPlans, getNutritionItemById, getNutritionPlanById } from "@/data/nutrition";
-import type { DailyNutritionPlan, NutritionItem, NutritionTiming } from "@/types/nutrition";
+import type {
+  DailyNutritionPlan,
+  NutritionCategory,
+  NutritionItem,
+  NutritionPriority,
+  NutritionTiming
+} from "@/types/nutrition";
 import type { DailyTrainingAdjustment, TrainingDayType } from "@/types/training";
 
 const preTrainingOnlyIds = new Set(["l-citrulline", "pre-training-light-carb"]);
@@ -10,11 +16,28 @@ const timingLabels: Record<NutritionTiming, string> = {
   preTraining15To30: "训练前 15-30 分钟",
   duringTraining: "训练中",
   postTraining0To2h: "训练后 0-2 小时",
-  dinner: "晚餐",
+  dinner: "晚餐 / 晚间",
   evening: "晚间",
   beforeBed: "睡前",
   anytime: "任意时间",
   recoveryDay: "恢复日"
+};
+
+const priorityLabels: Record<NutritionPriority, string> = {
+  core: "核心",
+  useful: "有帮助",
+  optional: "可选"
+};
+
+const categoryLabels: Record<NutritionCategory, string> = {
+  protein: "蛋白质",
+  carb: "碳水",
+  hydration: "水分 / 电解质",
+  supplement: "补剂",
+  mineral: "矿物质",
+  omega3: "鱼油 / Omega-3",
+  recovery: "恢复",
+  optional: "可选"
 };
 
 const nutritionPlanByDayType: Record<TrainingDayType, string> = {
@@ -44,6 +67,14 @@ export function isTrainingActiveForNutrition(
 
 export function getNutritionTimingLabel(timing: NutritionTiming): string {
   return timingLabels[timing];
+}
+
+export function getNutritionPriorityLabel(priority: NutritionPriority): string {
+  return priorityLabels[priority];
+}
+
+export function getNutritionCategoryLabel(category: NutritionCategory): string {
+  return categoryLabels[category];
 }
 
 export function getNutritionPlanForDayType(dayType: TrainingDayType): DailyNutritionPlan {
@@ -102,11 +133,25 @@ export function getTopNutritionItemsForToday(
   const plan = getNutritionPlanForDayType(dayType);
   const visibleItems = getVisibleNutritionItems(plan.items, { trainingActive });
   const preferredIds = trainingActive
-    ? ["collagen-vitamin-c", "l-citrulline", "creatine", "whey-isolate", "magnesium-glycinate"]
-    : ["creatine", "whey-isolate", "magnesium-glycinate", "zinc", "glutamine"];
+    ? ["collagen-vitamin-c", "hydration-electrolytes", "whey-isolate", "creatine", "magnesium-glycinate", "fish-oil-epa-dha"]
+    : ["creatine", "fish-oil-epa-dha", "magnesium-glycinate", "whey-isolate"];
   const preferredItems = preferredIds
     .map((id) => visibleItems.find((item) => item.id === id))
     .filter(Boolean) as NutritionItem[];
 
   return preferredItems.length > 0 ? preferredItems.slice(0, 5) : visibleItems.slice(0, 5);
+}
+
+export function getDailyBaselineNutritionItems(
+  dayType: TrainingDayType,
+  options?: { trainingActive?: boolean; adjustment?: DailyTrainingAdjustment }
+): NutritionItem[] {
+  const trainingActive =
+    options?.trainingActive ?? isTrainingActiveForNutrition(dayType, options?.adjustment);
+  const visibleItems = getVisibleNutritionItems(getNutritionPlanForDayType(dayType).items, { trainingActive });
+  const baselineIds = ["creatine", "fish-oil-epa-dha"];
+
+  return baselineIds
+    .map((id) => visibleItems.find((item) => item.id === id))
+    .filter(Boolean) as NutritionItem[];
 }

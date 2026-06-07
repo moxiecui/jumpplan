@@ -18,6 +18,7 @@ export type NutritionCategory =
   | "hydration"
   | "supplement"
   | "mineral"
+  | "omega3"
   | "recovery"
   | "optional";
 
@@ -46,7 +47,10 @@ export interface NutritionItem {
   purpose: string;
   whyForUser: string;
   instructions: string[];
+  keyPoints?: string[];
+  commonMistakes?: string[];
   cautions: string[];
+  skipOrReduceWhen?: string[];
   optional?: boolean;
 }
 

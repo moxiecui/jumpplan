@@ -62,6 +62,16 @@ export const supplementProducts: SupplementProduct[] = [
     userOwns: true
   },
   {
+    id: "thorne-super-epa",
+    name: "Thorne Super EPA",
+    shortNameZh: "鱼油 EPA/DHA",
+    brand: "Thorne",
+    form: "capsule",
+    defaultDose: "每天 1-2 粒，随正餐吃；具体以产品标签为准",
+    servingNote: "更适合作为日常基础补剂，不需要卡训练前后。",
+    userOwns: true
+  },
+  {
     id: "glutamine",
     name: "Glutamine",
     shortNameZh: "谷氨酰胺",

@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { DaySection } from "@/components/DaySection";
+import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { getTrainingDay } from "@/logic/schedule";
 
 export default function DayDetailScreen() {
@@ -35,6 +36,8 @@ export default function DayDetailScreen() {
       {day.blocks.map((block) => (
         <DaySection key={block.type} block={block} />
       ))}
+
+      <DailyNutritionCard dayType={day.type} compact />
     </ScrollView>
   );
 }

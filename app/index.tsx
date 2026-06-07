@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { DaySection } from "@/components/DaySection";
+import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { useReadiness } from "@/context/ReadinessContext";
 import { getTodayTrainingDay } from "@/logic/schedule";
 import { applyAdjustmentToDay } from "@/logic/trainingAdjustment";
@@ -31,6 +32,9 @@ export default function TodayScreen() {
         </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/checkin")}>
           <Text style={styles.navButtonText}>Check-in</Text>
+        </Pressable>
+        <Pressable style={styles.navButton} onPress={() => router.push("/nutrition" as never)}>
+          <Text style={styles.navButtonText}>Nutrition</Text>
         </Pressable>
       </View>
 
@@ -83,6 +87,8 @@ export default function TodayScreen() {
           <Text style={styles.adjustedText}>这是临时 overlay，不会修改原始 14 天计划数据。</Text>
         </View>
       ) : null}
+
+      <DailyNutritionCard dayType={day.type} adjustment={readinessEntry?.adjustment} compact />
 
       {visibleDay.readinessRule ? (
         <View style={styles.warning}>

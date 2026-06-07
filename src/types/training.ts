@@ -61,6 +61,7 @@ export interface TrainingDay {
   title: string;
   type: TrainingDayType;
   goal: string;
+  nutritionPlanId?: string;
   readinessRule?: string;
   blocks: TrainingBlock[];
 }

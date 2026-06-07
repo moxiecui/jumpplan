@@ -17,7 +17,7 @@ export function getReadiness(checkIn: DailyCheckIn): {
       level: "red",
       message: "今天不适合高冲击训练。",
       modifications: [
-        "取消 Pogo、最大跳、深度跳和冲刺。",
+        "取消 Pogo、最大跳、French Contrast、深度跳和冲刺。",
         "只做热身、Zone 2、活动度和主动恢复。",
         "如果疼痛持续，下一次训练也降级。"
       ]
@@ -29,7 +29,7 @@ export function getReadiness(checkIn: DailyCheckIn): {
       level: "yellow",
       message: "今天需要降级训练。",
       modifications: [
-        "取消最大跳和 PAP。",
+        "取消最大跳、PAP 和 French Contrast。",
         "Pogo 组数减半。",
         "力量动作保持 RPE 6–7，不做力竭。"
       ]

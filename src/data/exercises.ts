@@ -30,7 +30,42 @@ const youtubeSearchQueriesByExerciseId: Record<string, string> = {
   "backward-walk": "backward walking knees rehab exercise",
   "band-lateral-walk": "mini band lateral walk glute medius exercise",
   "step-down": "step down exercise knee control technique",
-  "calf-foam-roll": "calf foam rolling technique"
+  "calf-foam-roll": "calf foam rolling technique",
+  "push-up": "push up technique",
+  "dumbbell-bench-press": "dumbbell bench press technique",
+  "one-arm-dumbbell-row": "one arm dumbbell row technique",
+  "pull-up-or-lat-pulldown": "pull up lat pulldown technique",
+  "landmine-press": "landmine press technique",
+  "medicine-ball-chest-pass": "medicine ball chest pass power exercise",
+  "medicine-ball-overhead-slam": "medicine ball overhead slam technique",
+  "band-pull-apart": "band pull apart exercise technique",
+  "scapular-push-up": "scapular push up technique",
+  "dead-bug": "dead bug exercise technique",
+  "side-plank": "side plank technique",
+  "pallof-press": "Pallof press anti rotation exercise",
+  "suitcase-carry": "suitcase carry exercise technique",
+  "farmer-carry": "farmer carry technique",
+  "hollow-body-hold": "hollow body hold technique",
+  "plank-shoulder-tap": "plank shoulder tap anti rotation",
+  "calf-isometric-hold": "calf raise isometric hold Achilles exercise",
+  "split-squat-isometric": "split squat isometric hold",
+  "wall-sit": "wall sit exercise technique",
+  "mid-thigh-pull-isometric": "isometric mid thigh pull technique",
+  "overcoming-isometric-squat": "overcoming isometric squat pins technique",
+  "single-leg-hamstring-bridge": "single leg hamstring bridge exercise",
+  "hamstring-slider-curl": "hamstring slider curl exercise technique",
+  "hamstring-walkout": "hamstring walkout exercise technique",
+  "single-leg-balance-reach": "single leg balance reach exercise",
+  "hurdle-hop-forward-back": "forward backward hurdle hop drill",
+  "lateral-hurdle-hop": "lateral hurdle hop plyometric drill",
+  "single-leg-landing-stick": "single leg landing stick drill knee control",
+  "rdl": "Romanian deadlift technique hip hinge",
+  "nordic-curl": "nordic hamstring curl technique",
+  "copenhagen-plank": "copenhagen plank exercise technique",
+  "hip-90-90": "90 90 hip mobility exercise",
+  "defensive-slide-stop": "basketball defensive slide stop drill",
+  "catch-and-jump": "basketball catch and jump footwork drill",
+  "second-jump-rebound-drill": "basketball second jump rebound drill"
 };
 
 function getVideoNote(exercise: Exercise) {
@@ -38,7 +73,13 @@ function getVideoNote(exercise: Exercise) {
     return highImpactVideoNote;
   }
 
-  if (exercise.category === "strength" || exercise.category === "knee-tendon") {
+  if (
+    exercise.category === "strength" ||
+    exercise.category === "knee-tendon" ||
+    exercise.category === "upper-body" ||
+    exercise.category === "core" ||
+    exercise.category === "isometric"
+  ) {
     return strengthVideoNote;
   }
 
@@ -47,6 +88,23 @@ function getVideoNote(exercise: Exercise) {
   }
 
   return defaultVideoNote;
+}
+
+function supportExercise(params: {
+  id: string;
+  nameZh: string;
+  nameEn?: string;
+  category: Exercise["category"];
+  purpose: string;
+  whyForUser: string;
+  instructions: string[];
+  keyCues: string[];
+  commonMistakes: string[];
+  regressions: string[];
+  progressions: string[];
+  painRules: string[];
+}): Exercise {
+  return params;
 }
 
 const exerciseDefinitions: Exercise[] = [
@@ -395,7 +453,497 @@ const exerciseDefinitions: Exercise[] = [
       "如果第二天跟腱晨僵或髌腱敏感增加，下次压力和时长减少 50% 或直接跳过。",
       "泡沫轴应让你感觉更轻、更平静；如果更痛或更发炎，就不是合适剂量。"
     ]
-  }
+  },
+  supportExercise({
+    id: "push-up",
+    nameZh: "俯卧撑",
+    nameEn: "Push-Up",
+    category: "upper-body",
+    purpose: "训练上肢推力、躯干张力和肩胛控制。",
+    whyForUser: "篮球弹跳不只靠下肢，抢篮板、对抗、摆臂和空中稳定都需要上肢和核心参与。俯卧撑是低设备基础动作。",
+    instructions: ["双手略宽于肩，身体从头到脚保持直线。", "先轻微推开地面，让肩胛稳定。", "肘部约 30–45 度向后下降，胸口接近地面。", "推起时保持肋骨收住，不塌腰。"],
+    keyCues: ["身体一条线", "肘不过度外展", "肩胛稳定", "肋骨收住"],
+    commonMistakes: ["塌腰", "耸肩", "肘部完全打开", "为了数量牺牲深度和控制"],
+    regressions: ["手扶高台俯卧撑", "跪姿俯卧撑"],
+    progressions: ["脚抬高俯卧撑", "负重俯卧撑"],
+    painRules: ["肩前侧刺痛时缩小幅度或改高台版本。", "手腕不适时用俯卧撑把手或哑铃握把。"]
+  }),
+  supportExercise({
+    id: "dumbbell-bench-press",
+    nameZh: "哑铃卧推",
+    nameEn: "Dumbbell Bench Press",
+    category: "upper-body",
+    purpose: "训练上肢水平推力和肩部稳定。",
+    whyForUser: "稳定的上肢推力能提升对抗、护球和空中身体控制，但剂量要服务篮球和弹跳，不追求胸肌疲劳。",
+    instructions: ["仰卧凳上，脚踩稳地面。", "肩胛轻轻后收下沉，哑铃从胸侧下降。", "前臂接近垂直，推起时不耸肩。", "保留 1–3 次余力，不做到力竭。"],
+    keyCues: ["肩胛稳", "前臂直", "脚踩稳", "不力竭"],
+    commonMistakes: ["哑铃下放太深导致肩前顶痛", "推起时耸肩", "腰过度拱起", "训练到影响篮球投篮手感"],
+    regressions: ["地板哑铃卧推", "俯卧撑"],
+    progressions: ["增加重量", "慢速离心"],
+    painRules: ["肩痛超过 3/10 时停止。", "比赛或高强度篮球前避免做到明显酸痛。"]
+  }),
+  supportExercise({
+    id: "one-arm-dumbbell-row",
+    nameZh: "单臂哑铃划船",
+    nameEn: "One-Arm Dumbbell Row",
+    category: "upper-body",
+    purpose: "训练背部拉力、肩胛控制和左右上肢平衡。",
+    whyForUser: "更好的背部拉力和肩胛控制有助于对抗、篮板卡位和摆臂回收，也能平衡推的训练量。",
+    instructions: ["一手一膝或一手扶凳支撑，背部保持长。", "先让肩胛向后下方移动，再把肘拉向髋部。", "顶部停 1 秒，慢慢放下。", "躯干不要旋转借力。"],
+    keyCues: ["肘拉向髋", "肩胛后下", "背长", "不扭身"],
+    commonMistakes: ["耸肩", "用身体甩重量", "肘拉太高变成肩后侧代偿", "下背塌陷"],
+    regressions: ["弹力带划船", "胸托划船"],
+    progressions: ["增加重量", "底部停顿再拉"],
+    painRules: ["下背不适时改胸托版本。", "肩夹痛时减小幅度并降低重量。"]
+  }),
+  supportExercise({
+    id: "pull-up-or-lat-pulldown",
+    nameZh: "引体向上 / 高位下拉",
+    nameEn: "Pull-Up / Lat Pulldown",
+    category: "upper-body",
+    purpose: "训练上肢拉力和背阔肌力量，支持篮球对抗和姿势控制。",
+    whyForUser: "上肢拉力帮助篮板、对抗和身体姿势控制。选择不会让肩肘过度酸痛的版本即可。",
+    instructions: ["选择引体或高位下拉，握距略宽于肩。", "先下沉肩胛，再把肘向身体两侧拉。", "胸口保持打开，不用脖子去够。", "控制回到起点。"],
+    keyCues: ["肩胛先动", "肘向下", "胸口打开", "不耸肩"],
+    commonMistakes: ["用下巴硬够杆", "身体乱摆", "肩膀耸到耳朵", "下降失控"],
+    regressions: ["弹力带辅助引体", "高位下拉"],
+    progressions: ["减少辅助", "负重引体"],
+    painRules: ["肩肘疼痛时改中立握或高位下拉。", "不要做到影响投篮和篮球对抗。"]
+  }),
+  supportExercise({
+    id: "landmine-press",
+    nameZh: "地雷管推举",
+    nameEn: "Landmine Press",
+    category: "upper-body",
+    purpose: "训练斜向推力、核心稳定和肩部友好的上肢力量。",
+    whyForUser: "斜向推举更接近篮球中的对抗和伸展方向，同时比完全过顶推举更容易控制肩部。",
+    instructions: ["杠铃一端固定，另一端握在肩前。", "双脚站稳，肋骨收住。", "沿斜上方推起，顶部不要耸肩。", "慢慢回到肩前。"],
+    keyCues: ["肋骨收住", "斜上推", "肩不耸", "核心稳"],
+    commonMistakes: ["后仰借力", "腰椎代偿", "推到肩前侧疼", "重量过重"],
+    regressions: ["半跪姿地雷管推", "哑铃上斜推"],
+    progressions: ["站姿单臂地雷管推", "加入轻微髋转动但保持控制"],
+    painRules: ["肩痛时降低重量或改俯卧撑。", "腰背代偿明显时改半跪姿。"]
+  }),
+  supportExercise({
+    id: "medicine-ball-chest-pass",
+    nameZh: "药球胸前传球",
+    nameEn: "Medicine Ball Chest Pass",
+    category: "upper-body",
+    purpose: "训练上肢爆发和核心传力。",
+    whyForUser: "低量药球爆发能帮助摆臂、对抗和上肢发力速度，但不应制造疲劳。",
+    instructions: ["双手持药球在胸前，脚踩稳。", "肋骨收住，快速向墙或伙伴传出。", "每次传球后重新站稳。", "保持低次数高质量。"],
+    keyCues: ["快而干净", "核心稳", "脚踩地", "每次重置"],
+    commonMistakes: ["做成有氧循环", "腰背后仰", "药球太重", "传到动作变慢还继续"],
+    regressions: ["轻药球胸前传", "站姿弹力带快速推"],
+    progressions: ["分腿站姿传球", "轻微侧向步传球"],
+    painRules: ["肩肘不适时减重或跳过。", "篮球前不要做到上肢酸胀。"]
+  }),
+  supportExercise({
+    id: "medicine-ball-overhead-slam",
+    nameZh: "药球过顶砸球",
+    nameEn: "Medicine Ball Overhead Slam",
+    category: "upper-body",
+    purpose: "训练上肢和躯干协同爆发，但不能做到腰背代偿。",
+    whyForUser: "这个动作可以训练从上肢到核心的快速传力，对篮板和对抗有帮助，但必须低量、干净。",
+    instructions: ["双手持药球举到头上，肋骨保持收住。", "用上肢和躯干协同向地面砸球。", "髋膝自然弯曲吸收，不要用腰硬折。", "每次重置姿势。"],
+    keyCues: ["肋骨下沉", "快砸", "髋膝吸收", "低量高质"],
+    commonMistakes: ["腰椎过伸再猛弯", "药球太重", "做太多导致疲劳", "肩痛还继续"],
+    regressions: ["胸前传球", "轻药球砸球"],
+    progressions: ["半跪姿砸球", "轻量反应式砸球"],
+    painRules: ["腰背或肩部不适时停止。", "测试或篮球前不要做到疲劳。"]
+  }),
+  supportExercise({
+    id: "band-pull-apart",
+    nameZh: "弹力带拉开",
+    nameEn: "Band Pull-Apart",
+    category: "upper-body",
+    purpose: "训练肩胛后缩和上背激活。",
+    whyForUser: "上背激活有助于姿势、肩胛控制和上肢力量平衡，适合恢复日轻量使用。",
+    instructions: ["双手握弹力带，手臂抬到胸前。", "肩膀放松，向两侧拉开弹力带。", "肩胛轻轻向后收，停 1 秒。", "慢慢回到起点。"],
+    keyCues: ["肩不耸", "上背发力", "慢回", "肋骨收"],
+    commonMistakes: ["耸肩", "腰后仰", "弹力太大", "只用手臂甩"],
+    regressions: ["减少弹力", "降低手臂高度"],
+    progressions: ["增加停顿", "斜向拉开"],
+    painRules: ["肩前侧疼痛时减小幅度。", "颈部紧张明显时停止。"]
+  }),
+  supportExercise({
+    id: "scapular-push-up",
+    nameZh: "肩胛俯卧撑",
+    nameEn: "Scapular Push-Up",
+    category: "upper-body",
+    purpose: "训练肩胛控制，帮助上肢支撑和推力稳定。",
+    whyForUser: "肩胛稳定能让上肢推、拉和对抗更稳，也有助于俯卧撑和药球动作质量。",
+    instructions: ["进入高位平板支撑。", "手肘保持伸直，胸口轻轻下沉让肩胛靠近。", "再推开地面，让肩胛分开。", "全程保持肋骨和骨盆稳定。"],
+    keyCues: ["手肘直", "肩胛滑动", "推开地面", "核心稳"],
+    commonMistakes: ["弯肘变俯卧撑", "塌腰", "耸肩", "动作太快"],
+    regressions: ["跪姿肩胛俯卧撑", "墙上肩胛推"],
+    progressions: ["脚抬高版本", "顶部停 2 秒"],
+    painRules: ["手腕或肩痛时改墙上版本。", "颈部紧张时降低次数。"]
+  }),
+  supportExercise({
+    id: "dead-bug",
+    nameZh: "死虫",
+    nameEn: "Dead Bug",
+    category: "core",
+    purpose: "训练核心抗伸展，帮助起跳和落地时躯干保持稳定。",
+    whyForUser: "躯干稳定能让下肢力量更好传到起跳，同时减少落地时腰椎和右膝代偿。",
+    instructions: ["仰卧，髋膝 90 度，手臂指向天花板。", "轻轻收肋骨，让腰背保持稳定。", "对侧手脚慢慢伸远，再回到起点。", "全程保持呼吸。"],
+    keyCues: ["肋骨下沉", "慢伸", "腰不拱", "能呼吸"],
+    commonMistakes: ["动作太快", "腰离地明显", "憋气", "腿伸太低导致失控"],
+    regressions: ["只动手臂", "只动脚跟点地"],
+    progressions: ["手持轻球", "弹力带死虫"],
+    painRules: ["腰不舒服时缩小幅度。", "无法呼吸时降低难度。"]
+  }),
+  supportExercise({
+    id: "side-plank",
+    nameZh: "侧桥",
+    nameEn: "Side Plank",
+    category: "core",
+    purpose: "训练侧向核心稳定，支持单腿落地和急停变向。",
+    whyForUser: "侧向稳定不足时，右膝和骨盆更容易在单腿支撑、急停和落地时掉线。",
+    instructions: ["侧卧，肘在肩下，双腿伸直或屈膝。", "抬起髋部，让身体成一直线。", "保持骨盆不向前后翻。", "用鼻吸气、慢呼气维持张力。"],
+    keyCues: ["髋抬高", "身体直", "不旋转", "慢呼吸"],
+    commonMistakes: ["髋掉下去", "肩耸", "身体转开", "憋气硬撑"],
+    regressions: ["屈膝侧桥", "短时间多组"],
+    progressions: ["上腿抬起", "Copenhagen plank"],
+    painRules: ["肩痛时缩短时间或改屈膝。", "腰侧抽痛时停止。"]
+  }),
+  supportExercise({
+    id: "pallof-press",
+    nameZh: "Pallof Press 抗旋转推",
+    nameEn: "Pallof Press",
+    category: "core",
+    purpose: "训练抗旋转能力，帮助右侧单腿支撑和篮球变向。",
+    whyForUser: "抗旋转能力让躯干在变向、急停和单腿发力时不乱转，帮助右膝保持轨迹。",
+    instructions: ["侧对弹力带固定点站立，双手握带在胸前。", "脚踩稳，肋骨收住。", "双手向前推出，抵抗身体被拉转。", "停 1 秒后回到胸前。"],
+    keyCues: ["骨盆正", "肋骨收", "手向前", "身体不转"],
+    commonMistakes: ["身体跟着转", "耸肩", "腰后仰", "阻力太大"],
+    regressions: ["靠近固定点", "半跪姿"],
+    progressions: ["远离固定点", "分腿站姿"],
+    painRules: ["腰背不适时降低阻力。", "肩不舒服时缩短推出距离。"]
+  }),
+  supportExercise({
+    id: "suitcase-carry",
+    nameZh: "单侧农夫走",
+    nameEn: "Suitcase Carry",
+    category: "core",
+    purpose: "训练抗侧屈、握力和躯干稳定。",
+    whyForUser: "单侧负重能暴露左右稳定差异，帮助右侧支撑、落地和对抗时保持身体不歪。",
+    instructions: ["单手拿哑铃或壶铃，身体站高。", "肋骨和骨盆保持正，不向负重侧歪。", "小步稳定向前走。", "换边重复，比较左右控制。"],
+    keyCues: ["站高", "不歪", "小步", "握紧"],
+    commonMistakes: ["身体倾斜", "耸肩", "步子太大", "重量太重"],
+    regressions: ["原地站立保持", "减轻重量"],
+    progressions: ["增加距离", "底部停顿转身"],
+    painRules: ["腰背不适时减重或停止。", "握力失败前结束。"]
+  }),
+  supportExercise({
+    id: "farmer-carry",
+    nameZh: "农夫走",
+    nameEn: "Farmer Carry",
+    category: "core",
+    purpose: "训练全身张力、握力和躯干稳定。",
+    whyForUser: "全身张力和姿势控制对篮球对抗、篮板和力量传递都有帮助，同时疲劳成本可控。",
+    instructions: ["双手各拿一只哑铃或壶铃。", "站高，肩膀放松下沉。", "小步稳定行走，保持呼吸。", "结束时安全放下重量。"],
+    keyCues: ["站高", "肩放松", "步子稳", "能呼吸"],
+    commonMistakes: ["耸肩", "身体前倾", "重量过重", "拖着脚走"],
+    regressions: ["减轻重量", "缩短距离"],
+    progressions: ["增加距离", "单侧农夫走"],
+    painRules: ["腰背或肩痛时减重。", "不要做到影响第二天投篮和抓握。"]
+  }),
+  supportExercise({
+    id: "hollow-body-hold",
+    nameZh: "Hollow Body Hold",
+    nameEn: "Hollow Body Hold",
+    category: "core",
+    purpose: "训练核心抗伸展和躯干控制。",
+    whyForUser: "更好的核心抗伸展能帮助起跳和落地时保持身体刚性，但不需要做到腹部力竭。",
+    instructions: ["仰卧，轻轻收肋骨和骨盆。", "抬起肩胛和双腿到能控制的位置。", "保持腰背稳定贴近地面。", "短时间保持并呼吸。"],
+    keyCues: ["肋骨收", "腰稳", "短而稳", "不憋气"],
+    commonMistakes: ["腰拱起", "腿放太低", "脖子紧", "保持太久导致失控"],
+    regressions: ["屈膝保持", "单腿伸直"],
+    progressions: ["手臂过头", "轻微 rocking"],
+    painRules: ["腰不舒服时立即降级。", "颈部紧张时支撑头部或停止。"]
+  }),
+  supportExercise({
+    id: "plank-shoulder-tap",
+    nameZh: "平板支撑摸肩",
+    nameEn: "Plank Shoulder Tap",
+    category: "core",
+    purpose: "训练核心抗旋转和肩部支撑。",
+    whyForUser: "抗旋转支撑能帮助急停、单腿落地和上肢对抗时身体不乱晃。",
+    instructions: ["进入高位平板支撑，双脚略宽。", "慢慢抬一只手摸对侧肩。", "骨盆尽量不左右晃。", "左右交替，保持呼吸。"],
+    keyCues: ["骨盆稳", "慢摸肩", "推开地面", "不憋气"],
+    commonMistakes: ["髋大幅摇摆", "塌腰", "摸得太快", "手腕疼还硬撑"],
+    regressions: ["双脚更宽", "手扶高台"],
+    progressions: ["双脚更窄", "增加停顿"],
+    painRules: ["手腕或肩痛时改高台版本。", "腰不稳时降低次数。"]
+  }),
+  supportExercise({
+    id: "calf-isometric-hold",
+    nameZh: "提踵等长保持",
+    nameEn: "Calf Isometric Hold",
+    category: "isometric",
+    purpose: "训练小腿和跟腱可控负荷，作为低冲击跟腱容量维护。",
+    whyForUser: "当不适合弹跳时，提踵等长可以用更低冲击的方式保留小腿和跟腱负荷感觉。",
+    instructions: ["选择双腿或单腿版本。", "抬到中高位提踵位置。", "保持 20–45 秒，脚踝不外翻。", "慢慢放下，观察跟腱反应。"],
+    keyCues: ["中高位", "脚踝正", "稳定呼吸", "疼痛可控"],
+    commonMistakes: ["顶到极限抽筋", "脚踝外翻", "硬撑尖锐痛", "保持时间过长"],
+    regressions: ["双腿版本", "扶墙减重"],
+    progressions: ["单腿版本", "手持轻重量"],
+    painRules: ["不能有尖锐跟腱痛。", "跟腱晨僵 > 3/10 时用双腿版本或跳过。"]
+  }),
+  supportExercise({
+    id: "split-squat-isometric",
+    nameZh: "分腿蹲等长保持",
+    nameEn: "Split Squat Isometric",
+    category: "isometric",
+    purpose: "训练下肢位置控制、股四头肌和髌腱可控负荷。",
+    whyForUser: "分腿蹲等长能帮助右膝轨迹和髌腱耐受，适合作为动态力量或跳跃的低冲击替代。",
+    instructions: ["进入分腿蹲姿势，前脚三点踩稳。", "下降到无痛角度。", "保持 20–40 秒，膝盖对准第二脚趾。", "站起后换边。"],
+    keyCues: ["前脚踩满", "膝盖走正", "髋稳定", "疼痛可控"],
+    commonMistakes: ["前脚太近", "膝盖内扣", "蹲太深顶痛", "憋气"],
+    regressions: ["缩短保持时间", "扶墙辅助"],
+    progressions: ["手持轻重量", "增加保持时间"],
+    painRules: ["髌腱疼痛超过 3/10 时减小角度或停止。", "第二天敏感升高则下次减量。"]
+  }),
+  supportExercise({
+    id: "wall-sit",
+    nameZh: "靠墙静蹲",
+    nameEn: "Wall Sit",
+    category: "isometric",
+    purpose: "训练股四头肌等长耐受和膝关节位置控制。",
+    whyForUser: "靠墙静蹲是简单可控的膝伸等长选择，可在恢复或降级训练中保留一点股四头肌负荷。",
+    instructions: ["背靠墙，脚在身体前方。", "下滑到无痛角度。", "膝盖对准脚尖，保持 20–45 秒。", "用手扶墙慢慢站起。"],
+    keyCues: ["膝盖走正", "无痛角度", "脚踩稳", "慢呼吸"],
+    commonMistakes: ["蹲太深", "膝盖内扣", "脚太近", "硬撑疼痛"],
+    regressions: ["更高角度", "缩短时间"],
+    progressions: ["增加时间", "手持轻重量"],
+    painRules: ["膝前痛超过 3/10 时停止。", "不要为了燃烧感硬撑。"]
+  }),
+  supportExercise({
+    id: "mid-thigh-pull-isometric",
+    nameZh: "大腿中段等长拉",
+    nameEn: "Isometric Mid-Thigh Pull",
+    category: "isometric",
+    purpose: "训练高张力发力位置和全身用力协调。",
+    whyForUser: "这是进阶等长力量选择，只有在安全固定设置下才考虑，用来练习全身张力而不是日常必须项目。",
+    instructions: ["只在固定架、固定杠或专业设备安全可靠时做。", "站到大腿中段拉力位置。", "逐渐发力到目标强度，保持 2–5 秒。", "完全放松后再重复。"],
+    keyCues: ["安全固定", "逐渐发力", "全身绷紧", "短时间"],
+    commonMistakes: ["临时找不安全设备", "猛拉", "腰背代偿", "做太多组"],
+    regressions: ["陷阱杠硬拉速度组", "农夫走"],
+    progressions: ["提高发力意图", "更精确角度设置"],
+    painRules: ["没有安全设置就不做。", "腰背、膝或跟腱不适时跳过。"]
+  }),
+  supportExercise({
+    id: "overcoming-isometric-squat",
+    nameZh: "克服式深蹲等长",
+    nameEn: "Overcoming Isometric Squat",
+    category: "isometric",
+    purpose: "训练特定角度的高张力发力。",
+    whyForUser: "这是进阶选项，可能帮助特定角度发力，但不是 MVP 必需；安全设置比训练刺激更重要。",
+    instructions: ["只在固定安全销或专业架上做。", "站到目标深蹲角度，脚掌三点踩稳。", "逐渐向固定销发力 2–5 秒。", "放松并检查膝盖轨迹。"],
+    keyCues: ["固定安全", "脚掌三点", "膝盖走正", "短时间"],
+    commonMistakes: ["设备不安全", "猛顶", "膝盖内扣", "疲劳后继续"],
+    regressions: ["分腿蹲等长", "靠墙静蹲"],
+    progressions: ["改变角度", "提高发力意图"],
+    painRules: ["没有安全固定设置就不做。", "肌腱疼痛或动作变形时停止。"]
+  }),
+  supportExercise({
+    id: "single-leg-hamstring-bridge",
+    nameZh: "单腿腘绳肌桥",
+    nameEn: "Single-Leg Hamstring Bridge",
+    category: "strength",
+    purpose: "激活腘绳肌和臀部后链，帮助起跳髋伸展和落地控制。",
+    whyForUser: "右侧力量不平衡和腘绳肌不足会影响起跳下沉、髋伸展和膝盖控制，这个动作疲劳成本低。",
+    instructions: ["仰卧，一脚踩地，另一腿抬起。", "脚跟压地，把髋部抬起。", "顶部停 1 秒，感受臀部和腘绳肌。", "慢慢放下，不用腰顶。"],
+    keyCues: ["脚跟压地", "髋抬起", "肋骨收", "慢下"],
+    commonMistakes: ["用腰顶", "脚离身体太远导致抽筋", "骨盆旋转", "做太快"],
+    regressions: ["双腿桥", "短杠杆单腿桥"],
+    progressions: ["脚跟放高", "增加停顿"],
+    painRules: ["腘绳肌抽筋时缩短距离。", "腰背不适时改双腿版本。"]
+  }),
+  supportExercise({
+    id: "hamstring-slider-curl",
+    nameZh: "腘绳肌滑盘弯曲",
+    nameEn: "Hamstring Slider Curl",
+    category: "strength",
+    purpose: "训练腘绳肌离心和膝屈力量。",
+    whyForUser: "腘绳肌强度支持冲跳、刹车和膝关节控制，但要避免在测试前制造过大酸痛。",
+    instructions: ["仰卧，脚跟踩滑盘或毛巾。", "抬起髋部，慢慢把脚跟滑远。", "在可控范围内拉回。", "保持骨盆稳定。"],
+    keyCues: ["髋保持高", "慢滑远", "脚跟拉回", "骨盆稳"],
+    commonMistakes: ["髋掉下去", "离心太快", "抽筋后硬撑", "测试前做太多"],
+    regressions: ["只做离心滑远", "双腿版本"],
+    progressions: ["单腿离心", "增加慢速时间"],
+    painRules: ["腘绳肌拉扯痛时停止。", "测试前 48 小时不做高强度版本。"]
+  }),
+  supportExercise({
+    id: "hamstring-walkout",
+    nameZh: "腘绳肌走出",
+    nameEn: "Hamstring Walkout",
+    category: "strength",
+    purpose: "用低到中等强度激活腘绳肌，维持后链感觉。",
+    whyForUser: "恢复日和测试前需要一点腘绳肌激活，但不能制造离心酸痛；走出比 Nordic 更温和。",
+    instructions: ["仰卧做臀桥。", "脚跟一步一步向外走。", "走到能控制的位置后再走回。", "髋部尽量保持稳定。"],
+    keyCues: ["小步", "髋不掉", "慢走", "不抽筋"],
+    commonMistakes: ["步子太大", "髋掉下去", "走太远", "做成力竭"],
+    regressions: ["双腿桥保持", "缩短距离"],
+    progressions: ["增加步数", "顶部停顿"],
+    painRules: ["腘绳肌抽筋或刺痛时停止。", "测试前只做轻量。"]
+  }),
+  supportExercise({
+    id: "single-leg-balance-reach",
+    nameZh: "单腿平衡触地",
+    nameEn: "Single-Leg Balance Reach",
+    category: "foot-ankle",
+    purpose: "训练右脚三点支撑、髋控制和膝盖轨迹。",
+    whyForUser: "右脚外旋和右膝轨迹问题常在单腿支撑中暴露，这个动作能低冲击地检查和修正。",
+    instructions: ["单脚站稳，脚跟、第一和第五跖骨头压地。", "另一脚向前或斜前方轻触地。", "工作腿膝盖对准第二脚趾。", "慢慢回到站立。"],
+    keyCues: ["三点踩地", "膝盖走正", "髋稳定", "慢触地"],
+    commonMistakes: ["足弓塌陷", "右脚外旋失控", "膝盖内扣", "身体歪倒"],
+    regressions: ["手扶墙", "缩短触地距离"],
+    progressions: ["多方向触地", "轻负重"],
+    painRules: ["膝或足底疼痛超过 3/10 时停止。", "无法保持足弓时降低难度。"]
+  }),
+  supportExercise({
+    id: "hurdle-hop-forward-back",
+    nameZh: "前后跨栏小跳",
+    nameEn: "Forward/Backward Hurdle Hop",
+    category: "plyometric",
+    purpose: "低到中等剂量训练前后方向反应弹性。",
+    whyForUser: "反应弹性有助于篮球二次起跳和脚踝刚性，但总量必须控制，跟腱反应优先。",
+    instructions: ["使用低障碍或地面线。", "双脚轻跳过线再跳回。", "保持低幅、安静、快速。", "每组在质量下降前停止。"],
+    keyCues: ["低幅", "脚下安静", "身体高", "膝盖不塌"],
+    commonMistakes: ["障碍太高", "落地声音大", "疲劳后硬撑", "膝盖内扣"],
+    regressions: ["原地低 pogo", "跨线步伐"],
+    progressions: ["轻微提高障碍", "减少触地时间"],
+    painRules: ["跟腱或髌腱不适时取消。", "落地变重时停止。"]
+  }),
+  supportExercise({
+    id: "lateral-hurdle-hop",
+    nameZh: "侧向跨栏小跳",
+    nameEn: "Lateral Hurdle Hop",
+    category: "plyometric",
+    purpose: "训练侧向反应弹性和髋膝踝对齐。",
+    whyForUser: "篮球急停、横移和二次起跳需要侧向控制；这个动作必须低量高质量。",
+    instructions: ["站在低障碍或线的一侧。", "双脚侧向轻跳过去再回来。", "保持脚掌安静，膝盖对准脚尖。", "每组结束前保留质量。"],
+    keyCues: ["侧向轻", "膝盖正", "足弓撑", "不追数量"],
+    commonMistakes: ["跳太高", "身体左右甩", "右膝内扣", "落地声音大"],
+    regressions: ["侧向跨步定住", "低幅侧向 pogo"],
+    progressions: ["低栏", "单次反应跳"],
+    painRules: ["跟腱或髌腱 >= 3/10 时取消。", "右膝轨迹失控时停止。"]
+  }),
+  supportExercise({
+    id: "single-leg-landing-stick",
+    nameZh: "单腿落地定住",
+    nameEn: "Single-Leg Landing Stick",
+    category: "plyometric",
+    purpose: "训练单腿落地控制、足弓支撑和右膝轨迹。",
+    whyForUser: "右侧落地质量直接影响弹跳训练安全和篮球急停表现；低量定住比疲劳跳更有价值。",
+    instructions: ["从小幅双脚或单脚起跳开始。", "落到单腿后定住 2 秒。", "脚掌三点踩稳，膝盖对准第二脚趾。", "每次都重置。"],
+    keyCues: ["落地定住", "膝盖走正", "足弓撑", "安静"],
+    commonMistakes: ["落地后晃动", "膝盖内扣", "脚外旋失控", "连续做成疲劳"],
+    regressions: ["台阶下放", "小幅跨步定住"],
+    progressions: ["增加起跳距离", "侧向落地"],
+    painRules: ["疼痛或落地失控时停止。", "跟腱/髌腱 >= 3/10 时跳过。"]
+  }),
+  supportExercise({
+    id: "rdl",
+    nameZh: "罗马尼亚硬拉",
+    nameEn: "Romanian Deadlift",
+    category: "strength",
+    purpose: "训练髋主导力量、腘绳肌和臀部后链。",
+    whyForUser: "后链力量支持起跳髋伸展和刹车控制，但强离心要避开测试前。",
+    instructions: ["双脚与髋同宽，手持杠铃或哑铃。", "膝盖微弯，髋向后折叠。", "背部保持长，重量贴近腿。", "感到腘绳肌拉伸后用髋伸展站起。"],
+    keyCues: ["髋向后", "背长", "重量贴腿", "脚踩稳"],
+    commonMistakes: ["弯腰找地", "膝盖锁死", "重量离身太远", "下放太深失控"],
+    regressions: ["哑铃 RDL", "B-stance RDL"],
+    progressions: ["增加重量", "慢速离心"],
+    painRules: ["腘绳肌刺痛时停止。", "测试前 48 小时不做重离心版本。"]
+  }),
+  supportExercise({
+    id: "nordic-curl",
+    nameZh: "Nordic 腘绳肌弯举",
+    nameEn: "Nordic Hamstring Curl",
+    category: "strength",
+    purpose: "进阶训练腘绳肌离心力量。",
+    whyForUser: "Nordic 对腘绳肌很强，但酸痛风险高，只适合 readiness 好且远离测试/高强度篮球时少量使用。",
+    instructions: ["膝盖跪垫，脚踝固定安全。", "身体从膝到肩保持直线。", "慢慢向前下降，用手接住。", "推回起点或只做离心。"],
+    keyCues: ["身体直", "慢下降", "髋不折", "低量"],
+    commonMistakes: ["腰折叠", "下降太快", "做太多导致酸痛", "测试前使用"],
+    regressions: ["短幅 Nordic", "腘绳肌滑盘弯曲"],
+    progressions: ["增加下降幅度", "减少手辅助"],
+    painRules: ["腘绳肌 soreness 高时不做。", "测试前 72 小时避免高强度 Nordic。"]
+  }),
+  supportExercise({
+    id: "copenhagen-plank",
+    nameZh: "Copenhagen Plank",
+    nameEn: "Copenhagen Plank",
+    category: "core",
+    purpose: "训练内收肌、侧向核心和骨盆控制。",
+    whyForUser: "内收肌和侧向核心支持横移、急停和单腿落地，对篮球变向很重要。",
+    instructions: ["侧卧，上腿放在凳子上。", "肘在肩下，抬起髋部。", "保持骨盆正，不向前后转。", "短时间保持并换边。"],
+    keyCues: ["髋抬高", "骨盆正", "内侧腿发力", "短保持"],
+    commonMistakes: ["凳子太高", "髋掉下去", "肩耸", "内收肌拉扯痛还硬撑"],
+    regressions: ["膝盖支撑版本", "侧桥"],
+    progressions: ["脚踝支撑版本", "增加保持时间"],
+    painRules: ["腹股沟疼痛时降级或停止。", "不要在高强度篮球前做到酸痛。"]
+  }),
+  supportExercise({
+    id: "hip-90-90",
+    nameZh: "髋 90/90 活动",
+    nameEn: "Hip 90/90",
+    category: "mobility",
+    purpose: "改善髋内外旋控制，帮助下肢对线。",
+    whyForUser: "右脚外旋和右膝轨迹问题常与髋控制有关，90/90 能温和练习髋旋转。",
+    instructions: ["坐姿摆成前后腿 90/90。", "身体坐高，前腿髋外旋、后腿髋内旋。", "在无痛范围前倾或转换方向。", "动作慢，保持呼吸。"],
+    keyCues: ["坐高", "髋转动", "慢", "无痛"],
+    commonMistakes: ["腰背硬拧", "膝盖疼还压", "动作太快", "只追求幅度"],
+    regressions: ["手放身后支撑", "垫高臀部"],
+    progressions: ["主动转换", "前倾停顿"],
+    painRules: ["髋或膝夹痛时减小幅度。", "麻木或刺痛时停止。"]
+  }),
+  supportExercise({
+    id: "defensive-slide-stop",
+    nameZh: "防守滑步急停",
+    nameEn: "Defensive Slide Stop",
+    category: "basketball-skill",
+    purpose: "训练篮球横移后的刹车、髋膝踝对线和右脚角度控制。",
+    whyForUser: "防守滑步和急停会暴露右脚外旋、右膝内扣和落地刹车问题，是篮球转化的重要检查动作。",
+    instructions: ["低强度防守姿势开始。", "侧向滑步 2–3 步。", "急停时脚掌踩稳，膝盖对准脚尖。", "定住 1–2 秒再返回。"],
+    keyCues: ["髋低", "脚踩稳", "膝盖正", "先定住"],
+    commonMistakes: ["速度太快", "脚外旋失控", "膝盖内扣", "停不住还起跳"],
+    regressions: ["慢速侧滑定住", "无跳版本"],
+    progressions: ["加入低幅起跳", "加入接球"],
+    painRules: ["膝内侧或髌腱不适时只做慢速停步。", "右膝轨迹失控时停止。"]
+  }),
+  supportExercise({
+    id: "catch-and-jump",
+    nameZh: "接球起跳",
+    nameEn: "Catch and Jump",
+    category: "basketball-skill",
+    purpose: "训练接球后快速组织脚步和垂直起跳。",
+    whyForUser: "篮球弹跳需要把力量转化到真实接球节奏，但总次数要少，质量优先。",
+    instructions: ["从轻松传球或自抛接球开始。", "接球同时整理脚步。", "足弓撑住，膝盖对准脚尖。", "低到中等强度起跳并安静落地。"],
+    keyCues: ["接球稳", "脚步快", "向上跳", "落地定住"],
+    commonMistakes: ["接球后脚乱", "向前冲", "连续跳太多", "落地膝盖内扣"],
+    regressions: ["接球定住不跳", "原地 CMJ"],
+    progressions: ["加入一步移动", "提高到 85% 强度"],
+    painRules: ["跟腱或髌腱不适时不跳。", "落地变重时停止。"]
+  }),
+  supportExercise({
+    id: "second-jump-rebound-drill",
+    nameZh: "二次起跳篮板练习",
+    nameEn: "Second Jump Rebound Drill",
+    category: "basketball-skill",
+    purpose: "训练篮板后的低量二次起跳和落地再组织能力。",
+    whyForUser: "二次起跳对篮球表现重要，但很容易变成高冲击疲劳训练；这里强调少量高质量。",
+    instructions: ["模拟抢篮板落地。", "落地稳定后做第二次中等强度起跳。", "每次之间充分休息。", "记录右脚角度和右膝轨迹。"],
+    keyCues: ["先落稳", "再起跳", "少量", "膝盖正"],
+    commonMistakes: ["连续弹到疲劳", "落地没稳就跳", "膝盖内扣", "追数量"],
+    regressions: ["落地定住不二跳", "低强度 CMJ"],
+    progressions: ["加入接球", "增加到比赛节奏但减少次数"],
+    painRules: ["任何肌腱不适时取消。", "落地变重或高度下降时停止。"]
+  })
 ];
 
 export const exercises: Exercise[] = exerciseDefinitions.map((exercise) => ({

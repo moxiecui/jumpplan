@@ -4,7 +4,10 @@ import { useRouter } from "expo-router";
 
 import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
+import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
+import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { useReadiness } from "@/context/ReadinessContext";
+import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { getTodayTrainingDay } from "@/logic/schedule";
 import { applyAdjustmentToDay } from "@/logic/trainingAdjustment";
 
@@ -23,12 +26,18 @@ export default function TodayScreen() {
     [day, readinessEntry]
   );
   const visibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
+  const relatedTerms = useMemo(() => getRelatedGlossaryTermsForDay(visibleDay), [visibleDay]);
+  const focusFlags = [
+    day.upperBodyIncluded ? "上肢" : undefined,
+    day.coreIncluded ? "核心" : undefined,
+    day.isometricIncluded ? "等长" : undefined
+  ].filter(Boolean) as string[];
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.navRow}>
         <Pressable style={styles.navButton} onPress={() => router.push("/plan")}>
-          <Text style={styles.navButtonText}>14-Day Plan</Text>
+          <Text style={styles.navButtonText}>21-Day Plan</Text>
         </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/checkin")}>
           <Text style={styles.navButtonText}>Check-in</Text>
@@ -36,16 +45,42 @@ export default function TodayScreen() {
         <Pressable style={styles.navButton} onPress={() => router.push("/nutrition" as never)}>
           <Text style={styles.navButtonText}>Nutrition</Text>
         </Pressable>
+        <Pressable style={styles.navButton} onPress={() => router.push("/glossary" as never)}>
+          <Text style={styles.navButtonText}>术语</Text>
+        </Pressable>
       </View>
 
       <Pressable style={styles.adaptiveButton} onPress={() => router.push("/adaptive-plan")}>
         <Text style={styles.adaptiveButtonText}>根据反馈调整计划</Text>
       </Pressable>
 
-      <Text style={styles.eyebrow}>Today · Day {day.day}</Text>
+      <Text style={styles.eyebrow}>
+        Today · Day {day.day} · Phase {day.phase}
+      </Text>
       <Text style={styles.title}>{day.title}</Text>
-      <Text style={styles.type}>{day.type}</Text>
+      <View style={styles.badgeRow}>
+        <Text style={styles.type}>{day.type}</Text>
+        {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
+      </View>
       <Text style={styles.goal}>{day.goal}</Text>
+
+      {day.performanceFocus?.length ? (
+        <View style={styles.focusCard}>
+          <Text style={styles.focusTitle}>今日表现重点</Text>
+          <View style={styles.chipRow}>
+            {day.performanceFocus.map((focus) => (
+              <Text key={focus} style={styles.focusChip}>
+                {focus}
+              </Text>
+            ))}
+          </View>
+          <Text style={styles.focusText}>右侧再平衡：右脚 tripod、右膝轨迹和安静落地优先。</Text>
+          <Text style={styles.focusText}>腘绳肌重点：有酸痛时不做 Nordic、硬 RDL、冲刺或最大跳。</Text>
+          {focusFlags.length ? (
+            <Text style={styles.focusText}>支持模块：{focusFlags.join(" / ")}</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.readinessCard}>
         <Text style={styles.readinessTitle}>今日 Readiness 评估</Text>
@@ -84,9 +119,12 @@ export default function TodayScreen() {
       {showAdjustedPlan && readinessEntry ? (
         <View style={styles.adjustedBanner}>
           <Text style={styles.adjustedTitle}>正在预览 Readiness 调整版</Text>
-          <Text style={styles.adjustedText}>这是临时 overlay，不会修改原始 14 天计划数据。</Text>
+          <Text style={styles.adjustedText}>这是临时 overlay，不会修改原始 21 天计划数据。</Text>
         </View>
       ) : null}
+
+      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
+      <RelatedTermsSection terms={relatedTerms} />
 
       <DailyNutritionCard dayType={day.type} adjustment={readinessEntry?.adjustment} compact />
 
@@ -111,11 +149,13 @@ const styles = StyleSheet.create({
   },
   navRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
     marginBottom: 22
   },
   navButton: {
-    flex: 1,
+    minWidth: "22%",
+    flexGrow: 1,
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
@@ -152,7 +192,6 @@ const styles = StyleSheet.create({
   },
   type: {
     alignSelf: "flex-start",
-    marginTop: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
@@ -161,11 +200,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800"
   },
+  badgeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 10
+  },
+  phaseBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#dafbe1",
+    color: "#116329",
+    fontSize: 12,
+    fontWeight: "800"
+  },
   goal: {
     marginTop: 14,
     fontSize: 16,
     lineHeight: 24,
     color: "#24292f"
+  },
+  focusCard: {
+    marginTop: 18,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff"
+  },
+  focusTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  chipRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  focusChip: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#f6f8fa",
+    color: "#24292f",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  focusText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#57606a"
   },
   readinessCard: {
     marginTop: 18,

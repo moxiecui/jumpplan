@@ -197,8 +197,8 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       explanation:
         "跟腱晨僵或髌腱疼痛已经进入需要保护的范围。即使 Oura 分数看起来不错，疼痛和动作质量仍然优先于穿戴设备信号。",
       modifications: [
-        "取消 Pogo、最大跳、PAP、深度跳和冲刺。",
-        "只做热身、Zone 2、活动度、等长止痛和主动恢复。",
+        "取消 Pogo、最大跳、PAP、French Contrast、深度跳和冲刺。",
+        "只做热身、Zone 2、活动度、呼吸恢复，以及无痛低强度等长。",
         "如果疼痛持续或加重，考虑暂停下肢冲击训练。"
       ],
       removeExerciseCategories: ["plyometric", "basketball-skill"],
@@ -274,8 +274,9 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       explanation:
         "肌腱已经有中等预警，今天可以训练，但需要取消最大努力和高冲击内容。Oura 只能辅助判断，不能覆盖疼痛信号。",
       modifications: [
-        "取消最大跳和 PAP。",
+        "取消最大跳、PAP 和 French Contrast。",
         achillesIssue ? "取消 Pogo 或至少减少 50% 组数。" : "Pogo 组数减少 50%，只保留安静低幅版本。",
+        "把动态跳跃替换为 Spanish squat、提踵等长或分腿蹲等长等疼痛友好选项。",
         "篮球只做低强度技术和轻松投篮，避免连续冲跳。"
       ],
       removeExerciseCategories: ["plyometric"],
@@ -301,7 +302,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       explanation:
         "Oura 和基线指标提示恢复可能不足。没有明显疼痛也不代表可以硬做高冲击训练，建议保守处理。",
       modifications: [
-        "取消最大跳、PAP、冲刺和重复高强度变向。",
+        "取消最大跳、PAP、French Contrast、冲刺和重复高强度变向。",
         "只做热身、Zone 2、活动度和主动恢复。",
         "如果训练中动作变慢或落地变重，直接结束下肢冲击内容。"
       ],
@@ -326,8 +327,8 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
           "今天可以保留受控力量训练，但不适合磨重量或做失败次数。结合主观感觉判断，动作一旦变形就降级。",
         modifications: [
           "力量动作保持 RPE 6–7，不做力竭。",
-          "取消任何跳跃、PAP 或速度明显下降的组。",
-          "保留等长止痛和主动恢复。"
+          "取消任何跳跃、PAP、French Contrast 或速度明显下降的组。",
+          "保留疼痛友好的等长、核心和上肢支持训练。"
         ],
         removeExerciseCategories: ["plyometric", "basketball-skill"],
         reduceVolumePercent: 30,
@@ -391,7 +392,8 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         "恢复信号或主观状态提示今天不适合追求最大输出。建议保留技术质量，减少冲击和疲劳堆积。",
       modifications: [
         "跳跃和变向内容减少 30–50%。",
-        "取消 PAP 和最大跳。",
+        "取消 PAP、French Contrast 和最大跳。",
+        "如果腘绳肌酸痛明显，不做 Nordic、硬 RDL、冲刺或最大跳。",
         dayType === "skill"
           ? "保留低强度技术，不做硬急停起跳。"
           : "每组都以安静落地和右膝轨迹为优先。"

@@ -1,21 +1,75 @@
+import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { trainingPlan } from "@/data/plan";
+import type { TrainingDay, TrainingDayType } from "@/types/training";
+
+type PlanFilter = TrainingDayType | "upper-body" | "core" | "isometric" | "all";
+
+const filterOptions: Array<{ value: PlanFilter; label: string }> = [
+  { value: "all", label: "全部" },
+  { value: "jump", label: "Jump" },
+  { value: "strength", label: "Strength" },
+  { value: "basketball", label: "Basketball" },
+  { value: "recovery", label: "Recovery" },
+  { value: "upper-body", label: "Upper Body" },
+  { value: "core", label: "Core" },
+  { value: "isometric", label: "Isometric" }
+];
+
+function matchesFilter(day: TrainingDay, filter: PlanFilter) {
+  if (filter === "all") {
+    return true;
+  }
+
+  if (filter === "upper-body") {
+    return Boolean(day.upperBodyIncluded);
+  }
+
+  if (filter === "core") {
+    return Boolean(day.coreIncluded);
+  }
+
+  if (filter === "isometric") {
+    return Boolean(day.isometricIncluded);
+  }
+
+  return day.type === filter;
+}
 
 export default function PlanScreen() {
   const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState<PlanFilter>("all");
+  const visiblePlan = useMemo(
+    () => trainingPlan.filter((day) => matchesFilter(day, activeFilter)),
+    [activeFilter]
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>14-Day Plan</Text>
-      <Text style={styles.subtitle}>每天点进去查看完整训练块和动作细节。</Text>
+      <Text style={styles.title}>21-Day Plan</Text>
+      <Text style={styles.subtitle}>三阶段垂直弹跳计划：控制建立、力量转化、整合测试。</Text>
 
       <Pressable style={styles.generateButton} onPress={() => router.push("/adaptive-plan")}>
         <Text style={styles.generateButtonText}>周期结束后生成下一阶段计划</Text>
       </Pressable>
 
-      {trainingPlan.map((day) => (
+      <View style={styles.filterRow}>
+        {filterOptions.map((option) => (
+          <Pressable
+            key={option.value}
+            style={[styles.filterButton, activeFilter === option.value && styles.filterButtonActive]}
+            onPress={() => setActiveFilter(option.value)}
+          >
+            <Text style={[styles.filterText, activeFilter === option.value && styles.filterTextActive]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {visiblePlan.map((day) => (
         <Pressable
           key={day.day}
           style={styles.dayCard}
@@ -30,8 +84,22 @@ export default function PlanScreen() {
             <Text style={styles.dayNumber}>Day {day.day}</Text>
             <Text style={styles.dayType}>{day.type}</Text>
           </View>
+          {day.phaseTitle ? (
+            <Text style={styles.phase}>
+              Phase {day.phase} · {day.phaseTitle}
+            </Text>
+          ) : null}
           <Text style={styles.dayTitle}>{day.title}</Text>
           <Text style={styles.goal}>{day.goal}</Text>
+          {day.performanceFocus?.length ? (
+            <View style={styles.focusRow}>
+              {day.performanceFocus.slice(0, 4).map((focus) => (
+                <Text key={focus} style={styles.focusChip}>
+                  {focus}
+                </Text>
+              ))}
+            </View>
+          ) : null}
         </Pressable>
       ))}
     </ScrollView>
@@ -66,6 +134,32 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontWeight: "900"
   },
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 18
+  },
+  filterButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff"
+  },
+  filterButtonActive: {
+    borderColor: "#0969da",
+    backgroundColor: "#ddf4ff"
+  },
+  filterText: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#57606a"
+  },
+  filterTextActive: {
+    color: "#0969da"
+  },
   dayCard: {
     padding: 16,
     borderRadius: 8,
@@ -90,6 +184,12 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#57606a"
   },
+  phase: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#116329"
+  },
   dayTitle: {
     marginTop: 8,
     fontSize: 18,
@@ -101,5 +201,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#57606a"
+  },
+  focusRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  focusChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#f6f8fa",
+    color: "#24292f",
+    fontSize: 12,
+    fontWeight: "700"
   }
 });

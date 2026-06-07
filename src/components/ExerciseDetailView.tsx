@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 
 import { ExerciseVideoSection } from "@/components/ExerciseVideoSection";
+import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { findGlossaryTermsInText, getGlossaryEntriesByIds } from "@/logic/glossary";
 import type { Exercise } from "@/types/training";
 
 interface ExerciseDetailViewProps {
@@ -15,6 +17,9 @@ const categoryLabels: Record<Exercise["category"], string> = {
   strength: "力量",
   mobility: "活动度",
   recovery: "恢复",
+  "upper-body": "上肢",
+  core: "核心",
+  isometric: "等长",
   "basketball-skill": "篮球专项"
 };
 
@@ -35,7 +40,42 @@ function DetailList({ title, items }: { title: string; items?: string[] }) {
   );
 }
 
+function getRelatedTermsForExercise(exercise: Exercise) {
+  const text = [
+    exercise.id,
+    exercise.nameZh,
+    exercise.nameEn,
+    exercise.category,
+    exercise.purpose,
+    exercise.whyForUser,
+    exercise.videoNote,
+    exercise.youtubeSearchQuery,
+    ...(exercise.instructions ?? []),
+    ...(exercise.keyCues ?? []),
+    ...(exercise.commonMistakes ?? []),
+    ...(exercise.regressions ?? []),
+    ...(exercise.progressions ?? []),
+    ...(exercise.painRules ?? [])
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const detected = findGlossaryTermsInText(text);
+  const manualIds =
+    exercise.id === "cmj"
+      ? ["cmj", "ssc", "rfd", "plyometric"]
+      : exercise.id === "approach-jump"
+        ? ["cmj", "rfd", "ssc", "plyometric"]
+        : exercise.id === "trap-bar-deadlift"
+          ? ["rpe", "pap", "complex-training"]
+          : [];
+  const manual = getGlossaryEntriesByIds(manualIds);
+  const byId = new Map([...manual, ...detected].map((entry) => [entry.id, entry]));
+  return [...byId.values()];
+}
+
 export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
+  const relatedTerms = getRelatedTermsForExercise(exercise);
+
   return (
     <View style={styles.container}>
       <Text style={styles.nameZh}>{exercise.nameZh}</Text>
@@ -58,6 +98,7 @@ export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
       <DetailList title="降低难度" items={exercise.regressions} />
       <DetailList title="提高难度" items={exercise.progressions} />
       <DetailList title="疼痛 / 安全规则" items={exercise.painRules} />
+      <RelatedTermsSection terms={relatedTerms} />
       <ExerciseVideoSection exercise={exercise} />
     </View>
   );

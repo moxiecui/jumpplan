@@ -39,7 +39,15 @@ export function AdaptivePlanPreview({ plan }: AdaptivePlanPreviewProps) {
             <Text style={styles.dayTitle}>
               Day {day.day}: {day.title}
             </Text>
+            {day.phaseTitle ? (
+              <Text style={styles.dayPhase}>
+                Phase {day.phase} · {day.phaseTitle}
+              </Text>
+            ) : null}
             <Text style={styles.dayText}>{day.goal}</Text>
+            {day.performanceFocus?.length ? (
+              <Text style={styles.dayText}>重点：{day.performanceFocus.slice(0, 4).join(" / ")}</Text>
+            ) : null}
             <Text style={styles.dayText}>
               训练块：{day.blocks.map((block) => block.title).join(" / ")}
             </Text>
@@ -108,6 +116,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "900",
     color: "#1f2328"
+  },
+  dayPhase: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#116329"
   },
   dayText: {
     marginTop: 4,

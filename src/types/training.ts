@@ -28,6 +28,9 @@ export interface Exercise {
     | "strength"
     | "mobility"
     | "recovery"
+    | "upper-body"
+    | "core"
+    | "isometric"
     | "basketball-skill";
   purpose: string;
   whyForUser: string;
@@ -64,7 +67,14 @@ export interface TrainingDay {
   title: string;
   type: TrainingDayType;
   goal: string;
+  phase?: 1 | 2 | 3;
+  phaseTitle?: string;
+  performanceFocus?: string[];
+  upperBodyIncluded?: boolean;
+  coreIncluded?: boolean;
+  isometricIncluded?: boolean;
   nutritionPlanId?: string;
+  contrastModuleId?: "french-contrast";
   readinessRule?: string;
   blocks: TrainingBlock[];
 }

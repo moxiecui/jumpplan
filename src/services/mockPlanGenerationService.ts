@@ -10,11 +10,36 @@ import type {
   PlanLength,
   TrainingFeedback
 } from "@/types/adaptivePlan";
-import type { TrainingDay, TrainingItem } from "@/types/training";
+import type { TrainingBlock, TrainingDay, TrainingItem } from "@/types/training";
 import type { PlanGenerationService } from "@/services/planGeneration";
 
 function todayStamp() {
   return new Date().toISOString();
+}
+
+function generatedPhase(day: number): 1 | 2 | 3 {
+  if (day <= 7) {
+    return 1;
+  }
+
+  if (day <= 14) {
+    return 2;
+  }
+
+  return 3;
+}
+
+function generatedPhaseTitle(day: number) {
+  const phase = generatedPhase(day);
+  if (phase === 1) {
+    return "控制与容量建立";
+  }
+
+  if (phase === 2) {
+    return "力量转化与反应弹性";
+  }
+
+  return "整合、减量与测试";
 }
 
 function hasPainAtOrAbove(feedback: TrainingFeedback[], threshold: number) {
@@ -52,11 +77,31 @@ function activeRecoveryItems(): TrainingItem[] {
   ];
 }
 
+function eveningRecoveryBlock(): TrainingBlock {
+  return {
+    type: "eveningRecovery",
+    title: "Optional Evening Recovery",
+    items: [
+      { exerciseId: "legs-up-breathing", duration: "4–6 分钟", intensity: "low" },
+      {
+        exerciseId: "calf-foam-roll",
+        duration: "30–45 秒/肌群",
+        intensity: "low",
+        notes: "可选；轻到中等压力，第二天更僵就减半或跳过。"
+      }
+    ]
+  };
+}
+
 function recoveryDay(day: number, title = "肌腱安全恢复日"): TrainingDay {
   return {
     day,
     title,
     type: "recovery",
+    phase: generatedPhase(day),
+    phaseTitle: generatedPhaseTitle(day),
+    performanceFocus: ["肌腱安全", "Zone 2", "活动度", "呼吸恢复"],
+    isometricIncluded: true,
     goal: "降低冲击负荷，观察跟腱和髌腱反应，保留温和循环和活动度。",
     readinessRule: "如果跟腱或髌腱疼痛 >= 4/10，今天只执行恢复和肌腱安全内容。",
     blocks: [
@@ -77,7 +122,8 @@ function recoveryDay(day: number, title = "肌腱安全恢复日"): TrainingDay 
           { exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() }
+      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
+      eveningRecoveryBlock()
     ]
   };
 }
@@ -87,6 +133,10 @@ function movementQualityDay(day: number): TrainingDay {
     day,
     title: "足弓 + 右膝力线重建",
     type: "skill",
+    phase: generatedPhase(day),
+    phaseTitle: generatedPhaseTitle(day),
+    performanceFocus: ["右脚 tripod", "右膝轨迹", "安静落地", "低速控制"],
+    coreIncluded: true,
     goal: "用低速技术练习恢复足弓控制、髋膝踝对齐和安静落地。",
     readinessRule: "如果右膝内扣或落地变重，降低速度、减少幅度，取消跳跃。",
     blocks: [
@@ -107,7 +157,8 @@ function movementQualityDay(day: number): TrainingDay {
           }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() }
+      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
+      eveningRecoveryBlock()
     ]
   };
 }
@@ -117,6 +168,11 @@ function strengthControlDay(day: number, highBasketballLoad: boolean): TrainingD
     day,
     title: "力量维持 + 低冲击控制",
     type: "strength",
+    phase: generatedPhase(day),
+    phaseTitle: generatedPhaseTitle(day),
+    performanceFocus: ["力量维持", "右膝控制", "肌腱负荷", "核心支撑"],
+    coreIncluded: true,
+    isometricIncluded: true,
     goal: "保留可控力量刺激，不做磨重量，不增加球场外冲击量。",
     readinessRule: highBasketballLoad
       ? "篮球频率偏高，本日不加跳跃，力量保持 RPE 6–7。"
@@ -132,7 +188,8 @@ function strengthControlDay(day: number, highBasketballLoad: boolean): TrainingD
           { exerciseId: "single-leg-calf-raise", sets: 2, reps: "8 次", side: "each", intensity: "medium", notes: "慢上慢下，不弹震。" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() }
+      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
+      eveningRecoveryBlock()
     ]
   };
 }
@@ -142,6 +199,10 @@ function lowImpactJumpDay(day: number): TrainingDay {
     day,
     title: "低量弹跳技术日",
     type: "jump",
+    phase: generatedPhase(day),
+    phaseTitle: generatedPhaseTitle(day),
+    performanceFocus: ["低量弹跳", "起跳节奏", "落地质量", "右膝轨迹"],
+    coreIncluded: true,
     goal: "保持起跳节奏和落地质量，不做高容量增强式训练。",
     readinessRule: "只在无痛、落地安静、右膝轨迹稳定时执行；不做最大跳测试。",
     blocks: [
@@ -155,7 +216,8 @@ function lowImpactJumpDay(day: number): TrainingDay {
           { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "medium", rest: "90 秒", notes: "只练倒数两步和垂直投射。" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() }
+      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
+      eveningRecoveryBlock()
     ]
   };
 }
@@ -165,6 +227,9 @@ function basketballSkillDay(day: number): TrainingDay {
     day,
     title: "篮球低冲击技术日",
     type: "basketball",
+    phase: generatedPhase(day),
+    phaseTitle: generatedPhaseTitle(day),
+    performanceFocus: ["篮球手感", "脚步控制", "右膝轨迹", "赛后恢复"],
     goal: "保留投篮和脚步感觉，避免连续最大跳和高强度急停。",
     readinessRule: "篮球频率高时，本日只做技术和轻松投篮。",
     blocks: [
@@ -178,7 +243,8 @@ function basketballSkillDay(day: number): TrainingDay {
           { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", notes: "60–70% 技术跳，可直接跳过。" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() }
+      { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
+      eveningRecoveryBlock()
     ]
   };
 }
@@ -199,11 +265,9 @@ function buildDays(request: PlanGenerationRequest, length: PlanLength): Training
         ? 7
         : length === "10-days"
           ? 10
-          : length === "14-days"
-            ? 14
-            : length === "21-days"
-              ? 21
-              : 28;
+          : length === "21-days"
+            ? 21
+            : 28;
 
   if (tendonRisk || painHigh || painWorse) {
     return Array.from({ length: Math.min(count, 7) }, (_, index) => {
@@ -288,18 +352,28 @@ export const mockPlanGenerationService: PlanGenerationService = {
         "Do not add max jumps on recovery days.",
         "Do not override tendon pain with wearable readiness.",
         "If Achilles or patellar pain >= 4/10, generate recovery-only or tendon-safety plan.",
+        "If Achilles stiffness or patellar tendon pain >= 3/10, do not generate French Contrast, PAP, or max jump work.",
         "If basketball frequency is high, reduce gym impact volume.",
         `No more than ${Math.min(request.constraints.maxHighImpactDaysPerWeek, 2)} high-impact days per week.`,
+        "Upper-body work supports basketball contact, posture, arm swing, and force transfer; it is not bodybuilding.",
+        "Core work should be small-dose anti-rotation, anti-extension, anti-lateral-flexion, and carries.",
+        "Use isometrics 2-4 times per week as tendon-friendly loading or a pain-friendly substitute.",
+        "If tendon pain is moderate, replace dynamic jumps with Spanish squat isometric, calf isometric hold, or split-squat isometric.",
+        "If hamstring soreness is high, remove Nordic, hard RDL, sprinting, and max jumping.",
+        "French Contrast / Complex Training is optional conversion work, not conditioning.",
+        "With multiple weekly basketball sessions, use French Contrast no more than once per week; prefer once every 7-10 days.",
+        "Full French Contrast is rare: at most once every 2-3 weeks, only with high readiness and good tendon status.",
         "Every training day must include warmup and active recovery.",
         "Generated plan must be structured JSON only."
       ],
       progressionRules: [
         "只有连续 48 小时跟腱和髌腱反应稳定，才增加跳跃次数。",
         "每次只增加一个变量：总量、强度或复杂度。",
-        "篮球频率高的一周，不额外增加健身房冲击量。"
+        "篮球频率高的一周，不额外增加健身房冲击量。",
+        "French Contrast 只放在专门转化日，不放在恢复日、休息日或高冲击篮球后的第二天。"
       ],
       deloadRules: [
-        "跟腱或髌腱疼痛达到 3/10，取消最大跳和 PAP。",
+        "跟腱或髌腱疼痛达到 3/10，取消最大跳、PAP 和 French Contrast。",
         "跟腱或髌腱疼痛达到 4/10，改恢复或肌腱安全计划。",
         "右膝内扣、落地变重或触地变慢时，降低速度和幅度。"
       ],

@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { getSupplementProductById } from "@/data/supplements";
+import { findGlossaryTermsInText, getGlossaryEntriesByIds } from "@/logic/glossary";
 import {
   getNutritionCategoryLabel,
   getNutritionPriorityLabel,
@@ -27,6 +29,36 @@ function DetailList({ title, items }: { title: string; items?: string[] }) {
 
 export function NutritionDetailView({ item }: { item: NutritionItem }) {
   const product = item.productId ? getSupplementProductById(item.productId) : undefined;
+  const text = [
+    item.id,
+    item.nameZh,
+    item.nameEn,
+    item.purpose,
+    item.whyForUser,
+    item.dose,
+    product?.name,
+    product?.shortNameZh,
+    product?.servingNote,
+    ...(item.instructions ?? []),
+    ...(item.keyPoints ?? []),
+    ...(item.commonMistakes ?? []),
+    ...(item.cautions ?? []),
+    ...(item.skipOrReduceWhen ?? [])
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const manualIdsByNutritionId: Record<string, string[]> = {
+    "fish-oil-epa-dha": ["epa", "dha"],
+    creatine: ["creatine"],
+    "whey-isolate": ["whey"],
+    "collagen-vitamin-c": ["collagen"],
+    zinc: ["zma"],
+    "magnesium-glycinate": ["zma"],
+    "l-citrulline": ["l-citrulline"]
+  };
+  const detectedTerms = findGlossaryTermsInText(text);
+  const manualTerms = getGlossaryEntriesByIds(manualIdsByNutritionId[item.id] ?? []);
+  const relatedTerms = [...new Map([...manualTerms, ...detectedTerms].map((entry) => [entry.id, entry])).values()];
 
   return (
     <View style={styles.container}>
@@ -67,6 +99,7 @@ export function NutritionDetailView({ item }: { item: NutritionItem }) {
       <DetailList title="常见错误" items={item.commonMistakes} />
       <DetailList title="注意事项" items={item.cautions} />
       <DetailList title="什么时候减少、跳过或咨询医生" items={item.skipOrReduceWhen} />
+      <RelatedTermsSection terms={relatedTerms} />
     </View>
   );
 }

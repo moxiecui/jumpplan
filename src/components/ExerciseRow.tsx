@@ -30,6 +30,9 @@ const categoryLabels: Record<Exercise["category"], string> = {
   strength: "力量",
   mobility: "活动度",
   recovery: "恢复",
+  "upper-body": "上肢",
+  core: "核心",
+  isometric: "等长",
   "basketball-skill": "篮球专项"
 };
 

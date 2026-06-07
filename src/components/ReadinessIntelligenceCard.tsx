@@ -1,5 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { getGlossaryEntriesByIds } from "@/logic/glossary";
 import type {
   DailyTrainingAdjustment,
   OuraDailyReadinessInput,
@@ -56,6 +58,7 @@ export function ReadinessIntelligenceCard({
 }: ReadinessIntelligenceCardProps) {
   const meta = levelStyles[adjustment.level];
   const subjectiveFlags = getSubjectiveFlags(subjective);
+  const relatedTerms = getGlossaryEntriesByIds(["hrv", "rhr", "readiness"]);
 
   return (
     <View style={[styles.card, { backgroundColor: meta.backgroundColor, borderColor: meta.borderColor }]}>
@@ -109,6 +112,8 @@ export function ReadinessIntelligenceCard({
           • {flag}
         </Text>
       ))}
+
+      <RelatedTermsSection terms={relatedTerms} />
     </View>
   );
 }

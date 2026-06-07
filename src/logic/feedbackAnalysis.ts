@@ -66,7 +66,7 @@ export function suggestPlanLength(request: PlanGenerationRequest): PlanLength {
   }
 
   if (request.trigger === "end-of-cycle-regeneration") {
-    return "14-days";
+    return "21-days";
   }
 
   return "10-days";

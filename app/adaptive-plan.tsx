@@ -21,7 +21,6 @@ const lengthOptions: Array<{ value: PlanLength; label: string }> = [
   { value: "3-days", label: "3 天" },
   { value: "7-days", label: "7 天" },
   { value: "10-days", label: "10 天" },
-  { value: "14-days", label: "14 天" },
   { value: "21-days", label: "21 天" },
   { value: "4-weeks", label: "4 周" }
 ];
@@ -64,7 +63,7 @@ function ToggleButton({
 
 export default function AdaptivePlanScreen() {
   const [trigger, setTrigger] = useState<PlanGenerationTrigger>("mid-cycle-adjustment");
-  const [requestedLength, setRequestedLength] = useState<PlanLength>("7-days");
+  const [requestedLength, setRequestedLength] = useState<PlanLength>("21-days");
   const [completedExerciseIds, setCompletedExerciseIds] = useState("");
   const [skippedExerciseIds, setSkippedExerciseIds] = useState("");
   const [difficultExerciseIds, setDifficultExerciseIds] = useState("");
@@ -100,16 +99,16 @@ export default function AdaptivePlanScreen() {
     return {
       trigger,
       requestedLength,
-      currentPlanTitle: "JumpPlan 14-day routine",
+      currentPlanTitle: "JumpPlan 21-day vertical jump performance plan",
       recentFeedback: [feedback],
       cycleSummary:
         trigger === "end-of-cycle-regeneration"
           ? {
               startDate: todayDate(),
               endDate: todayDate(),
-              completedDays: 10,
-              plannedDays: 14,
-              completionRate: 10 / 14,
+              completedDays: 21,
+              plannedDays: 21,
+              completionRate: 1,
               achillesPainTrend: "unknown",
               patellarPainTrend: "unknown",
               mainUserNotes: notes

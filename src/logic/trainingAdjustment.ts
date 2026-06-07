@@ -23,10 +23,23 @@ const controlledStrengthIds = new Set([
   "single-leg-rdl-contralateral",
   "trap-bar-deadlift",
   "spanish-squat-isometric",
+  "calf-isometric-hold",
+  "split-squat-isometric",
+  "wall-sit",
   "step-down",
   "rdl",
   "nordic-curl",
-  "copenhagen-plank"
+  "copenhagen-plank",
+  "dead-bug",
+  "side-plank",
+  "pallof-press",
+  "suitcase-carry",
+  "farmer-carry",
+  "push-up",
+  "dumbbell-bench-press",
+  "one-arm-dumbbell-row",
+  "pull-up-or-lat-pulldown",
+  "landmine-press"
 ]);
 
 function cloneDay(day: TrainingDay): TrainingDay {
@@ -63,7 +76,14 @@ function annotateItem(item: TrainingItem, note: string): TrainingItem {
 
 function isPAPOrSprintLike(item: TrainingItem) {
   const text = `${item.exerciseId} ${item.notes ?? ""}`.toLowerCase();
-  return text.includes("pap") || text.includes("sprint") || text.includes("冲刺");
+  return (
+    text.includes("pap") ||
+    text.includes("sprint") ||
+    text.includes("contrast") ||
+    text.includes("french") ||
+    text.includes("复合训练") ||
+    text.includes("冲刺")
+  );
 }
 
 export function isHighImpactExercise(exerciseId: string, notes?: string): boolean {
@@ -166,7 +186,14 @@ function applyStrengthOnly(day: TrainingDay, adjustment: DailyTrainingAdjustment
               }
 
               const exercise = getExerciseById(item.exerciseId);
-              return controlledStrengthIds.has(item.exerciseId) || exercise?.category === "strength" || exercise?.category === "knee-tendon";
+              return (
+                controlledStrengthIds.has(item.exerciseId) ||
+                exercise?.category === "strength" ||
+                exercise?.category === "knee-tendon" ||
+                exercise?.category === "isometric" ||
+                exercise?.category === "core" ||
+                exercise?.category === "upper-body"
+              );
             })
             .map((item) => annotateItem(item, `Readiness 调整：保持受控速度，强度封顶 ${adjustment.intensityCap ?? "RPE 7"}。`))
         };
@@ -178,6 +205,7 @@ function applyStrengthOnly(day: TrainingDay, adjustment: DailyTrainingAdjustment
 
 function recoveryMainBlock(adjustment: DailyTrainingAdjustment): TrainingBlock {
   const patellarCaution = adjustment.cautionFlags.some((flag) => flag.includes("髌腱"));
+  const achillesCaution = adjustment.cautionFlags.some((flag) => flag.includes("跟腱"));
   const items: TrainingItem[] = [
     { exerciseId: "easy-walk", duration: "10–20 分钟", intensity: "low", notes: "保持能完整说话。" },
     { exerciseId: "easy-bike", duration: "10–20 分钟", intensity: "low", notes: "可替代步行或作为 Zone 2。" },
@@ -192,6 +220,25 @@ function recoveryMainBlock(adjustment: DailyTrainingAdjustment): TrainingBlock {
             notes: "仅在疼痛不超过 3/10 时做。"
           }
         ]),
+    ...(achillesCaution
+      ? []
+      : [
+          {
+            exerciseId: "calf-isometric-hold",
+            sets: 2,
+            duration: "20–30 秒",
+            intensity: "low" as const,
+            notes: "仅在跟腱没有尖锐痛、疼痛不超过 3/10 时做。"
+          }
+        ]),
+    {
+      exerciseId: "split-squat-isometric",
+      sets: 1,
+      duration: "20 秒/侧",
+      side: "each",
+      intensity: "low",
+      notes: "可选；只做无痛、浅幅、稳定版本。"
+    },
     { exerciseId: "foot-ball-release", duration: "1 分钟/侧", intensity: "low" },
     { exerciseId: "legs-up-breathing", duration: "4–6 分钟", intensity: "low" }
   ];

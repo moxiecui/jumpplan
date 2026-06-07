@@ -9,7 +9,6 @@ export type PlanLength =
   | "3-days"
   | "7-days"
   | "10-days"
-  | "14-days"
   | "21-days"
   | "4-weeks";
 

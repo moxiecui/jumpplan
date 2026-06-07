@@ -16,9 +16,11 @@ export default function RootLayout() {
         <Stack.Screen name="today" options={{ title: "Today" }} />
         <Stack.Screen name="checkin" options={{ title: "Daily Check-in" }} />
         <Stack.Screen name="adaptive-plan" options={{ title: "Adaptive Plan" }} />
+        <Stack.Screen name="glossary/index" options={{ title: "Glossary" }} />
+        <Stack.Screen name="glossary/[id]" options={{ title: "Glossary Detail" }} />
         <Stack.Screen name="nutrition" options={{ title: "Nutrition" }} />
         <Stack.Screen name="nutrition/[id]" options={{ title: "Nutrition Detail" }} />
-        <Stack.Screen name="plan/index" options={{ title: "14-Day Plan" }} />
+        <Stack.Screen name="plan/index" options={{ title: "21-Day Plan" }} />
         <Stack.Screen name="plan/[day]" options={{ title: "Day Detail" }} />
         <Stack.Screen name="exercise/[id]" options={{ title: "Exercise" }} />
       </Stack>

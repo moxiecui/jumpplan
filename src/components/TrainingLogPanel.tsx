@@ -33,9 +33,11 @@ function formatUpdatedAt(value: string) {
 }
 
 export function TrainingLogPanel() {
-  const { entries } = useTrainingLog();
+  const { dayCompletions, entries } = useTrainingLog();
   const [expanded, setExpanded] = useState(false);
   const recentEntries = entries.slice(0, 8);
+  const recentDayCompletions = dayCompletions.slice(0, 4);
+  const totalRecords = entries.length + dayCompletions.length;
 
   return (
     <View style={styles.card}>
@@ -44,12 +46,31 @@ export function TrainingLogPanel() {
           <Text style={styles.title}>最近训练记录</Text>
           <Text style={styles.subtitle}>本次打开期间保存，刷新后会清空。</Text>
         </View>
-        <Text style={styles.badge}>{entries.length}</Text>
+        <Text style={styles.badge}>{totalRecords}</Text>
         <Text style={styles.chevron}>{expanded ? "⌃" : "›"}</Text>
       </Pressable>
 
       {expanded ? (
         <View style={styles.body}>
+          {recentDayCompletions.length ? (
+            <View style={styles.daySummaryGroup}>
+              <Text style={styles.groupTitle}>已结束训练日</Text>
+              {recentDayCompletions.map((completion) => (
+                <View key={completion.id} style={styles.daySummary}>
+                  <Text style={styles.exerciseName}>
+                    {completion.dayLabel} · {completion.dayTitle}
+                  </Text>
+                  <Text style={styles.meta}>
+                    {formatUpdatedAt(completion.completedAt)} · 完成 {completion.completedCount} · 降级{" "}
+                    {completion.regressedCount} · 跳过 {completion.skippedCount} · 未记录{" "}
+                    {completion.unloggedCount}
+                  </Text>
+                  {completion.note ? <Text style={styles.detail}>备注：{completion.note}</Text> : null}
+                </View>
+              ))}
+            </View>
+          ) : null}
+
           {recentEntries.length ? (
             recentEntries.map((entry) => (
               <View key={entry.id} style={styles.entry}>
@@ -64,9 +85,9 @@ export function TrainingLogPanel() {
                 {entry.note ? <Text style={styles.detail}>备注：{entry.note}</Text> : null}
               </View>
             ))
-          ) : (
-            <Text style={styles.emptyText}>还没有记录。训练时点“完成 / 降级 / 跳过”后会出现在这里。</Text>
-          )}
+          ) : !recentDayCompletions.length ? (
+            <Text style={styles.emptyText}>还没有动作记录。训练时点“完成 / 降级 / 跳过”后会出现在这里。</Text>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -124,6 +145,23 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 14,
     paddingBottom: 14
+  },
+  daySummaryGroup: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#d8dee4"
+  },
+  groupTitle: {
+    marginBottom: 8,
+    fontSize: 13,
+    color: "#57606a",
+    fontWeight: "900"
+  },
+  daySummary: {
+    marginBottom: 10,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#dafbe1"
   },
   entry: {
     paddingVertical: 12,

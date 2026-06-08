@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
+import { DayCompletionPanel } from "@/components/DayCompletionPanel";
 import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
@@ -29,6 +30,7 @@ export default function TodayScreen() {
   );
   const visibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
   const relatedTerms = useMemo(() => getRelatedGlossaryTermsForDay(visibleDay), [visibleDay]);
+  const totalActions = visibleDay.blocks.reduce((count, block) => count + block.items.length, 0);
   const focusFlags = [
     day.upperBodyIncluded ? "上肢" : undefined,
     day.coreIncluded ? "核心" : undefined,
@@ -119,6 +121,12 @@ export default function TodayScreen() {
         <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.day} 天`} />
       ))}
 
+      <DayCompletionPanel
+        dayKey={`day-${visibleDay.day}`}
+        dayLabel={`第 ${visibleDay.day} 天`}
+        dayTitle={visibleDay.title}
+        totalActions={totalActions}
+      />
       <TrainingLogPanel />
 
       <DailyNutritionCard dayType={day.type} adjustment={readinessEntry?.adjustment} compact />

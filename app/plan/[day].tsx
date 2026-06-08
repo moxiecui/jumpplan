@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
+import { DayCompletionPanel } from "@/components/DayCompletionPanel";
 import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
@@ -37,6 +38,7 @@ export default function DayDetailScreen() {
     day.isometricIncluded ? "等长" : undefined
   ].filter(Boolean) as string[];
   const relatedTerms = getRelatedGlossaryTermsForDay(day);
+  const totalActions = day.blocks.reduce((count, block) => count + block.items.length, 0);
   const positioning = [
     day.goal,
     day.upperBodyIncluded ? "包含上肢支持" : undefined,
@@ -86,6 +88,12 @@ export default function DayDetailScreen() {
         <DaySection key={block.type} block={block} dayLabel={`第 ${day.day} 天`} />
       ))}
 
+      <DayCompletionPanel
+        dayKey={`day-${day.day}`}
+        dayLabel={`第 ${day.day} 天`}
+        dayTitle={day.title}
+        totalActions={totalActions}
+      />
       <TrainingLogPanel />
 
       <DailyNutritionCard dayType={day.type} compact />

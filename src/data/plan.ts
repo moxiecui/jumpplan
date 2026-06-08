@@ -159,7 +159,7 @@ export const trainingPlan: TrainingDay[] = [
     performanceFocus: ["上肢推拉", "肩胛控制", "核心抗旋转", "低冲击弹性"],
     upperBodyIncluded: true,
     coreIncluded: true,
-    readinessRule: "这不是高冲击日；Pogo 只有 tendon status green 才做。",
+    readinessRule: "今天不是高冲击日。只有跟腱和髌腱状态良好时才做少量 Pogo；如果晨僵或疼痛 ≥ 3/10，直接跳过。",
     blocks: [
       { type: "warmup", title: "Complete Warmup", items: [warmupBase[0], warmupBase[1], warmupBase[2], { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" }] },
       {
@@ -193,7 +193,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low", notes: "作为篮球前质量检查。" },
-          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", notes: "只在绿色状态做低强度技术跳，可跳过。" }
+          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", notes: "只在跟腱/髌腱状态良好时做低强度技术跳，可跳过。" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "easy-walk", duration: "10–15 分钟", intensity: "low" }, { exerciseId: "foot-ball-release", duration: "1 分钟/侧", intensity: "low" }] },
@@ -448,7 +448,7 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "low-pogo", sets: 2, reps: "10 次", intensity: "low", rest: "60 秒" },
           { exerciseId: "cmj", sets: 4, reps: "2 次", intensity: "medium", rest: "90–120 秒", notes: "85–90%，记录左右感觉。" },
           { exerciseId: "approach-jump", sets: 3, reps: "2 次", intensity: "medium", rest: "90–120 秒" },
-          { exerciseId: "single-leg-landing-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", notes: "只有 tendon status green 才做。" }
+          { exerciseId: "single-leg-landing-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", notes: "只有跟腱/髌腱状态良好时才做。" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: recoveryFinish },

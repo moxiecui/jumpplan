@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { getTrainingBlockTitle } from "@/logic/trainingDisplay";
 import type { GeneratedAdaptivePlan } from "@/types/adaptivePlan";
 
 interface AdaptivePlanPreviewProps {
@@ -49,7 +50,7 @@ export function AdaptivePlanPreview({ plan }: AdaptivePlanPreviewProps) {
               <Text style={styles.dayText}>重点：{day.performanceFocus.slice(0, 4).join(" / ")}</Text>
             ) : null}
             <Text style={styles.dayText}>
-              训练块：{day.blocks.map((block) => block.title).join(" / ")}
+              训练块：{day.blocks.map((block) => getTrainingBlockTitle(block)).join(" / ")}
             </Text>
           </View>
         ))}

@@ -3,19 +3,20 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { trainingPlan } from "@/data/plan";
+import { getTrainingDayTypeLabel } from "@/logic/trainingDisplay";
 import type { TrainingDay, TrainingDayType } from "@/types/training";
 
 type PlanFilter = TrainingDayType | "upper-body" | "core" | "isometric" | "all";
 
 const filterOptions: Array<{ value: PlanFilter; label: string }> = [
   { value: "all", label: "全部" },
-  { value: "jump", label: "Jump" },
-  { value: "strength", label: "Strength" },
-  { value: "basketball", label: "Basketball" },
-  { value: "recovery", label: "Recovery" },
-  { value: "upper-body", label: "Upper Body" },
-  { value: "core", label: "Core" },
-  { value: "isometric", label: "Isometric" }
+  { value: "jump", label: "弹跳" },
+  { value: "strength", label: "力量" },
+  { value: "basketball", label: "篮球" },
+  { value: "recovery", label: "恢复" },
+  { value: "upper-body", label: "上肢" },
+  { value: "core", label: "核心" },
+  { value: "isometric", label: "等长" }
 ];
 
 function matchesFilter(day: TrainingDay, filter: PlanFilter) {
@@ -48,7 +49,7 @@ export default function PlanScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>21-Day Plan</Text>
+      <Text style={styles.title}>21天计划</Text>
       <Text style={styles.subtitle}>三阶段垂直弹跳计划：控制建立、力量转化、整合测试。</Text>
 
       <Pressable style={styles.generateButton} onPress={() => router.push("/adaptive-plan")}>
@@ -81,12 +82,12 @@ export default function PlanScreen() {
           }
         >
           <View style={styles.dayHeader}>
-            <Text style={styles.dayNumber}>Day {day.day}</Text>
-            <Text style={styles.dayType}>{day.type}</Text>
+            <Text style={styles.dayNumber}>第 {day.day} 天</Text>
+            <Text style={styles.dayType}>{getTrainingDayTypeLabel(day.type)}</Text>
           </View>
           {day.phaseTitle ? (
             <Text style={styles.phase}>
-              Phase {day.phase} · {day.phaseTitle}
+              第 {day.phase} 阶段 · {day.phaseTitle}
             </Text>
           ) : null}
           <Text style={styles.dayTitle}>{day.title}</Text>

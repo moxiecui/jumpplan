@@ -98,7 +98,7 @@ export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
       <DetailList title="降低难度" items={exercise.regressions} />
       <DetailList title="提高难度" items={exercise.progressions} />
       <DetailList title="疼痛 / 安全规则" items={exercise.painRules} />
-      <RelatedTermsSection terms={relatedTerms} />
+      <RelatedTermsSection terms={relatedTerms} defaultExpanded />
       <ExerciseVideoSection exercise={exercise} />
     </View>
   );

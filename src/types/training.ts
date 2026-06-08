@@ -9,6 +9,12 @@ export type TrainingDayType =
 
 export type Intensity = "low" | "medium" | "high";
 
+export type TrainingItemCompletionStatus =
+  | "not-started"
+  | "completed"
+  | "skipped"
+  | "regressed";
+
 export type TrainingBlockType =
   | "warmup"
   | "main"

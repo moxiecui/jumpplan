@@ -6,10 +6,12 @@ import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { getTodayTrainingDay } from "@/logic/schedule";
 import { applyAdjustmentToDay } from "@/logic/trainingAdjustment";
+import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
@@ -37,50 +39,29 @@ export default function TodayScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.navRow}>
         <Pressable style={styles.navButton} onPress={() => router.push("/plan")}>
-          <Text style={styles.navButtonText}>21-Day Plan</Text>
+          <Text style={styles.navButtonText}>21天计划</Text>
         </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/checkin")}>
-          <Text style={styles.navButtonText}>Check-in</Text>
+          <Text style={styles.navButtonText}>状态</Text>
         </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/nutrition" as never)}>
-          <Text style={styles.navButtonText}>Nutrition</Text>
+          <Text style={styles.navButtonText}>营养</Text>
         </Pressable>
-        <Pressable style={styles.navButton} onPress={() => router.push("/glossary" as never)}>
-          <Text style={styles.navButtonText}>术语</Text>
+        <Pressable style={styles.navTextLink} onPress={() => router.push("/glossary" as never)}>
+          <Text style={styles.navTextLinkText}>术语词典</Text>
         </Pressable>
       </View>
 
-      <Pressable style={styles.adaptiveButton} onPress={() => router.push("/adaptive-plan")}>
-        <Text style={styles.adaptiveButtonText}>根据反馈调整计划</Text>
-      </Pressable>
-
+      <Text style={styles.sectionKicker}>今日概览</Text>
       <Text style={styles.eyebrow}>
-        Today · Day {day.day} · Phase {day.phase}
+        第 {day.day} 天 · 第 {day.phase} 阶段
       </Text>
       <Text style={styles.title}>{day.title}</Text>
       <View style={styles.badgeRow}>
-        <Text style={styles.type}>{day.type}</Text>
+        <Text style={styles.type}>{getTrainingDayTypeLabel(day.type)}</Text>
         {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
       </View>
       <Text style={styles.goal}>{day.goal}</Text>
-
-      {day.performanceFocus?.length ? (
-        <View style={styles.focusCard}>
-          <Text style={styles.focusTitle}>今日表现重点</Text>
-          <View style={styles.chipRow}>
-            {day.performanceFocus.map((focus) => (
-              <Text key={focus} style={styles.focusChip}>
-                {focus}
-              </Text>
-            ))}
-          </View>
-          <Text style={styles.focusText}>右侧再平衡：右脚 tripod、右膝轨迹和安静落地优先。</Text>
-          <Text style={styles.focusText}>腘绳肌重点：有酸痛时不做 Nordic、硬 RDL、冲刺或最大跳。</Text>
-          {focusFlags.length ? (
-            <Text style={styles.focusText}>支持模块：{focusFlags.join(" / ")}</Text>
-          ) : null}
-        </View>
-      ) : null}
 
       <View style={styles.readinessCard}>
         <Text style={styles.readinessTitle}>今日 Readiness 评估</Text>
@@ -116,6 +97,8 @@ export default function TodayScreen() {
         )}
       </View>
 
+      <Text style={styles.sectionTitle}>今日训练内容</Text>
+
       {showAdjustedPlan && readinessEntry ? (
         <View style={styles.adjustedBanner}>
           <Text style={styles.adjustedTitle}>正在预览 Readiness 调整版</Text>
@@ -123,40 +106,68 @@ export default function TodayScreen() {
         </View>
       ) : null}
 
-      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
-      <RelatedTermsSection terms={relatedTerms} />
-
-      <DailyNutritionCard dayType={day.type} adjustment={readinessEntry?.adjustment} compact />
-
       {visibleDay.readinessRule ? (
         <View style={styles.warning}>
-          <Text style={styles.warningTitle}>Readiness Warning</Text>
-          <Text style={styles.warningText}>{visibleDay.readinessRule}</Text>
+          <Text style={styles.warningTitle}>今日状态提醒</Text>
+          <Text style={styles.warningText}>{normalizeTrainingCopy(visibleDay.readinessRule)}</Text>
         </View>
       ) : null}
 
+      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
+
       {visibleDay.blocks.map((block, index) => (
-        <DaySection key={`${block.type}-${index}`} block={block} />
+        <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.day} 天`} />
       ))}
+
+      <TrainingLogPanel />
+
+      <DailyNutritionCard dayType={day.type} adjustment={readinessEntry?.adjustment} compact />
+
+      {day.performanceFocus?.length ? (
+        <View style={styles.focusCard}>
+          <Text style={styles.focusTitle}>右侧发力 / 腘绳肌 / 核心重点</Text>
+          <View style={styles.chipRow}>
+            {day.performanceFocus.map((focus) => (
+              <Text key={focus} style={styles.focusChip}>
+                {focus}
+              </Text>
+            ))}
+          </View>
+          <Text style={styles.focusText}>右侧再平衡：右脚 tripod、右膝轨迹和安静落地优先。</Text>
+          <Text style={styles.focusText}>腘绳肌重点：有酸痛时不做 Nordic、硬 RDL、冲刺或最大跳。</Text>
+          {focusFlags.length ? (
+            <Text style={styles.focusText}>支持模块：{focusFlags.join(" / ")}</Text>
+          ) : null}
+        </View>
+      ) : null}
+
+      <RelatedTermsSection terms={relatedTerms} />
+
+      <Pressable style={styles.adaptiveLink} onPress={() => router.push("/adaptive-plan")}>
+        <Text style={styles.adaptiveLinkText}>根据反馈调整计划</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 18,
-    paddingBottom: 36
+    padding: 14,
+    paddingBottom: 96
   },
   navRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 10,
-    marginBottom: 22
+    gap: 8,
+    marginBottom: 12,
+    alignItems: "center"
   },
   navButton: {
-    minWidth: "22%",
+    minWidth: "29%",
     flexGrow: 1,
-    paddingVertical: 12,
+    minHeight: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#0969da",
@@ -165,18 +176,30 @@ const styles = StyleSheet.create({
   },
   navButtonText: {
     color: "#0969da",
-    fontWeight: "800"
+    fontWeight: "800",
+    fontSize: 13
   },
-  adaptiveButton: {
-    marginBottom: 22,
-    paddingVertical: 13,
-    borderRadius: 8,
-    backgroundColor: "#0969da",
-    alignItems: "center"
+  navTextLink: {
+    minHeight: 36,
+    paddingHorizontal: 6,
+    justifyContent: "center"
   },
-  adaptiveButtonText: {
-    color: "#ffffff",
+  navTextLinkText: {
+    color: "#0969da",
+    fontSize: 13,
     fontWeight: "900"
+  },
+  sectionKicker: {
+    marginTop: 2,
+    fontSize: 14,
+    color: "#57606a",
+    fontWeight: "900"
+  },
+  sectionTitle: {
+    marginTop: 20,
+    fontSize: 19,
+    fontWeight: "900",
+    color: "#1f2328"
   },
   eyebrow: {
     fontSize: 13,
@@ -186,7 +209,8 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 6,
-    fontSize: 30,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: "900",
     color: "#1f2328"
   },
@@ -257,8 +281,8 @@ const styles = StyleSheet.create({
     color: "#57606a"
   },
   readinessCard: {
-    marginTop: 18,
-    padding: 16,
+    marginTop: 16,
+    padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#d8dee4",
@@ -351,7 +375,7 @@ const styles = StyleSheet.create({
     color: "#24292f"
   },
   warning: {
-    marginTop: 18,
+    marginTop: 12,
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
@@ -368,5 +392,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#24292f"
+  },
+  adaptiveLink: {
+    minHeight: 44,
+    marginTop: 18,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0969da",
+    alignItems: "center",
+    backgroundColor: "#ffffff"
+  },
+  adaptiveLinkText: {
+    color: "#0969da",
+    fontSize: 14,
+    fontWeight: "900"
   }
 });

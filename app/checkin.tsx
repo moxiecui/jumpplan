@@ -131,7 +131,7 @@ export default function CheckInScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Daily Check-in</Text>
+      <Text style={styles.title}>今日状态</Text>
       <Text style={styles.subtitle}>
         手动输入 Oura 风格数据和肌腱状态。Oura 只是参考信号，疼痛和动作质量优先。
       </Text>

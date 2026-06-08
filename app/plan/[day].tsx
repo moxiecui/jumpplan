@@ -5,9 +5,11 @@ import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { getTrainingDay } from "@/logic/schedule";
+import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
@@ -24,7 +26,7 @@ export default function DayDetailScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.missingTitle}>找不到这个训练日</Text>
-        <Text style={styles.missingText}>请从 21-Day Plan 选择 Day 1 到 Day 21。</Text>
+        <Text style={styles.missingText}>请从 21天计划选择第 1 天到第 21 天。</Text>
       </View>
     );
   }
@@ -35,22 +37,33 @@ export default function DayDetailScreen() {
     day.isometricIncluded ? "等长" : undefined
   ].filter(Boolean) as string[];
   const relatedTerms = getRelatedGlossaryTermsForDay(day);
+  const positioning = [
+    day.goal,
+    day.upperBodyIncluded ? "包含上肢支持" : undefined,
+    day.coreIncluded ? "包含核心" : undefined,
+    day.isometricIncluded ? "包含等长" : undefined,
+    day.type === "recovery" || day.type === "rest" ? "不做最大跳、不做 PAP" : undefined
+  ]
+    .filter(Boolean)
+    .join("；");
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>
-        Day {day.day} · Phase {day.phase}
+        第 {day.day} 天 · 第 {day.phase} 阶段
       </Text>
       <Text style={styles.title}>{day.title}</Text>
       <View style={styles.badgeRow}>
-        <Text style={styles.type}>{day.type}</Text>
+        <Text style={styles.type}>{getTrainingDayTypeLabel(day.type)}</Text>
         {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
       </View>
-      <Text style={styles.goal}>{day.goal}</Text>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>今日定位</Text>
+        <Text style={styles.goal}>{positioning}</Text>
+      </View>
 
       {day.performanceFocus?.length ? (
-        <View style={styles.focusCard}>
-          <Text style={styles.focusTitle}>表现重点</Text>
+        <View style={styles.focusCompact}>
           <View style={styles.chipRow}>
             {day.performanceFocus.map((focus) => (
               <Text key={focus} style={styles.focusChip}>
@@ -58,35 +71,34 @@ export default function DayDetailScreen() {
               </Text>
             ))}
           </View>
-          <Text style={styles.focusText}>右侧再平衡：右脚外旋、右膝轨迹和落地声音都要记录。</Text>
-          <Text style={styles.focusText}>腘绳肌重点：测试前不安排高疲劳离心。</Text>
           {focusFlags.length ? <Text style={styles.focusText}>支持模块：{focusFlags.join(" / ")}</Text> : null}
         </View>
       ) : null}
 
       {day.readinessRule ? (
         <View style={styles.warning}>
-          <Text style={styles.warningTitle}>Readiness Warning</Text>
-          <Text style={styles.warningText}>{day.readinessRule}</Text>
+          <Text style={styles.warningTitle}>今日状态提醒</Text>
+          <Text style={styles.warningText}>{normalizeTrainingCopy(day.readinessRule)}</Text>
         </View>
       ) : null}
 
-      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
-      <RelatedTermsSection terms={relatedTerms} />
-
       {day.blocks.map((block) => (
-        <DaySection key={block.type} block={block} />
+        <DaySection key={block.type} block={block} dayLabel={`第 ${day.day} 天`} />
       ))}
 
+      <TrainingLogPanel />
+
       <DailyNutritionCard dayType={day.type} compact />
+      <RelatedTermsSection terms={relatedTerms} />
+      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 18,
-    paddingBottom: 36
+    padding: 14,
+    paddingBottom: 96
   },
   center: {
     flex: 1,
@@ -114,7 +126,8 @@ const styles = StyleSheet.create({
   },
   title: {
     marginTop: 6,
-    fontSize: 30,
+    fontSize: 28,
+    lineHeight: 34,
     fontWeight: "900",
     color: "#1f2328"
   },
@@ -144,27 +157,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800"
   },
-  goal: {
+  summaryCard: {
     marginTop: 14,
-    fontSize: 16,
-    lineHeight: 24,
-    color: "#24292f"
-  },
-  focusCard: {
-    marginTop: 18,
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#d8dee4",
     backgroundColor: "#ffffff"
   },
-  focusTitle: {
-    fontSize: 16,
+  summaryTitle: {
+    fontSize: 14,
     fontWeight: "900",
-    color: "#1f2328"
+    color: "#57606a"
+  },
+  goal: {
+    marginTop: 6,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#24292f"
+  },
+  focusCompact: {
+    marginTop: 10
   },
   chipRow: {
-    marginTop: 10,
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8
@@ -185,7 +200,7 @@ const styles = StyleSheet.create({
     color: "#57606a"
   },
   warning: {
-    marginTop: 18,
+    marginTop: 12,
     padding: 14,
     borderRadius: 8,
     borderWidth: 1,

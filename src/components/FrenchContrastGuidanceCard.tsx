@@ -29,7 +29,7 @@ function getStatus(readinessEntry?: ReadinessEntry) {
 
   if (!readinessEntry) {
     return {
-      label: "先完成 Check-in",
+      label: "先完成今日状态",
       tone: "neutral" as const,
       text: "没有今天的肌腱状态时，只把这个模块当成阅读参考，不要临时加高强度转化训练。"
     };

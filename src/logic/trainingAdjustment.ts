@@ -245,7 +245,7 @@ function recoveryMainBlock(adjustment: DailyTrainingAdjustment): TrainingBlock {
 
   return {
     type: "main",
-    title: "Main Training（恢复替代）",
+    title: "主训练（恢复替代）",
     items
   };
 }
@@ -294,7 +294,7 @@ function applyTestNotRecommended(day: TrainingDay, adjustment: DailyTrainingAdju
 
         return {
           ...block,
-          title: "Main Training（测试降级）",
+          title: "主训练（测试降级）",
           items: testReplacementItems
         };
       }),

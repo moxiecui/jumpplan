@@ -1,12 +1,17 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { getExerciseById } from "@/data/exercises";
 import { ExerciseVideoSection } from "@/components/ExerciseVideoSection";
-import type { Exercise, Intensity, TrainingItem } from "@/types/training";
+import { useTrainingLog } from "@/context/TrainingLogContext";
+import { normalizeTrainingCopy } from "@/logic/trainingDisplay";
+import type { Exercise, Intensity, TrainingItem, TrainingItemCompletionStatus } from "@/types/training";
 
 interface ExerciseRowProps {
   item: TrainingItem;
+  logKey?: string;
+  dayLabel?: string;
+  blockTitle?: string;
 }
 
 const sideLabels: Record<NonNullable<TrainingItem["side"]>, string> = {
@@ -35,6 +40,23 @@ const categoryLabels: Record<Exercise["category"], string> = {
   isometric: "等长",
   "basketball-skill": "篮球专项"
 };
+
+const statusLabels: Record<TrainingItemCompletionStatus, string> = {
+  "not-started": "未开始",
+  completed: "完成",
+  skipped: "跳过",
+  regressed: "降级"
+};
+
+const regressionReasons = [
+  "跟腱不适",
+  "髌腱不适",
+  "腘绳肌酸痛",
+  "右膝轨迹不稳",
+  "右脚外旋明显",
+  "睡眠/状态差",
+  "时间不够"
+];
 
 function formatPrescription(item: TrainingItem): string {
   const parts = [
@@ -92,10 +114,16 @@ function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
   );
 }
 
-export function ExerciseRow({ item }: ExerciseRowProps) {
-  const [completed, setCompleted] = useState(false);
+export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowProps) {
+  const { clearTrainingLogEntry, getTrainingLogEntry, upsertTrainingLogEntry } = useTrainingLog();
+  const logId = logKey ?? item.exerciseId;
+  const existingLogEntry = getTrainingLogEntry(logId);
+  const [status, setStatus] = useState<TrainingItemCompletionStatus>(existingLogEntry?.status ?? "not-started");
   const [expanded, setExpanded] = useState(false);
+  const [selectedReasons, setSelectedReasons] = useState<string[]>(existingLogEntry?.reasons ?? []);
+  const [skipNote, setSkipNote] = useState(existingLogEntry?.note ?? "");
   const exercise = getExerciseById(item.exerciseId);
+  const completed = status === "completed";
 
   const toggleExpanded = () => {
     if (!exercise) {
@@ -105,36 +133,139 @@ export function ExerciseRow({ item }: ExerciseRowProps) {
     setExpanded((value) => !value);
   };
 
+  const writeLogEntry = (nextStatus: TrainingItemCompletionStatus, reasons = selectedReasons, note = skipNote) => {
+    if (nextStatus === "not-started") {
+      clearTrainingLogEntry(logId);
+      return;
+    }
+
+    upsertTrainingLogEntry({
+      id: logId,
+      exerciseId: item.exerciseId,
+      exerciseName: exercise?.nameZh ?? `未知动作: ${item.exerciseId}`,
+      status: nextStatus,
+      dayLabel,
+      blockTitle,
+      reasons: nextStatus === "regressed" && reasons.length ? reasons : undefined,
+      note: nextStatus === "skipped" && note.trim() ? note.trim() : undefined
+    });
+  };
+
+  const setNextStatus = (nextStatus: TrainingItemCompletionStatus) => {
+    const resolvedStatus = status === nextStatus ? "not-started" : nextStatus;
+    setStatus(resolvedStatus);
+    writeLogEntry(resolvedStatus);
+    if (resolvedStatus !== "regressed") {
+      setSelectedReasons([]);
+    }
+    if (resolvedStatus !== "skipped") {
+      setSkipNote("");
+    }
+  };
+
+  const toggleReason = (reason: string) => {
+    setSelectedReasons((current) => {
+      const nextReasons = current.includes(reason) ? current.filter((item) => item !== reason) : [...current, reason];
+      if (status === "regressed") {
+        writeLogEntry("regressed", nextReasons, skipNote);
+      }
+      return nextReasons;
+    });
+  };
+
+  const updateSkipNote = (note: string) => {
+    setSkipNote(note);
+    if (status === "skipped") {
+      writeLogEntry("skipped", selectedReasons, note);
+    }
+  };
+
   return (
-    <View style={[styles.row, completed && styles.completedRow, !exercise && styles.warningRow]}>
+    <View
+      style={[
+        styles.row,
+        status === "completed" && styles.completedRow,
+        status === "skipped" && styles.skippedRow,
+        status === "regressed" && styles.regressedRow,
+        !exercise && styles.warningRow
+      ]}
+    >
       <Pressable
         accessibilityRole="checkbox"
         accessibilityState={{ checked: completed }}
-        onPress={() => setCompleted((value) => !value)}
+        onPress={() => setNextStatus(completed ? "not-started" : "completed")}
         style={[styles.checkbox, completed && styles.checkboxChecked]}
       >
         <Text style={styles.checkboxText}>{completed ? "✓" : ""}</Text>
       </Pressable>
 
-      <Pressable
-        accessibilityRole={exercise ? "button" : "text"}
-        accessibilityState={exercise ? { expanded } : undefined}
-        disabled={!exercise}
-        onPress={toggleExpanded}
-        style={styles.content}
-      >
-        <Text style={styles.name}>
-          {exercise ? exercise.nameZh : `未知动作: ${item.exerciseId}`}
-        </Text>
-        {exercise?.nameEn ? <Text style={styles.nameEn}>{exercise.nameEn}</Text> : null}
-        <Text style={styles.prescription}>{formatPrescription(item)}</Text>
-        {item.notes ? <Text style={styles.notes}>{item.notes}</Text> : null}
-        {exercise ? (
-          <Text style={styles.expandHint}>{expanded ? "收起动作细节" : "展开动作细节"}</Text>
+      <View style={styles.content}>
+        <Pressable
+          accessibilityRole={exercise ? "button" : "text"}
+          accessibilityState={exercise ? { expanded } : undefined}
+          disabled={!exercise}
+          onPress={toggleExpanded}
+          style={styles.summaryTapZone}
+        >
+          <View style={styles.titleRow}>
+            <View style={styles.titleWrap}>
+              <Text style={styles.name}>
+                {exercise ? exercise.nameZh : `未知动作: ${item.exerciseId}`}
+              </Text>
+              {exercise?.nameEn ? <Text style={styles.nameEn}>{exercise.nameEn}</Text> : null}
+            </View>
+            {exercise ? <Text style={styles.chevron}>{expanded ? "⌃" : "›"}</Text> : null}
+          </View>
+          <Text style={styles.prescription}>{formatPrescription(item)}</Text>
+          {item.notes ? <Text style={styles.notes}>{normalizeTrainingCopy(item.notes)}</Text> : null}
+          <View style={styles.statusRow}>
+            <Text style={[styles.statusPill, styles[`status-${status}`]]}>{statusLabels[status]}</Text>
+            {exercise ? <Text style={styles.tapHint}>点击查看动作原因、指导和注意事项</Text> : null}
+          </View>
+          {exercise ? (
+            <Text style={styles.expandHint}>{expanded ? "收起动作细节" : "展开动作细节"}</Text>
+          ) : null}
+        </Pressable>
+        <View style={styles.actionRow}>
+          {(["completed", "regressed", "skipped"] as TrainingItemCompletionStatus[]).map((nextStatus) => (
+            <Pressable
+              key={nextStatus}
+              style={[styles.statusButton, status === nextStatus && styles.statusButtonActive]}
+              onPress={() => setNextStatus(nextStatus)}
+            >
+              <Text style={[styles.statusButtonText, status === nextStatus && styles.statusButtonTextActive]}>
+                {statusLabels[nextStatus]}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        {status === "regressed" ? (
+          <View style={styles.reasonWrap}>
+            {regressionReasons.map((reason) => (
+              <Pressable
+                key={reason}
+                style={[styles.reasonChip, selectedReasons.includes(reason) && styles.reasonChipActive]}
+                onPress={() => toggleReason(reason)}
+              >
+                <Text style={[styles.reasonText, selectedReasons.includes(reason) && styles.reasonTextActive]}>
+                  {reason}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
+        {status === "skipped" ? (
+          <TextInput
+            style={styles.skipInput}
+            value={skipNote}
+            onChangeText={updateSkipNote}
+            placeholder="跳过原因，可选"
+            multiline
+          />
         ) : null}
         {expanded && exercise ? <InlineExerciseDetails exercise={exercise} /> : null}
         {!exercise ? <Text style={styles.warningText}>请检查训练数据中的 exerciseId。</Text> : null}
-      </Pressable>
+      </View>
     </View>
   );
 }
@@ -152,6 +283,14 @@ const styles = StyleSheet.create({
   },
   completedRow: {
     opacity: 0.72
+  },
+  skippedRow: {
+    borderColor: "#d0d7de",
+    backgroundColor: "#f6f8fa"
+  },
+  regressedRow: {
+    borderColor: "#d29922",
+    backgroundColor: "#fff8c5"
   },
   warningRow: {
     borderColor: "#f0a500",
@@ -179,10 +318,27 @@ const styles = StyleSheet.create({
   content: {
     flex: 1
   },
+  summaryTapZone: {
+    minHeight: 44
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8
+  },
+  titleWrap: {
+    flex: 1
+  },
   name: {
     fontSize: 16,
     fontWeight: "700",
     color: "#1f2328"
+  },
+  chevron: {
+    fontSize: 24,
+    lineHeight: 26,
+    color: "#0969da",
+    fontWeight: "900"
   },
   nameEn: {
     marginTop: 2,
@@ -200,6 +356,111 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     color: "#6e7781"
+  },
+  statusRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+    fontSize: 12,
+    fontWeight: "900",
+    overflow: "hidden"
+  },
+  "status-not-started": {
+    backgroundColor: "#eaeef2",
+    color: "#57606a"
+  },
+  "status-completed": {
+    backgroundColor: "#dafbe1",
+    color: "#116329"
+  },
+  "status-skipped": {
+    backgroundColor: "#eaeef2",
+    color: "#57606a"
+  },
+  "status-regressed": {
+    backgroundColor: "#fff8c5",
+    color: "#6e5500"
+  },
+  tapHint: {
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#57606a"
+  },
+  actionRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    gap: 8,
+    flexWrap: "wrap"
+  },
+  statusButton: {
+    minHeight: 44,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  statusButtonActive: {
+    borderColor: "#0969da",
+    backgroundColor: "#ddf4ff"
+  },
+  statusButtonText: {
+    color: "#57606a",
+    fontSize: 13,
+    fontWeight: "900"
+  },
+  statusButtonTextActive: {
+    color: "#0969da"
+  },
+  reasonWrap: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  reasonChip: {
+    minHeight: 36,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff"
+  },
+  reasonChipActive: {
+    borderColor: "#d29922",
+    backgroundColor: "#fff1a7"
+  },
+  reasonText: {
+    fontSize: 12,
+    color: "#57606a",
+    fontWeight: "800"
+  },
+  reasonTextActive: {
+    color: "#6e5500"
+  },
+  skipInput: {
+    marginTop: 10,
+    minHeight: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: "#1f2328",
+    textAlignVertical: "top"
   },
   expandHint: {
     marginTop: 8,

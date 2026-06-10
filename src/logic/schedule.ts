@@ -2,6 +2,7 @@ import { trainingPlan } from "@/data/plan";
 import type { TrainingDay } from "@/types/training";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export const DEFAULT_PLAN_START_DATE = "2026-06-07";
 export const PLAN_LENGTH_DAYS = trainingPlan.length;
 
 export function getTrainingDay(day: number): TrainingDay | undefined {
@@ -9,11 +10,7 @@ export function getTrainingDay(day: number): TrainingDay | undefined {
 }
 
 export function getTodayTrainingDay(date = new Date()): TrainingDay {
-  const startDateValue = process.env.EXPO_PUBLIC_PLAN_START_DATE;
-
-  if (!startDateValue) {
-    return trainingPlan[0];
-  }
+  const startDateValue = process.env.EXPO_PUBLIC_PLAN_START_DATE ?? DEFAULT_PLAN_START_DATE;
 
   const startDate = new Date(`${startDateValue}T00:00:00`);
   if (Number.isNaN(startDate.getTime())) {

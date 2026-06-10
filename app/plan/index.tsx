@@ -52,10 +52,6 @@ export default function PlanScreen() {
       <Text style={styles.title}>21天计划</Text>
       <Text style={styles.subtitle}>三阶段垂直弹跳计划：控制建立、力量转化、整合测试。</Text>
 
-      <Pressable style={styles.generateButton} onPress={() => router.push("/adaptive-plan")}>
-        <Text style={styles.generateButtonText}>周期结束后生成下一阶段计划</Text>
-      </Pressable>
-
       <View style={styles.filterRow}>
         {filterOptions.map((option) => (
           <Pressable
@@ -101,16 +97,21 @@ export default function PlanScreen() {
               ))}
             </View>
           ) : null}
+          <Text style={styles.openHint}>查看训练 ›</Text>
         </Pressable>
       ))}
+
+      <Pressable style={styles.generateButton} onPress={() => router.push("/adaptive-plan")}>
+        <Text style={styles.generateButtonText}>周期结束后生成下一阶段计划</Text>
+      </Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 18,
-    paddingBottom: 36
+    padding: 14,
+    paddingBottom: 96
   },
   title: {
     fontSize: 30,
@@ -125,9 +126,12 @@ const styles = StyleSheet.create({
     color: "#57606a"
   },
   generateButton: {
-    marginBottom: 18,
+    minHeight: 44,
+    marginTop: 8,
     paddingVertical: 13,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0969da",
     backgroundColor: "#0969da",
     alignItems: "center"
   },
@@ -217,5 +221,11 @@ const styles = StyleSheet.create({
     color: "#24292f",
     fontSize: 12,
     fontWeight: "700"
+  },
+  openHint: {
+    marginTop: 10,
+    color: "#0969da",
+    fontSize: 13,
+    fontWeight: "900"
   }
 });

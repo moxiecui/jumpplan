@@ -220,11 +220,13 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
           {item.notes ? <Text style={styles.notes}>{normalizeTrainingCopy(item.notes)}</Text> : null}
           <View style={styles.statusRow}>
             <Text style={[styles.statusPill, styles[`status-${status}`]]}>{statusLabels[status]}</Text>
-            {exercise ? <Text style={styles.tapHint}>点击查看动作原因、指导和注意事项</Text> : null}
+            {exercise ? (
+              <Text style={styles.tapHint}>
+                {expanded ? "点击收起动作原因、指导和注意事项" : "查看指导 ›"}
+              </Text>
+            ) : null}
           </View>
-          {exercise ? (
-            <Text style={styles.expandHint}>{expanded ? "收起动作细节" : "展开动作细节"}</Text>
-          ) : null}
+          {exercise && expanded ? <Text style={styles.expandHint}>收起动作细节</Text> : null}
         </Pressable>
         <View style={styles.actionRow}>
           {(["completed", "regressed", "skipped"] as TrainingItemCompletionStatus[]).map((nextStatus) => (
@@ -392,7 +394,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     fontSize: 12,
     lineHeight: 17,
-    color: "#57606a"
+    color: "#0969da",
+    fontWeight: "900"
   },
   actionRow: {
     marginTop: 10,

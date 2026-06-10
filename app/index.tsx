@@ -41,7 +41,7 @@ export default function TodayScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.navRow}>
         <Pressable style={styles.navButton} onPress={() => router.push("/plan")}>
-          <Text style={styles.navButtonText}>21天计划</Text>
+          <Text style={styles.navButtonText}>计划</Text>
         </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/checkin")}>
           <Text style={styles.navButtonText}>状态</Text>
@@ -49,8 +49,8 @@ export default function TodayScreen() {
         <Pressable style={styles.navButton} onPress={() => router.push("/nutrition" as never)}>
           <Text style={styles.navButtonText}>营养</Text>
         </Pressable>
-        <Pressable style={styles.navTextLink} onPress={() => router.push("/glossary" as never)}>
-          <Text style={styles.navTextLinkText}>术语词典</Text>
+        <Pressable style={styles.navButton} onPress={() => router.push("/glossary" as never)}>
+          <Text style={styles.navButtonText}>术语</Text>
         </Pressable>
       </View>
 
@@ -115,8 +115,6 @@ export default function TodayScreen() {
         </View>
       ) : null}
 
-      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
-
       {visibleDay.blocks.map((block, index) => (
         <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.day} 天`} />
       ))}
@@ -150,6 +148,7 @@ export default function TodayScreen() {
       ) : null}
 
       <RelatedTermsSection terms={relatedTerms} />
+      <FrenchContrastGuidanceCard day={day} readinessEntry={readinessEntry} />
 
       <Pressable style={styles.adaptiveLink} onPress={() => router.push("/adaptive-plan")}>
         <Text style={styles.adaptiveLinkText}>根据反馈调整计划</Text>
@@ -166,16 +165,16 @@ const styles = StyleSheet.create({
   navRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 12,
+    gap: 6,
+    marginBottom: 8,
     alignItems: "center"
   },
   navButton: {
-    minWidth: "29%",
+    minWidth: "23%",
     flexGrow: 1,
-    minHeight: 44,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    minHeight: 40,
+    paddingVertical: 7,
+    paddingHorizontal: 6,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#0969da",
@@ -186,16 +185,6 @@ const styles = StyleSheet.create({
     color: "#0969da",
     fontWeight: "800",
     fontSize: 13
-  },
-  navTextLink: {
-    minHeight: 36,
-    paddingHorizontal: 6,
-    justifyContent: "center"
-  },
-  navTextLinkText: {
-    color: "#0969da",
-    fontSize: 13,
-    fontWeight: "900"
   },
   sectionKicker: {
     marginTop: 2,

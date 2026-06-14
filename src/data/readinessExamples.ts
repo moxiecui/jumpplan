@@ -11,7 +11,15 @@ const calmSubjective: SubjectiveReadinessInput = {
   achillesStiffness: 0,
   patellarPain: 0,
   calfTightness: 1,
-  sleepQuality: 4
+  sleepQuality: 4,
+  hamstringSoreness: 0,
+  upperBodySoreness: 0,
+  generalDoms: 1,
+  generalFatigue: 2,
+  movementQualityToday: 4,
+  legsFeelHeavy: false,
+  basketballLoadLast24h: "none",
+  basketballLoadLast48h: "none"
 };
 
 export const greenHighReadiness = {
@@ -66,6 +74,7 @@ export const redTendonPain = {
     source: "mock"
   } satisfies OuraDailyReadinessInput,
   subjective: {
+    ...calmSubjective,
     date: "2026-06-05",
     achillesStiffness: 4,
     patellarPain: 2,

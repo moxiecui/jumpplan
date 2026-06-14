@@ -11,6 +11,9 @@ export interface TrainingLogEntry {
   blockTitle?: string;
   reasons?: string[];
   note?: string;
+  actualJumpContacts?: number;
+  maxIntentContacts?: number;
+  landingOnlyContacts?: number;
   updatedAt: string;
 }
 

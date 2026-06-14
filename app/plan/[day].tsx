@@ -2,14 +2,21 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 
 import { DayCompletionPanel } from "@/components/DayCompletionPanel";
+import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
+import { CycleReviewCard } from "@/components/CycleReviewCard";
+import { DayLoadCard } from "@/components/DayLoadCard";
 import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
+import { JumpTestCard } from "@/components/JumpTestCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
+import { usePerformance } from "@/context/PerformanceContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
-import { getTrainingDay } from "@/logic/schedule";
+import { getPlanDate, getTrainingDay } from "@/logic/schedule";
+import { applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 
 function todayDate() {
@@ -19,11 +26,12 @@ function todayDate() {
 export default function DayDetailScreen() {
   const { day: dayParam } = useLocalSearchParams<{ day?: string }>();
   const { getReadinessEntry } = useReadiness();
+  const { getBasketballLog } = usePerformance();
   const dayNumber = Number(Array.isArray(dayParam) ? dayParam[0] : dayParam);
-  const day = getTrainingDay(dayNumber);
+  const baseDay = getTrainingDay(dayNumber);
   const readinessEntry = getReadinessEntry(todayDate());
 
-  if (!day) {
+  if (!baseDay) {
     return (
       <View style={styles.center}>
         <Text style={styles.missingTitle}>找不到这个训练日</Text>
@@ -31,6 +39,16 @@ export default function DayDetailScreen() {
       </View>
     );
   }
+  const day9BasketballLog = getBasketballLog(getPlanDate(9));
+  const day =
+    baseDay.day === 11 &&
+    (day9BasketballLog?.loadLevel === "moderate" || day9BasketballLog?.loadLevel === "high")
+      ? applyDay11PapDowngrade(
+          baseDay,
+          `第 9 天篮球负荷为${day9BasketballLog.loadLevel === "high" ? "高" : "中等"}`
+        )
+      : baseDay;
+  const planDate = getPlanDate(day.day);
 
   const focusFlags = [
     day.upperBodyIncluded ? "上肢" : undefined,
@@ -63,6 +81,7 @@ export default function DayDetailScreen() {
         <Text style={styles.summaryTitle}>今日定位</Text>
         <Text style={styles.goal}>{positioning}</Text>
       </View>
+      <DayLoadCard day={day} />
 
       {day.performanceFocus?.length ? (
         <View style={styles.focusCompact}>
@@ -87,6 +106,13 @@ export default function DayDetailScreen() {
       {day.blocks.map((block) => (
         <DaySection key={block.type} block={block} dayLabel={`第 ${day.day} 天`} />
       ))}
+
+      {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
+      {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {day.assessmentProtocolId ? (
+        <RightSideAssessmentCard date={planDate} dayNumber={day.day as 1 | 14 | 20 | 21} />
+      ) : null}
+      {day.day === 21 ? <CycleReviewCard /> : null}
 
       <DayCompletionPanel
         dayKey={`day-${day.day}`}

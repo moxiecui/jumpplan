@@ -56,7 +56,14 @@ function hasModerateSubjectiveWarning(subjective?: SubjectiveReadinessInput) {
     subjective.achillesStiffness >= 3 ||
     subjective.patellarPain >= 3 ||
     subjective.calfTightness >= 4 ||
-    subjective.sleepQuality <= 2
+    subjective.sleepQuality <= 2 ||
+    subjective.hamstringSoreness >= 3 ||
+    subjective.generalDoms >= 5 ||
+    subjective.generalFatigue >= 4 ||
+    subjective.movementQualityToday <= 2 ||
+    subjective.legsFeelHeavy ||
+    subjective.basketballLoadLast24h === "moderate" ||
+    subjective.basketballLoadLast24h === "high"
   );
 }
 
@@ -179,6 +186,10 @@ function getPositiveUpgradeSignal(
 export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingAdjustment {
   const { oura, subjective, dayType, baseline } = params;
   const wearable = getWearableWarnings(oura, baseline);
+  const hamstringHigh = Boolean(subjective && subjective.hamstringSoreness >= 4);
+  const movementQualityLow = Boolean(subjective && subjective.movementQualityToday <= 2);
+  const highBasketball24h = subjective?.basketballLoadLast24h === "high";
+  const highBasketball48h = subjective?.basketballLoadLast48h === "high";
 
   if (hasRedSubjectivePain(subjective)) {
     const tendonFlags = [
@@ -217,6 +228,36 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
     });
   }
 
+  if (
+    subjective &&
+    highBasketball48h &&
+    (subjective.achillesStiffness >= 3 || subjective.patellarPain >= 3)
+  ) {
+    return baseAdjustment(params, {
+      level: "red",
+      adjustmentType: dayType === "strength" ? "strength-only" : "recovery-only",
+      headline: "高篮球负荷后先保护肌腱",
+      explanation:
+        "过去 48 小时篮球负荷高，同时肌腱已有预警。今天不做 PAP、最大跳、冲刺或重复变向，动作质量和肌腱反应优先于 Oura。",
+      modifications: [
+        "取消最大跳、PAP、French Contrast、冲刺和高冲击篮球。",
+        "只保留恢复或 RPE 6–7 的受控力量、核心和无痛等长。",
+        "如果腿仍沉重或落地质量差，改为短恢复日。"
+      ],
+      removeExerciseCategories: ["plyometric", "basketball-skill"],
+      reduceVolumePercent: 60,
+      intensityCap: "RPE 7",
+      allowMaxJump: false,
+      allowPogo: false,
+      allowPAP: false,
+      allowBasketball: false,
+      cautionFlags: unique([
+        ...wearable.cautionFlags,
+        "过去 48 小时篮球负荷高且肌腱有预警。"
+      ])
+    });
+  }
+
   const tendonWarning =
     subjective?.achillesStiffness !== undefined &&
     (subjective.achillesStiffness >= 3 || subjective.patellarPain >= 3);
@@ -229,7 +270,12 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
 
   if (
     dayType === "test" &&
-    ((typeof score === "number" && score < 75) || wearable.hrvLow || wearable.rhrElevated)
+    ((typeof score === "number" && score < 75) ||
+      wearable.hrvLow ||
+      wearable.rhrElevated ||
+      hamstringHigh ||
+      movementQualityLow ||
+      highBasketball24h)
   ) {
     return baseAdjustment(params, {
       level: "yellow",
@@ -252,6 +298,56 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       cautionFlags: unique([
         ...wearable.cautionFlags,
         "测试日对恢复状态更敏感，今天不适合用最大跳判断水平。"
+      ])
+    });
+  }
+
+  if (hamstringHigh) {
+    return baseAdjustment(params, {
+      level: "yellow",
+      adjustmentType: dayType === "strength" ? "strength-only" : "reduce-impact",
+      headline: "腘绳肌酸痛，取消高速和重离心",
+      explanation:
+        "腘绳肌酸痛达到 4/10 或以上。今天可以保留不受影响的上肢、核心和轻量控制，但不做 Nordic、硬 RDL、冲刺或最大跳。",
+      modifications: [
+        "取消 Nordic、硬 RDL、冲刺和最大跳。",
+        "下肢总量减少约 40%，避免长肌长位重离心。",
+        "上肢和核心可以保留，但不要影响呼吸、支撑和整体恢复。"
+      ],
+      removeExerciseCategories: ["plyometric", "basketball-skill"],
+      reduceVolumePercent: 40,
+      intensityCap: "RPE 7",
+      allowMaxJump: false,
+      allowPogo: false,
+      allowPAP: false,
+      allowBasketball: false,
+      cautionFlags: unique([...wearable.cautionFlags, "腘绳肌酸痛达到 4/10 或以上。"])
+    });
+  }
+
+  if (movementQualityLow || highBasketball24h) {
+    return baseAdjustment(params, {
+      level: "yellow",
+      adjustmentType: dayType === "strength" ? "strength-only" : "reduce-impact",
+      headline: movementQualityLow ? "动作质量偏低，今天只做降级版本" : "高篮球负荷后取消最大输出",
+      explanation: movementQualityLow
+        ? "今天动作质量评分较低，不做进阶、高速或单腿高难度内容。"
+        : "过去 24 小时篮球负荷高，今天不安排 PAP、最大跳或额外高冲击健身房训练。",
+      modifications: [
+        "取消 PAP、最大跳和高速度单腿动作。",
+        "可保留受控力量、核心、上肢和低幅技术练习。",
+        "动作质量下降时直接停止，不用完成预定总量。"
+      ],
+      removeExerciseCategories: ["plyometric"],
+      reduceVolumePercent: 50,
+      intensityCap: "RPE 7",
+      allowMaxJump: false,
+      allowPogo: false,
+      allowPAP: false,
+      allowBasketball: false,
+      cautionFlags: unique([
+        ...wearable.cautionFlags,
+        movementQualityLow ? "今日动作质量为 2/5 或以下。" : "过去 24 小时篮球负荷高。"
       ])
     });
   }

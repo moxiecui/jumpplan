@@ -1,4 +1,10 @@
-import type { TrainingBlock, TrainingDayType } from "@/types/training";
+import type {
+  BasketballLoadLevel,
+  EstimatedFatigue,
+  ImpactLevel,
+  TrainingBlock,
+  TrainingDayType
+} from "@/types/training";
 
 const dayTypeLabels: Record<TrainingDayType, string> = {
   jump: "弹跳",
@@ -15,6 +21,7 @@ const blockTypeLabels: Record<TrainingBlock["type"], string> = {
   main: "主训练",
   activeRecovery: "主动恢复",
   eveningRecovery: "晚间恢复",
+  optionalRecovery: "可选恢复工具",
   notes: "训练备注"
 };
 
@@ -29,6 +36,30 @@ const legacyBlockTitleLabels: Record<string, string> = {
 export function getTrainingDayTypeLabel(type: TrainingDayType): string {
   return dayTypeLabels[type];
 }
+
+export const impactLevelLabels: Record<ImpactLevel, string> = {
+  none: "无",
+  low: "低",
+  moderate: "中等",
+  high: "高",
+  variable: "取决于篮球负荷"
+};
+
+export const estimatedFatigueLabels: Record<EstimatedFatigue, string> = {
+  "very-low": "极低",
+  low: "低",
+  moderate: "中等",
+  "moderate-high": "中高",
+  high: "高",
+  variable: "取决于实际训练"
+};
+
+export const basketballLoadLabels: Record<BasketballLoadLevel, string> = {
+  none: "无",
+  light: "轻",
+  moderate: "中等",
+  high: "高"
+};
 
 export function getTrainingBlockTitle(block: TrainingBlock): string {
   const exactTitle = legacyBlockTitleLabels[block.title];

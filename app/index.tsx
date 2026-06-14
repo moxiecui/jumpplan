@@ -3,15 +3,22 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { DayCompletionPanel } from "@/components/DayCompletionPanel";
+import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
+import { CycleReviewCard } from "@/components/CycleReviewCard";
+import { DayLoadCard } from "@/components/DayLoadCard";
 import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
+import { JumpTestCard } from "@/components/JumpTestCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
+import { usePerformance } from "@/context/PerformanceContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
-import { getTodayTrainingDay } from "@/logic/schedule";
-import { applyAdjustmentToDay } from "@/logic/trainingAdjustment";
+import { getBasketballLoadWarning } from "@/logic/basketballLoad";
+import { getPlanDate, getTodayTrainingDay } from "@/logic/schedule";
+import { applyAdjustmentToDay, applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 
 function todayDate() {
@@ -22,13 +29,28 @@ export default function TodayScreen() {
   const router = useRouter();
   const day = getTodayTrainingDay();
   const { getReadinessEntry } = useReadiness();
+  const { getBasketballLog } = usePerformance();
   const readinessEntry = getReadinessEntry(todayDate());
+  const planDate = getPlanDate(day.day);
+  const day9BasketballLog = getBasketballLog(getPlanDate(9));
   const [showAdjustedPlan, setShowAdjustedPlan] = useState(false);
   const adjustedDay = useMemo(
     () => (readinessEntry ? applyAdjustmentToDay(day, readinessEntry.adjustment) : day),
     [day, readinessEntry]
   );
-  const visibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
+  const papDowngradeReason =
+    day.day === 11 &&
+    (day9BasketballLog?.loadLevel === "moderate" || day9BasketballLog?.loadLevel === "high")
+      ? `第 9 天篮球负荷为${day9BasketballLog.loadLevel === "high" ? "高" : "中等"}`
+      : undefined;
+  const baseVisibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
+  const visibleDay = papDowngradeReason
+    ? applyDay11PapDowngrade(baseVisibleDay, papDowngradeReason)
+    : baseVisibleDay;
+  const basketballWarning = getBasketballLoadWarning(
+    readinessEntry?.subjective?.basketballLoadLast24h ?? "none",
+    readinessEntry?.subjective?.basketballLoadLast48h ?? "none"
+  );
   const relatedTerms = useMemo(() => getRelatedGlossaryTermsForDay(visibleDay), [visibleDay]);
   const totalActions = visibleDay.blocks.reduce((count, block) => count + block.items.length, 0);
   const focusFlags = [
@@ -64,6 +86,7 @@ export default function TodayScreen() {
         {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
       </View>
       <Text style={styles.goal}>{day.goal}</Text>
+      <DayLoadCard day={visibleDay} />
 
       <View style={styles.readinessCard}>
         <Text style={styles.readinessTitle}>今日 Readiness 评估</Text>
@@ -114,10 +137,26 @@ export default function TodayScreen() {
           <Text style={styles.warningText}>{normalizeTrainingCopy(visibleDay.readinessRule)}</Text>
         </View>
       ) : null}
+      {basketballWarning ? (
+        <View style={styles.warning}>
+          <Text style={styles.warningTitle}>篮球负荷调整</Text>
+          <Text style={styles.warningText}>{basketballWarning}</Text>
+        </View>
+      ) : null}
 
       {visibleDay.blocks.map((block, index) => (
         <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.day} 天`} />
       ))}
+
+      {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
+      {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {day.assessmentProtocolId ? (
+        <RightSideAssessmentCard
+          date={planDate}
+          dayNumber={day.day as 1 | 14 | 20 | 21}
+        />
+      ) : null}
+      {day.day === 21 ? <CycleReviewCard /> : null}
 
       <DayCompletionPanel
         dayKey={`day-${visibleDay.day}`}

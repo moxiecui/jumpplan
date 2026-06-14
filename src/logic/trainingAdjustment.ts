@@ -323,3 +323,55 @@ export function applyAdjustmentToDay(
       return withNote(day, adjustment);
   }
 }
+
+export function applyDay11PapDowngrade(day: TrainingDay, reason: string): TrainingDay {
+  if (day.day !== 11) {
+    return cloneDay(day);
+  }
+
+  const next = cloneDay(day);
+  return {
+    ...next,
+    plannedJumpContacts: { min: 6, max: 10 },
+    maxIntentJumpContacts: { min: 0, max: 0 },
+    readinessRule: `PAP 已自动降级：${reason}`,
+    blocks: next.blocks.map((block) => {
+      if (block.type === "warmup") {
+        return {
+          ...block,
+          items: block.items.filter((item) => item.exerciseId !== "low-pogo")
+        };
+      }
+
+      if (block.type !== "main") {
+        return block;
+      }
+
+      return {
+        ...block,
+        title: "主训练（PAP 自动降级）",
+        items: [
+          {
+            exerciseId: "cmj",
+            sets: 3,
+            reps: "2 次",
+            intensity: "medium",
+            rest: "90–120 秒",
+            notes: "70–85% 技术跳，不做最大努力；与助跑跳二选一。",
+            jumpContacts: { min: 6, max: 6 }
+          },
+          {
+            exerciseId: "approach-jump",
+            sets: 2,
+            reps: "2 次",
+            intensity: "medium",
+            rest: "90–120 秒",
+            optional: true,
+            notes: "可替代 CMJ；只练节奏，总接触不超过 10 次。",
+            jumpContacts: { min: 0, max: 4 }
+          }
+        ]
+      };
+    })
+  };
+}

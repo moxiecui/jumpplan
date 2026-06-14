@@ -1,4 +1,11 @@
-import type { DailyTrainingAdjustment, TrainingDay } from "@/types/training";
+import type {
+  BasketballSessionLog,
+  DailyTrainingAdjustment,
+  JumpContactSummary,
+  JumpTestResult,
+  RightSideAssessment,
+  TrainingDay
+} from "@/types/training";
 
 export type PlanGenerationTrigger =
   | "mid-cycle-adjustment"
@@ -63,6 +70,16 @@ export interface PlanGenerationRequest {
   recentFeedback: TrainingFeedback[];
   cycleSummary?: CycleSummary;
   readinessContext?: DailyTrainingAdjustment[];
+  performanceContext?: {
+    jumpContacts?: JumpContactSummary[];
+    basketballLogs?: BasketballSessionLog[];
+    jumpTests?: JumpTestResult[];
+    rightSideAssessments?: RightSideAssessment[];
+    highImpactDayCount?: number;
+    hamstringSorenessTrend?: number[];
+    skippedExerciseIds?: string[];
+    regressedExerciseIds?: string[];
+  };
   constraints: {
     basketballSessionsPerWeek: number;
     maxHighImpactDaysPerWeek: number;

@@ -2,20 +2,47 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { ReadinessIntelligenceCard } from "@/components/ReadinessIntelligenceCard";
+import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
 import { useReadiness } from "@/context/ReadinessContext";
 import { evaluateDailyReadiness } from "@/logic/readinessScore";
 import { getTodayTrainingDay } from "@/logic/schedule";
-import type { OuraDailyReadinessInput, SubjectiveReadinessInput } from "@/types/training";
+import type {
+  BasketballLoadLevel,
+  OuraDailyReadinessInput,
+  SubjectiveReadinessInput
+} from "@/types/training";
 
-type SubjectiveField = "achillesStiffness" | "patellarPain" | "calfTightness" | "sleepQuality";
+type SubjectiveField =
+  | "achillesStiffness"
+  | "patellarPain"
+  | "calfTightness"
+  | "sleepQuality"
+  | "hamstringSoreness"
+  | "upperBodySoreness"
+  | "generalDoms"
+  | "generalFatigue"
+  | "movementQualityToday";
 type OuraField = "readinessScore" | "restingHeartRate" | "hrv" | "sleepScore";
 type BaselineField = "restingHeartRate" | "hrv";
 
 const subjectiveLabels: Record<SubjectiveField, { label: string; min: number; max: number }> = {
-  achillesStiffness: { label: "Achilles tendon morning stiffness", min: 0, max: 10 },
-  patellarPain: { label: "Patellar tendon pain", min: 0, max: 10 },
-  calfTightness: { label: "Calf tightness", min: 0, max: 10 },
-  sleepQuality: { label: "Sleep quality", min: 1, max: 5 }
+  achillesStiffness: { label: "跟腱晨僵", min: 0, max: 10 },
+  patellarPain: { label: "髌腱疼痛", min: 0, max: 10 },
+  calfTightness: { label: "小腿紧绷", min: 0, max: 10 },
+  sleepQuality: { label: "睡眠质量", min: 1, max: 5 },
+  hamstringSoreness: { label: "腘绳肌酸痛", min: 0, max: 10 },
+  upperBodySoreness: { label: "上肢酸痛", min: 0, max: 10 },
+  generalDoms: { label: "全身 DOMS", min: 0, max: 10 },
+  generalFatigue: { label: "整体疲劳", min: 1, max: 5 },
+  movementQualityToday: { label: "今日动作质量", min: 1, max: 5 }
+};
+
+const loadOptions: BasketballLoadLevel[] = ["none", "light", "moderate", "high"];
+const loadLabels: Record<BasketballLoadLevel, string> = {
+  none: "无",
+  light: "轻",
+  moderate: "中等",
+  high: "高"
 };
 
 const ouraLabels: Record<OuraField, { label: string; min: number; max: number; suffix?: string }> = {
@@ -59,7 +86,15 @@ export default function CheckInScreen() {
     achillesStiffness: 0,
     patellarPain: 0,
     calfTightness: 0,
-    sleepQuality: 4
+    sleepQuality: 4,
+    hamstringSoreness: 0,
+    upperBodySoreness: 0,
+    generalDoms: 0,
+    generalFatigue: 2,
+    movementQualityToday: 4,
+    legsFeelHeavy: false,
+    basketballLoadLast24h: "none",
+    basketballLoadLast48h: "none"
   });
   const [ouraValues, setOuraValues] = useState<Record<OuraField, string>>({
     readinessScore: "",
@@ -113,7 +148,10 @@ export default function CheckInScreen() {
 
     setSubjective((current) => ({
       ...current,
-      [field]: field === "sleepQuality" ? (Math.round(nextValue) as SubjectiveReadinessInput["sleepQuality"]) : nextValue
+      [field]:
+        field === "sleepQuality" || field === "generalFatigue" || field === "movementQualityToday"
+          ? Math.round(nextValue)
+          : nextValue
     }));
     setSavedMessage("");
   };
@@ -210,6 +248,34 @@ export default function CheckInScreen() {
         );
       })}
 
+      <Pressable
+        style={[styles.binaryButton, subjective.legsFeelHeavy && styles.binaryButtonActive]}
+        onPress={() => setSubjective((current) => ({ ...current, legsFeelHeavy: !current.legsFeelHeavy }))}
+      >
+        <Text style={[styles.binaryText, subjective.legsFeelHeavy && styles.binaryTextActive]}>
+          今天双腿感觉沉重
+        </Text>
+      </Pressable>
+
+      {(["basketballLoadLast24h", "basketballLoadLast48h"] as const).map((field) => (
+        <View key={field} style={styles.loadCard}>
+          <Text style={styles.label}>{field === "basketballLoadLast24h" ? "过去 24 小时篮球负荷" : "过去 48 小时篮球负荷"}</Text>
+          <View style={styles.loadRow}>
+            {loadOptions.map((option) => (
+              <Pressable
+                key={option}
+                style={[styles.loadButton, subjective[field] === option && styles.loadButtonActive]}
+                onPress={() => setSubjective((current) => ({ ...current, [field]: option }))}
+              >
+                <Text style={[styles.loadText, subjective[field] === option && styles.loadTextActive]}>{loadLabels[option]}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      ))}
+
+      <BasketballLoadLogger date={subjective.date} />
+
       <ReadinessIntelligenceCard adjustment={adjustment} oura={oura} subjective={subjective} />
 
       <Pressable style={styles.saveButton} onPress={saveEntry}>
@@ -297,5 +363,60 @@ const styles = StyleSheet.create({
     color: "#116329",
     fontSize: 14,
     fontWeight: "800"
+  },
+  binaryButton: {
+    minHeight: 44,
+    marginTop: 4,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff"
+  },
+  binaryButtonActive: {
+    borderColor: "#d29922",
+    backgroundColor: "#fff8c5"
+  },
+  binaryText: {
+    color: "#57606a",
+    fontWeight: "900"
+  },
+  binaryTextActive: {
+    color: "#6e5500"
+  },
+  loadCard: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff"
+  },
+  loadRow: {
+    marginTop: 9,
+    flexDirection: "row",
+    gap: 7
+  },
+  loadButton: {
+    minHeight: 44,
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de"
+  },
+  loadButtonActive: {
+    borderColor: "#0969da",
+    backgroundColor: "#ddf4ff"
+  },
+  loadText: {
+    color: "#57606a",
+    fontWeight: "800"
+  },
+  loadTextActive: {
+    color: "#0969da"
   }
 });

@@ -93,6 +93,19 @@ function eveningRecoveryBlock(): TrainingBlock {
   };
 }
 
+function generatedLoad(
+  impactLevel: TrainingDay["impactLevel"],
+  estimatedFatigue: TrainingDay["estimatedFatigue"],
+  minMinutes: number,
+  maxMinutes: number
+) {
+  return {
+    impactLevel,
+    estimatedFatigue,
+    estimatedDurationMinutes: { min: minMinutes, max: maxMinutes }
+  };
+}
+
 function recoveryDay(day: number, title = "肌腱安全恢复日"): TrainingDay {
   return {
     day,
@@ -100,6 +113,8 @@ function recoveryDay(day: number, title = "肌腱安全恢复日"): TrainingDay 
     type: "recovery",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedLoad("none", "very-low", 20, 35),
+    plannedJumpContacts: { min: 0, max: 0 },
     performanceFocus: ["肌腱安全", "Zone 2", "活动度", "呼吸恢复"],
     isometricIncluded: true,
     goal: "降低冲击负荷，观察跟腱和髌腱反应，保留温和循环和活动度。",
@@ -135,6 +150,8 @@ function movementQualityDay(day: number): TrainingDay {
     type: "skill",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedLoad("low", "low", 30, 45),
+    plannedJumpContacts: { min: 0, max: 4 },
     performanceFocus: ["右脚 tripod", "右膝轨迹", "安静落地", "低速控制"],
     coreIncluded: true,
     goal: "用低速技术练习恢复足弓控制、髋膝踝对齐和安静落地。",
@@ -170,6 +187,8 @@ function strengthControlDay(day: number, highBasketballLoad: boolean): TrainingD
     type: "strength",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedLoad("low", "moderate", 40, 55),
+    plannedJumpContacts: { min: 0, max: 0 },
     performanceFocus: ["力量维持", "右膝控制", "肌腱负荷", "核心支撑"],
     coreIncluded: true,
     isometricIncluded: true,
@@ -201,6 +220,8 @@ function lowImpactJumpDay(day: number): TrainingDay {
     type: "jump",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedLoad("moderate", "moderate", 35, 50),
+    plannedJumpContacts: { min: 19, max: 25 },
     performanceFocus: ["低量弹跳", "起跳节奏", "落地质量", "右膝轨迹"],
     coreIncluded: true,
     goal: "保持起跳节奏和落地质量，不做高容量增强式训练。",
@@ -211,9 +232,9 @@ function lowImpactJumpDay(day: number): TrainingDay {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", rest: "60 秒", notes: "低幅、安静；跟腱晨僵则取消。" },
-          { exerciseId: "cmj", sets: 3, reps: "1 次", intensity: "medium", rest: "90 秒", notes: "70–85% 技术跳，不做最大努力。" },
-          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "medium", rest: "90 秒", notes: "只练倒数两步和垂直投射。" }
+          { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", rest: "60 秒", notes: "低幅、安静；跟腱晨僵则取消。", jumpContacts: { min: 16, max: 20 } },
+          { exerciseId: "cmj", sets: 3, reps: "1 次", intensity: "medium", rest: "90 秒", notes: "70–85% 技术跳，不做最大努力。", jumpContacts: { min: 3, max: 3 } },
+          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "medium", rest: "90 秒", notes: "只练倒数两步和垂直投射。", jumpContacts: { min: 0, max: 2 } }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
@@ -229,6 +250,7 @@ function basketballSkillDay(day: number): TrainingDay {
     type: "basketball",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedLoad("variable", "variable", 30, 75),
     performanceFocus: ["篮球手感", "脚步控制", "右膝轨迹", "赛后恢复"],
     goal: "保留投篮和脚步感觉，避免连续最大跳和高强度急停。",
     readinessRule: "篮球频率高时，本日只做技术和轻松投篮。",
@@ -239,8 +261,7 @@ function basketballSkillDay(day: number): TrainingDay {
         title: "Main Training",
         items: [
           { exerciseId: "easy-walk", duration: "8–10 分钟", intensity: "low", notes: "球场热身或轻松走动。" },
-          { exerciseId: "lateral-stop-jump", sets: 2, reps: "2 次/方向", intensity: "low", notes: "低速急停，不追高度；膝盖内扣就取消跳。" },
-          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", notes: "60–70% 技术跳，可直接跳过。" }
+          { exerciseId: "lateral-stop-jump", sets: 2, reps: "2 次/方向", intensity: "low", optional: true, notes: "仅轻篮球日可选；低速急停，不追高度。", jumpContacts: { min: 0, max: 8 } }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: activeRecoveryItems() },
@@ -367,8 +388,11 @@ export const mockPlanGenerationService: PlanGenerationService = {
         "Generated plan must be structured JSON only."
       ],
       progressionRules: [
-        "只有连续 48 小时跟腱和髌腱反应稳定，才增加跳跃次数。",
-        "每次只增加一个变量：总量、强度或复杂度。",
+        "只有肌腱症状 <=1–2/10、动作质量 >=4/5、过去 24–48 小时无高篮球负荷，并且完成接触量后质量没有下降，才进阶跳跃。",
+        "相似跳跃课之间接触次数最多增加约 10–20%，或在接触数稳定时提高强度；不能同时自动增加强度和总量。",
+        "力量动作全部按目标技术完成、RPE <=7 且症状未增加时，下次可增加 2.5–5% 重量或每组增加 1 次。",
+        "RPE >=9、杠速明显下降、右脚/右膝控制变差或肌腱/腘绳肌症状增加时不加重量。",
+        "Nordic 先增加控制和活动范围，再增加次数；不自动超过 2–3 个低次数组。",
         "篮球频率高的一周，不额外增加健身房冲击量。",
         "French Contrast 只放在专门转化日，不放在恢复日、休息日或高冲击篮球后的第二天。"
       ],

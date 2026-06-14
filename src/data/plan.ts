@@ -1,9 +1,48 @@
-import type { TrainingDay, TrainingDayType } from "@/types/training";
+import type {
+  EstimatedFatigue,
+  ImpactLevel,
+  TrainingDay,
+  TrainingDayType
+} from "@/types/training";
 
 const phaseTitles: Record<1 | 2 | 3, string> = {
   1: "控制与容量建立",
   2: "力量转化与反应弹性",
   3: "整合、减量与测试"
+};
+
+interface DayLoadMetadata {
+  impactLevel: ImpactLevel;
+  estimatedFatigue: EstimatedFatigue;
+  estimatedDurationMinutes: { min: number; max: number };
+  plannedJumpContacts?: { min: number; max: number };
+  maxIntentJumpContacts?: { min: number; max: number };
+  conditionalRules?: string[];
+  assessmentProtocolId?: "right-side-reassessment";
+}
+
+const dayLoadMetadata: Record<number, DayLoadMetadata> = {
+  1: { impactLevel: "low", estimatedFatigue: "low", estimatedDurationMinutes: { min: 35, max: 50 }, plannedJumpContacts: { min: 8, max: 16 }, maxIntentJumpContacts: { min: 0, max: 0 }, assessmentProtocolId: "right-side-reassessment" },
+  2: { impactLevel: "variable", estimatedFatigue: "variable", estimatedDurationMinutes: { min: 30, max: 90 }, conditionalRules: ["篮球负荷轻时最多增加 2–4 次 60–70% 技术跳；中高负荷不加额外跳跃。"] },
+  3: { impactLevel: "low", estimatedFatigue: "moderate-high", estimatedDurationMinutes: { min: 55, max: 75 }, plannedJumpContacts: { min: 0, max: 0 } },
+  4: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 35 }, plannedJumpContacts: { min: 0, max: 0 } },
+  5: { impactLevel: "none", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 40, max: 60 }, plannedJumpContacts: { min: 0, max: 0 }, conditionalRules: ["Pogo 仅作为 readiness 绿色时的可选项目，默认不显示在训练主项中。"] },
+  6: { impactLevel: "variable", estimatedFatigue: "variable", estimatedDurationMinutes: { min: 30, max: 90 }, conditionalRules: ["中等或高篮球负荷后不加助跑跳或其他跳跃练习。"] },
+  7: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 15, max: 30 }, plannedJumpContacts: { min: 0, max: 0 } },
+  8: { impactLevel: "high", estimatedFatigue: "moderate-high", estimatedDurationMinutes: { min: 45, max: 60 }, plannedJumpContacts: { min: 20, max: 32 }, maxIntentJumpContacts: { min: 0, max: 0 } },
+  9: { impactLevel: "variable", estimatedFatigue: "variable", estimatedDurationMinutes: { min: 20, max: 75 }, conditionalRules: ["中等或高篮球负荷会让第 11 天 PAP 自动降级。"] },
+  10: { impactLevel: "low", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 45, max: 65 }, plannedJumpContacts: { min: 0, max: 0 }, conditionalRules: ["Nordic 最多 1–2 组，每组 2–4 次；48 小时内有硬篮球或测试时取消。"] },
+  11: { impactLevel: "high", estimatedFatigue: "moderate-high", estimatedDurationMinutes: { min: 45, max: 60 }, plannedJumpContacts: { min: 10, max: 18 }, maxIntentJumpContacts: { min: 6, max: 10 }, conditionalRules: ["第 9 天篮球负荷中高、肌腱或腘绳肌 >=3/10、readiness 非绿色或热身跳质量下降时，改为 6–10 次 70–85% 技术跳。"] },
+  12: { impactLevel: "none", estimatedFatigue: "low", estimatedDurationMinutes: { min: 20, max: 35 }, plannedJumpContacts: { min: 0, max: 0 } },
+  13: { impactLevel: "high", estimatedFatigue: "moderate-high", estimatedDurationMinutes: { min: 40, max: 55 }, plannedJumpContacts: { min: 16, max: 26 }, maxIntentJumpContacts: { min: 0, max: 6 }, conditionalRules: ["只选两个主要跳跃练习，加一个低冲击移动练习；不把所有项目都做成高量。"] },
+  14: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 0, max: 0 }, assessmentProtocolId: "right-side-reassessment" },
+  15: { impactLevel: "low", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 45, max: 60 }, plannedJumpContacts: { min: 0, max: 0 } },
+  16: { impactLevel: "none", estimatedFatigue: "low", estimatedDurationMinutes: { min: 25, max: 35 }, plannedJumpContacts: { min: 0, max: 0 } },
+  17: { impactLevel: "moderate", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 35, max: 75 }, conditionalRules: ["如果篮球变成高负荷，第 19 天激活量减少。"] },
+  18: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 0, max: 0 } },
+  19: { impactLevel: "low", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 4, max: 8 }, maxIntentJumpContacts: { min: 0, max: 0 }, conditionalRules: ["Pogo 为短时激活，不纳入 4–8 次正式技术跳；高篮球负荷或腿沉重时取消 Pogo，只保留 2–4 次 70–80% CMJ。"] },
+  20: { impactLevel: "high", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 35, max: 50 }, plannedJumpContacts: { min: 7, max: 9 }, maxIntentJumpContacts: { min: 7, max: 9 }, conditionalRules: ["连续两次成绩下降或动作质量变差时立即停止。"], assessmentProtocolId: "right-side-reassessment" },
+  21: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 15, max: 30 }, plannedJumpContacts: { min: 0, max: 0 }, conditionalRules: ["周期结束后必须选择重复、修改、生成新计划或延后周期；不自动静默重复。"], assessmentProtocolId: "right-side-reassessment" }
 };
 
 function day(params: {
@@ -22,6 +61,7 @@ function day(params: {
 }): TrainingDay {
   return {
     ...params,
+    ...dayLoadMetadata[params.day],
     phaseTitle: phaseTitles[params.phase],
     readinessRule:
       params.readinessRule ??
@@ -62,8 +102,8 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, reps: "10 次", intensity: "low", rest: "60 秒", notes: "低幅、安静，非疲劳。" },
-          { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "medium", rest: "90 秒", notes: "70–80%，落地定住。" },
+          { exerciseId: "low-pogo", sets: 1, reps: "8 次", intensity: "low", rest: "60 秒", notes: "低幅、安静，非疲劳。", jumpContacts: { min: 8, max: 8 } },
+          { exerciseId: "cmj", sets: 2, reps: "2 次", intensity: "medium", rest: "90 秒", notes: "70–80%，落地定住。", jumpContacts: { min: 4, max: 4 } },
           { exerciseId: "step-down", sets: 3, reps: "5 次", side: "each", intensity: "low", notes: "右膝轨迹优先。" },
           { exerciseId: "single-leg-hamstring-bridge", sets: 2, reps: "6 次", side: "each", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" },
@@ -90,7 +130,6 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "3 次/方向", intensity: "low", notes: "只做低速观察右脚角度。" },
-          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", rest: "90 秒", notes: "可选；只在完全无痛时做 60–70%。" },
           { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" }
         ]
@@ -135,28 +174,27 @@ export const trainingPlan: TrainingDay[] = [
     goal: "降低冲击，维持循环，练右脚和右膝低强度控制。",
     performanceFocus: ["Zone 2", "右踝背屈线", "右脚 tripod", "轻腘绳肌激活", "呼吸恢复"],
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [warmupBase[0], warmupBase[1], warmupBase[2]] },
+      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-walk", duration: "3–5 分钟", intensity: "low" }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "easy-bike", duration: "20–30 分钟", intensity: "low", notes: "可替代轻松步行。" },
-          { exerciseId: "backward-walk", duration: "6–8 分钟", intensity: "low" },
+          { exerciseId: "easy-bike", duration: "15–20 分钟", intensity: "low", notes: "可替代轻松步行。" },
           { exerciseId: "single-leg-balance-reach", sets: 2, reps: "5 次", side: "each", intensity: "low" },
-          { exerciseId: "hamstring-walkout", sets: 2, reps: "4 次", intensity: "low" }
+          { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "hip-90-90", sets: 2, reps: "4 次/方向", side: "each", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] },
-      { type: "eveningRecovery", title: "Evening Recovery", items: eveningDownshift }
+      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] },
+      { type: "optionalRecovery", title: "Optional Recovery Tools", items: eveningDownshift.slice(1) }
     ]
   }),
   day({
     day: 5,
-    title: "上肢力量 + 核心 + 低冲击弹性",
+    title: "上肢力量 + 核心",
     type: "strength",
     phase: 1,
     goal: "加入上肢推拉和核心，不把这天做成高冲击日。",
-    performanceFocus: ["上肢推拉", "肩胛控制", "核心抗旋转", "低冲击弹性"],
+    performanceFocus: ["上肢推拉", "肩胛控制", "核心抗旋转"],
     upperBodyIncluded: true,
     coreIncluded: true,
     readinessRule: "今天不是高冲击日。只有跟腱和髌腱状态良好时才做少量 Pogo；如果晨僵或疼痛 ≥ 3/10，直接跳过。",
@@ -166,7 +204,6 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, reps: "8 次", intensity: "low", rest: "60 秒", notes: "完全无痛才做；不是高冲击训练。" },
           { exerciseId: "landmine-press", sets: 3, reps: "6 次", side: "each", intensity: "medium" },
           { exerciseId: "one-arm-dumbbell-row", sets: 3, reps: "8 次", side: "each", intensity: "medium" },
           { exerciseId: "pull-up-or-lat-pulldown", sets: 3, reps: "5–8 次", intensity: "medium" },
@@ -193,7 +230,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low", notes: "作为篮球前质量检查。" },
-          { exerciseId: "approach-jump", sets: 2, reps: "1 次", intensity: "low", notes: "只在跟腱/髌腱状态良好时做低强度技术跳，可跳过。" }
+          { exerciseId: "easy-walk", duration: "按篮球安排", intensity: "low", notes: "本项代表篮球训练本身；中高负荷时不追加任何跳跃。" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "easy-walk", duration: "10–15 分钟", intensity: "low" }, { exerciseId: "foot-ball-release", duration: "1 分钟/侧", intensity: "low" }] },
@@ -210,18 +247,19 @@ export const trainingPlan: TrainingDay[] = [
     isometricIncluded: true,
     readinessRule: "无高冲击；等长也必须无尖锐痛。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "toe-yoga", sets: 1, reps: "8 次", side: "each", intensity: "low" }, { exerciseId: "short-foot", sets: 1, reps: "5 次", side: "each", intensity: "low" }] },
+      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-walk", duration: "3–5 分钟", intensity: "low" }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "easy-walk", duration: "15–25 分钟，可选", intensity: "low" },
-          { exerciseId: "spanish-squat-isometric", sets: 2, duration: "20–30 秒", intensity: "low", notes: "髌腱感觉安静才做。" },
-          { exerciseId: "calf-isometric-hold", sets: 2, duration: "20–30 秒", intensity: "low", notes: "跟腱感觉安静才做。" }
+          { exerciseId: "easy-walk", duration: "10–20 分钟，可选", intensity: "low" },
+          { exerciseId: "short-foot", sets: 1, reps: "5 次", side: "each", intensity: "low" },
+          { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" },
+          { exerciseId: "spanish-squat-isometric", sets: 2, duration: "20–30 秒", intensity: "low", optional: true, isometricPurpose: "maintenance", notes: "可选；髌腱感觉安静才做，RPE 5–7。" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "6 分钟", intensity: "low" }] },
-      { type: "eveningRecovery", title: "Evening Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] }
+      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5–6 分钟", intensity: "low" }] },
+      { type: "optionalRecovery", title: "Optional Recovery Tools", items: [{ exerciseId: "calf-foam-roll", duration: "30 秒/肌群", intensity: "low", optional: true, notes: "可选，不压跟腱、髌腱或膝关节。" }] }
     ]
   }),
   day({
@@ -239,10 +277,10 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 3, reps: "10 次", intensity: "low", rest: "60 秒" },
-          { exerciseId: "hurdle-hop-forward-back", sets: 3, reps: "4 次", intensity: "medium", rest: "90 秒" },
-          { exerciseId: "lateral-hurdle-hop", sets: 2, reps: "4 次/方向", intensity: "medium", rest: "90 秒" },
-          { exerciseId: "single-leg-landing-stick", sets: 2, reps: "2 次", side: "each", intensity: "low" },
+          { exerciseId: "low-pogo", sets: 1, reps: "10 次", intensity: "low", rest: "60 秒", jumpContacts: { min: 10, max: 10 } },
+          { exerciseId: "hurdle-hop-forward-back", sets: 2, reps: "3 次", intensity: "medium", rest: "90 秒", jumpContacts: { min: 6, max: 6 } },
+          { exerciseId: "lateral-hurdle-hop", sets: 1, reps: "3 次/方向", intensity: "medium", rest: "90 秒", jumpContacts: { min: 6, max: 6 } },
+          { exerciseId: "single-leg-landing-stick", sets: 1, reps: "2 次", side: "each", intensity: "low", jumpContacts: { min: 4, max: 4, landingOnly: true } },
           { exerciseId: "copenhagen-plank", sets: 2, duration: "15–20 秒", side: "each", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" }
         ]
@@ -283,7 +321,7 @@ export const trainingPlan: TrainingDay[] = [
     performanceFocus: ["RDL", "右侧单腿 RDL", "腘绳肌离心", "分腿蹲等长", "抗侧屈"],
     coreIncluded: true,
     isometricIncluded: true,
-    readinessRule: "腘绳肌 soreness 高时取消 Nordic、重 RDL、冲刺和最大跳。",
+    readinessRule: "腘绳肌酸痛较高时取消 Nordic、重 RDL、冲刺和最大跳。",
     blocks: [
       { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-walk", duration: "5 分钟", intensity: "low" }, ...warmupBase.slice(1)] },
       {
@@ -293,8 +331,8 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "rdl", sets: 3, reps: "5 次", intensity: "medium", rest: "2 分钟", notes: "RPE 7，不做硬拉酸痛赛。" },
           { exerciseId: "single-leg-rdl-contralateral", sets: 3, reps: "6 次", side: "each", intensity: "medium" },
           { exerciseId: "hamstring-slider-curl", sets: 2, reps: "5 次", intensity: "medium" },
-          { exerciseId: "nordic-curl", sets: 1, reps: "3 次", intensity: "medium", notes: "可选；只有 readiness green 且无腘绳肌酸痛时做。" },
-          { exerciseId: "split-squat-isometric", sets: 2, duration: "25–35 秒", side: "each", intensity: "low" },
+          { exerciseId: "nordic-curl", sets: 1, reps: "2–4 次", intensity: "medium", optional: true, notes: "可选；仅 readiness 绿色、腘绳肌酸痛 <=1/10，且 48 小时内无硬篮球或测试时做。先增加控制和活动范围，不自动加次数。" },
+          { exerciseId: "split-squat-isometric", sets: 2, duration: "20–30 秒", side: "each", intensity: "low", isometricPurpose: "position-control", notes: "RPE 5–7，保持无尖锐痛。" },
           { exerciseId: "suitcase-carry", sets: 3, duration: "20 米/侧", intensity: "medium" }
         ]
       },
@@ -312,15 +350,15 @@ export const trainingPlan: TrainingDay[] = [
     contrastModuleId: "french-contrast",
     readinessRule: "只有绿色状态且跟腱/髌腱 < 3/10 才做；不做高容量 French Contrast。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [...warmupBase, { exerciseId: "low-pogo", sets: 2, reps: "8 次", intensity: "low", notes: "热身弹性，不累积疲劳。" }] },
+      { type: "warmup", title: "Complete Warmup", items: [...warmupBase, { exerciseId: "low-pogo", sets: 1, reps: "6 次", intensity: "low", notes: "热身弹性，不累积疲劳。", jumpContacts: { min: 6, max: 6 } }] },
       {
         type: "main",
         title: "Main Training",
         items: [
           { exerciseId: "trap-bar-deadlift", sets: 3, reps: "2 次", intensity: "medium", rest: "2.5–4 分钟", notes: "RPE 7–8，速度干净。" },
-          { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", notes: "可与 approach jump 二选一；高度下降就停。" },
-          { exerciseId: "approach-jump", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", notes: "如果已做 CMJ，本项跳过；保留最佳质量。" },
-          { exerciseId: "lateral-stop-jump", sets: 2, reps: "1–2 次/方向", intensity: "medium", rest: "90 秒", notes: "低量，落地安静。" }
+          { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", notes: "与助跑跳二选一；高度下降就停。", jumpContacts: { min: 6, max: 6, maxIntent: true } },
+          { exerciseId: "approach-jump", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", optional: true, notes: "与 CMJ 二选一，不同时完成。", jumpContacts: { min: 0, max: 6, maxIntent: true } },
+          { exerciseId: "lateral-stop-jump", sets: 1, reps: "1 次/方向", intensity: "medium", rest: "90 秒", optional: true, notes: "可选；动作质量和肌腱状态持续良好才做。", jumpContacts: { min: 0, max: 2 } }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: recoveryFinish },
@@ -337,19 +375,19 @@ export const trainingPlan: TrainingDay[] = [
     upperBodyIncluded: true,
     readinessRule: "不制造下肢疲劳；上肢也不做到酸痛。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-bike", duration: "8–10 分钟", intensity: "low" }, { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }] },
+      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-bike", duration: "5 分钟", intensity: "low" }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "easy-bike", duration: "15–25 分钟", intensity: "low" },
+          { exerciseId: "easy-bike", duration: "10–15 分钟", intensity: "low" },
           { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" },
           { exerciseId: "one-arm-dumbbell-row", sets: 2, reps: "8 次", side: "each", intensity: "low" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "worlds-greatest-stretch", sets: 1, reps: "4 次", side: "each", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "6 分钟", intensity: "low" }] },
-      { type: "eveningRecovery", title: "Evening Recovery", items: eveningDownshift }
+      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] },
+      { type: "optionalRecovery", title: "Optional Recovery Tools", items: eveningDownshift.slice(1) }
     ]
   }),
   day({
@@ -367,9 +405,8 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "lateral-stop-jump", sets: 2, reps: "1–2 次/方向", intensity: "low", rest: "90 秒", notes: "低冲击技术日，只看脚步和膝线。" },
-          { exerciseId: "catch-and-jump", sets: 2, reps: "2 次", intensity: "low", rest: "90 秒", notes: "轻到中等，不追高度。" },
-          { exerciseId: "second-jump-rebound-drill", sets: 2, reps: "1–2 次", intensity: "low", rest: "90–120 秒", notes: "只练节奏，不做连续疲劳跳。" },
+          { exerciseId: "lateral-stop-jump", sets: 2, reps: "2 次/方向", intensity: "medium", rest: "90 秒", notes: "主要跳跃练习一；落地安静。", jumpContacts: { min: 8, max: 8 } },
+          { exerciseId: "catch-and-jump", sets: 3, reps: "3 次", intensity: "medium", rest: "90 秒", notes: "主要跳跃练习二；不追疲劳。", jumpContacts: { min: 9, max: 9 } },
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" }
         ]
@@ -388,19 +425,18 @@ export const trainingPlan: TrainingDay[] = [
     isometricIncluded: true,
     readinessRule: "不做最大跳，不做高冲击，不做重离心。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [warmupBase[0], warmupBase[1], warmupBase[2]] },
+      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-walk", duration: "3–5 分钟", intensity: "low" }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "easy-walk", duration: "20–35 分钟", intensity: "low" },
-          { exerciseId: "single-leg-hamstring-bridge", sets: 2, reps: "5 次", side: "each", intensity: "low" },
-          { exerciseId: "calf-isometric-hold", sets: 2, duration: "20 秒", intensity: "low", notes: "可选；跟腱不敏感才做。" },
-          { exerciseId: "hip-90-90", sets: 2, reps: "4 次/方向", side: "each", intensity: "low" }
+          { exerciseId: "easy-walk", duration: "12–20 分钟", intensity: "low" },
+          { exerciseId: "single-leg-balance-reach", sets: 1, reps: "4 次", side: "each", intensity: "low" },
+          { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "calf-foam-roll", duration: "30–45 秒/肌群", intensity: "low", notes: "可选轻压力。" }, { exerciseId: "legs-up-breathing", duration: "6 分钟", intensity: "low" }] },
-      { type: "eveningRecovery", title: "Evening Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "6 分钟", intensity: "low" }] }
+      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5–6 分钟", intensity: "low" }] },
+      { type: "optionalRecovery", title: "Optional Recovery Tools", items: [{ exerciseId: "calf-foam-roll", duration: "30–45 秒/肌群", intensity: "low", optional: true, notes: "可选；轻压力。第二天更僵或更敏感就减半或跳过。" }] }
     ]
   }),
   day({
@@ -412,7 +448,7 @@ export const trainingPlan: TrainingDay[] = [
     performanceFocus: ["力量维持", "髌腱等长", "跟腱等长", "上肢基础", "农夫走"],
     upperBodyIncluded: true,
     isometricIncluded: true,
-    readinessRule: "不制造 major soreness；肌腱 >= 3/10 时动态下肢改等长或恢复。",
+    readinessRule: "不制造明显酸痛；肌腱 >= 3/10 时动态下肢改等长或恢复。",
     blocks: [
       { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-walk", duration: "5–8 分钟", intensity: "low" }, ...warmupBase.slice(1)] },
       {
@@ -420,8 +456,8 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "trap-bar-deadlift", sets: 3, reps: "3 次", intensity: "medium", rest: "2 分钟", notes: "RPE 6–7。" },
-          { exerciseId: "spanish-squat-isometric", sets: 3, duration: "30 秒", intensity: "low" },
-          { exerciseId: "calf-isometric-hold", sets: 3, duration: "25–35 秒", intensity: "low" },
+          { exerciseId: "spanish-squat-isometric", sets: 3, duration: "20–30 秒", intensity: "low", isometricPurpose: "maintenance", notes: "RPE 5–7，疼痛保持可接受且不能尖锐。" },
+          { exerciseId: "calf-isometric-hold", sets: 3, duration: "20–30 秒", intensity: "low", isometricPurpose: "maintenance", notes: "RPE 5–7；等长只是渐进负荷工具之一，不替代动态力量。" },
           { exerciseId: "push-up", sets: 3, reps: "6–10 次", intensity: "medium" },
           { exerciseId: "one-arm-dumbbell-row", sets: 3, reps: "8 次", side: "each", intensity: "medium" },
           { exerciseId: "farmer-carry", sets: 3, duration: "20–30 米", intensity: "medium" }
@@ -433,26 +469,28 @@ export const trainingPlan: TrainingDay[] = [
   }),
   day({
     day: 16,
-    title: "低量弹跳技术 + CMJ 质量",
-    type: "jump",
+    title: "恢复 + 上肢 / 核心",
+    type: "recovery",
     phase: 3,
-    goal: "保留弹跳质量，记录左右感觉，不做正式最大测试。",
-    performanceFocus: ["低量 Pogo", "CMJ 质量", "助跑起跳", "左右比较", "单腿落地"],
-    readinessRule: "不做正式 max testing；跟腱/髌腱 >= 3/10 时取消弹跳。",
+    goal: "清除下肢疲劳，用短时上肢和核心维持支撑，不安排下肢跳跃。",
+    performanceFocus: ["Zone 2", "上肢轻量", "核心抗旋转", "肩胛控制", "呼吸恢复"],
+    upperBodyIncluded: true,
+    coreIncluded: true,
+    readinessRule: "今天不做下肢跳跃；上肢和核心也不练到明显酸痛。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: warmupBase },
+      { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "easy-bike", duration: "5 分钟", intensity: "low" }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, reps: "10 次", intensity: "low", rest: "60 秒" },
-          { exerciseId: "cmj", sets: 4, reps: "2 次", intensity: "medium", rest: "90–120 秒", notes: "85–90%，记录左右感觉。" },
-          { exerciseId: "approach-jump", sets: 3, reps: "2 次", intensity: "medium", rest: "90–120 秒" },
-          { exerciseId: "single-leg-landing-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", notes: "只有跟腱/髌腱状态良好时才做。" }
+          { exerciseId: "easy-bike", duration: "12–18 分钟", intensity: "low" },
+          { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
+          { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" },
+          { exerciseId: "pallof-press", sets: 2, reps: "6 次/侧", side: "each", intensity: "low" }
         ]
       },
-      { type: "activeRecovery", title: "Active Recovery", items: recoveryFinish },
-      { type: "eveningRecovery", title: "Evening Recovery", items: eveningDownshift }
+      { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5–6 分钟", intensity: "low" }] },
+      { type: "optionalRecovery", title: "Optional Recovery Tools", items: eveningDownshift.slice(1) }
     ]
   }),
   day({
@@ -470,7 +508,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
-          { exerciseId: "catch-and-jump", sets: 2, reps: "2 次", intensity: "low", notes: "可选，轻到中等。" }
+          { exerciseId: "catch-and-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "可选，轻到中等；不做重复最大跳。", jumpContacts: { min: 0, max: 4 } }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "easy-walk", duration: "10–15 分钟", intensity: "low" }, { exerciseId: "foot-ball-release", duration: "1 分钟/侧", intensity: "low" }] },
@@ -483,7 +521,7 @@ export const trainingPlan: TrainingDay[] = [
     type: "recovery",
     phase: 3,
     goal: "保持身体新鲜，只做轻核心和腘绳肌激活。",
-    performanceFocus: ["恢复", "核心", "轻腘绳肌激活", "低强度等长", "髋 90/90", "呼吸"],
+    performanceFocus: ["恢复", "核心", "轻腘绳肌激活", "髋 90/90", "呼吸"],
     coreIncluded: true,
     isometricIncluded: true,
     readinessRule: "不做硬腘绳肌离心，不做跳跃。",
@@ -494,8 +532,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "easy-walk", duration: "15–25 分钟", intensity: "low" },
-          { exerciseId: "hamstring-walkout", sets: 2, reps: "3 次", intensity: "low" },
-          { exerciseId: "split-squat-isometric", sets: 1, duration: "20 秒/侧", side: "each", intensity: "low", notes: "浅幅、无痛、只做位置感。" },
+          { exerciseId: "hamstring-walkout", sets: 1, reps: "3 次", intensity: "low" },
           { exerciseId: "side-plank", sets: 2, duration: "20 秒", side: "each", intensity: "low" },
           { exerciseId: "dead-bug", sets: 2, reps: "5 次/侧", intensity: "low" }
         ]
@@ -519,8 +556,9 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, duration: "10 秒", intensity: "low", notes: "低幅，感觉弹即可。" },
-          { exerciseId: "cmj", sets: 2, reps: "2 次", intensity: "low", rest: "90 秒", notes: "75–80% 激活，绝不追最大。" },
+          { exerciseId: "low-pogo", sets: 2, duration: "8–10 秒", intensity: "low", notes: "低幅、快速、安静；可输入实际次数，未输入时按估算记录。", jumpContacts: { min: 8, max: 12, estimated: true } },
+          { exerciseId: "cmj", sets: 2, reps: "1–2 次", intensity: "low", rest: "90 秒", notes: "75–85% 激活，绝不追最大。", jumpContacts: { min: 2, max: 4 } },
+          { exerciseId: "approach-jump", sets: 2, reps: "节奏演练", intensity: "low", rest: "60–90 秒", optional: true, notes: "只走助跑节奏或做低幅起跳，不追高度。", jumpContacts: { min: 0, max: 4 } },
           { exerciseId: "scapular-push-up", sets: 2, reps: "6 次", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "6 次", side: "each", intensity: "low" }
         ]
@@ -538,13 +576,13 @@ export const trainingPlan: TrainingDay[] = [
     performanceFocus: ["CMJ 测试", "助跑起跳测试", "右脚外旋记录", "右膝轨迹记录", "疲劳前停止"],
     readinessRule: "只有绿色状态测试；黄色改 70–85% 技术跳，红色只恢复。测试日不做完整 French Contrast。",
     blocks: [
-      { type: "warmup", title: "Complete Warmup", items: [...warmupBase, { exerciseId: "low-pogo", sets: 2, reps: "8 次", intensity: "low" }] },
+      { type: "warmup", title: "Complete Warmup", items: [...warmupBase, { exerciseId: "low-pogo", sets: 1, reps: "6 次", intensity: "low", notes: "仅用于热身，不追高度。", jumpContacts: { min: 6, max: 6 } }] },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "cmj", sets: 3, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "3 次尝试，记录最佳和左右感觉。" },
-          { exerciseId: "approach-jump", sets: 5, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "5–6 次以内，记录右脚外旋和右膝轨迹。" }
+          { exerciseId: "cmj", sets: 3, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "最多 3 次正式尝试，记录最佳和左右感觉。", jumpContacts: { min: 3, max: 3, maxIntent: true } },
+          { exerciseId: "approach-jump", sets: 4, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "最多 4–6 次正式尝试；连续两次下降或动作变差立即停止。", jumpContacts: { min: 4, max: 6, maxIntent: true } }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "easy-walk", duration: "10–15 分钟", intensity: "low" }, { exerciseId: "worlds-greatest-stretch", sets: 1, reps: "4 次", side: "each", intensity: "low" }] },
@@ -557,7 +595,7 @@ export const trainingPlan: TrainingDay[] = [
     type: "rest",
     phase: 3,
     goal: "恢复、复盘右侧质量和腘绳肌状态，准备生成下一阶段计划。",
-    performanceFocus: ["恢复", "readiness review", "左右不平衡 check-in", "腘绳肌 soreness", "生成下一阶段计划"],
+    performanceFocus: ["恢复", "状态趋势复盘", "左右不平衡复评", "腘绳肌酸痛趋势", "生成下一阶段计划"],
     readinessRule: "不加训练压力；今天只复盘和恢复。",
     blocks: [
       { type: "warmup", title: "Complete Warmup", items: [{ exerciseId: "toe-yoga", sets: 1, reps: "8 次", side: "each", intensity: "low" }, { exerciseId: "short-foot", sets: 1, reps: "5 次", side: "each", intensity: "low" }] },

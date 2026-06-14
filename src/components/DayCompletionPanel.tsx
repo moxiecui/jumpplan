@@ -34,6 +34,14 @@ export function DayCompletionPanel({ dayKey, dayLabel, dayTitle, totalActions }:
   const loggedCount = counts.completed + counts.regressed + counts.skipped;
   const unloggedCount = Math.max(totalActions - loggedCount, 0);
   const doneCount = counts.completed + counts.regressed + counts.skipped;
+  const completedJumpContacts = dayEntries.reduce(
+    (total, entry) => total + (entry.actualJumpContacts ?? 0),
+    0
+  );
+  const maxIntentContacts = dayEntries.reduce(
+    (total, entry) => total + (entry.maxIntentContacts ?? 0),
+    0
+  );
 
   const finishDay = () => {
     completeTrainingDay({
@@ -72,6 +80,8 @@ export function DayCompletionPanel({ dayKey, dayLabel, dayTitle, totalActions }:
             <Text style={styles.countItem}>降级 {counts.regressed}</Text>
             <Text style={styles.countItem}>跳过 {counts.skipped}</Text>
             <Text style={styles.countItem}>未记录 {unloggedCount}</Text>
+            <Text style={styles.countItem}>跳跃接触 {completedJumpContacts}</Text>
+            <Text style={styles.countItem}>最大意图 {maxIntentContacts}</Text>
           </View>
 
           <Text style={styles.helpText}>

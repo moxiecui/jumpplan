@@ -122,6 +122,9 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
   const [expanded, setExpanded] = useState(false);
   const [selectedReasons, setSelectedReasons] = useState<string[]>(existingLogEntry?.reasons ?? []);
   const [skipNote, setSkipNote] = useState(existingLogEntry?.note ?? "");
+  const [actualJumpContacts, setActualJumpContacts] = useState(
+    existingLogEntry?.actualJumpContacts !== undefined ? String(existingLogEntry.actualJumpContacts) : ""
+  );
   const exercise = getExerciseById(item.exerciseId);
   const completed = status === "completed";
 
@@ -147,7 +150,14 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
       dayLabel,
       blockTitle,
       reasons: nextStatus === "regressed" && reasons.length ? reasons : undefined,
-      note: nextStatus === "skipped" && note.trim() ? note.trim() : undefined
+      note: nextStatus === "skipped" && note.trim() ? note.trim() : undefined,
+      actualJumpContacts: actualJumpContacts.trim() ? Math.max(0, Number(actualJumpContacts) || 0) : undefined,
+      maxIntentContacts: item.jumpContacts?.maxIntent && actualJumpContacts.trim()
+        ? Math.max(0, Number(actualJumpContacts) || 0)
+        : undefined,
+      landingOnlyContacts: item.jumpContacts?.landingOnly && actualJumpContacts.trim()
+        ? Math.max(0, Number(actualJumpContacts) || 0)
+        : undefined
     });
   };
 
@@ -178,6 +188,29 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
     if (status === "skipped") {
       writeLogEntry("skipped", selectedReasons, note);
     }
+  };
+
+  const updateActualContacts = (value: string) => {
+    const nextValue = value.replace(/[^\d]/g, "");
+    setActualJumpContacts(nextValue);
+    const nextStatus = status === "not-started" ? "completed" : status;
+    if (nextStatus !== status) {
+      setStatus(nextStatus);
+    }
+    const numericValue = nextValue.trim() ? Math.max(0, Number(nextValue) || 0) : undefined;
+    upsertTrainingLogEntry({
+      id: logId,
+      exerciseId: item.exerciseId,
+      exerciseName: exercise?.nameZh ?? `未知动作: ${item.exerciseId}`,
+      status: nextStatus,
+      dayLabel,
+      blockTitle,
+      reasons: nextStatus === "regressed" && selectedReasons.length ? selectedReasons : undefined,
+      note: nextStatus === "skipped" && skipNote.trim() ? skipNote.trim() : undefined,
+      actualJumpContacts: numericValue,
+      maxIntentContacts: item.jumpContacts?.maxIntent ? numericValue : undefined,
+      landingOnlyContacts: item.jumpContacts?.landingOnly ? numericValue : undefined
+    });
   };
 
   return (
@@ -218,6 +251,14 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
           </View>
           <Text style={styles.prescription}>{formatPrescription(item)}</Text>
           {item.notes ? <Text style={styles.notes}>{normalizeTrainingCopy(item.notes)}</Text> : null}
+          {item.jumpContacts ? (
+            <Text style={styles.contactPlan}>
+              计入跳跃接触：{item.jumpContacts.min}–{item.jumpContacts.max} 次
+              {item.jumpContacts.estimated ? "（未输入时为估算）" : ""}
+              {item.jumpContacts.landingOnly ? " · 落地接触" : ""}
+              {item.jumpContacts.maxIntent ? " · 最大意图" : ""}
+            </Text>
+          ) : null}
           <View style={styles.statusRow}>
             <Text style={[styles.statusPill, styles[`status-${status}`]]}>{statusLabels[status]}</Text>
             {exercise ? (
@@ -241,6 +282,18 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
             </Pressable>
           ))}
         </View>
+        {item.jumpContacts ? (
+          <View style={styles.contactInputRow}>
+            <Text style={styles.contactInputLabel}>实际完成接触次数</Text>
+            <TextInput
+              style={styles.contactInput}
+              value={actualJumpContacts}
+              onChangeText={updateActualContacts}
+              keyboardType="numeric"
+              placeholder="输入次数"
+            />
+          </View>
+        ) : null}
         {status === "regressed" ? (
           <View style={styles.reasonWrap}>
             {regressionReasons.map((reason) => (
@@ -359,6 +412,13 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     color: "#6e7781"
   },
+  contactPlan: {
+    marginTop: 6,
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#6e5500",
+    fontWeight: "800"
+  },
   statusRow: {
     marginTop: 8,
     flexDirection: "row",
@@ -402,6 +462,28 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 8,
     flexWrap: "wrap"
+  },
+  contactInputRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  contactInputLabel: {
+    flex: 1,
+    fontSize: 13,
+    color: "#24292f",
+    fontWeight: "800"
+  },
+  contactInput: {
+    width: 104,
+    minHeight: 44,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff",
+    textAlign: "center"
   },
   statusButton: {
     minHeight: 44,

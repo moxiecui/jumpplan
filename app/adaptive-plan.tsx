@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AdaptivePlanPreview } from "@/components/AdaptivePlanPreview";
+import { usePerformance } from "@/context/PerformanceContext";
+import { useReadiness } from "@/context/ReadinessContext";
+import { useTrainingLog } from "@/context/TrainingLogContext";
+import { trainingPlan } from "@/data/plan";
 import { mockPlanGenerationService } from "@/services/mockPlanGenerationService";
 import type {
   GeneratedAdaptivePlan,
@@ -62,6 +66,9 @@ function ToggleButton({
 }
 
 export default function AdaptivePlanScreen() {
+  const { basketballLogs, assessments, jumpTests } = usePerformance();
+  const { entriesByDate } = useReadiness();
+  const { entries, dayCompletions } = useTrainingLog();
   const [trigger, setTrigger] = useState<PlanGenerationTrigger>("mid-cycle-adjustment");
   const [requestedLength, setRequestedLength] = useState<PlanLength>("21-days");
   const [completedExerciseIds, setCompletedExerciseIds] = useState("");
@@ -101,6 +108,46 @@ export default function AdaptivePlanScreen() {
       requestedLength,
       currentPlanTitle: "JumpPlan 21-day vertical jump performance plan",
       recentFeedback: [feedback],
+      readinessContext: Object.values(entriesByDate).map((entry) => entry.adjustment),
+      performanceContext: {
+        jumpContacts: [
+          {
+            plannedContacts: 0,
+            completedContacts: entries.reduce(
+              (total, entry) => total + (entry.actualJumpContacts ?? 0),
+              0
+            ),
+            maxIntentContacts: entries.reduce(
+              (total, entry) => total + (entry.maxIntentContacts ?? 0),
+              0
+            ),
+            landingOnlyContacts: entries.reduce(
+              (total, entry) => total + (entry.landingOnlyContacts ?? 0),
+              0
+            ),
+            estimatedBasketballContacts: basketballLogs.reduce(
+              (total, log) => total + (log.estimatedJumpContacts ?? 0),
+              0
+            )
+          }
+        ],
+        basketballLogs,
+        jumpTests,
+        rightSideAssessments: assessments,
+        highImpactDayCount: dayCompletions.filter((completion) => {
+          const dayNumber = Number(completion.dayLabel.replace(/[^\d]/g, ""));
+          return trainingPlan.find((day) => day.day === dayNumber)?.impactLevel === "high";
+        }).length,
+        hamstringSorenessTrend: Object.values(entriesByDate)
+          .map((entry) => entry.subjective?.hamstringSoreness)
+          .filter((value): value is number => typeof value === "number"),
+        skippedExerciseIds: entries
+          .filter((entry) => entry.status === "skipped")
+          .map((entry) => entry.exerciseId),
+        regressedExerciseIds: entries
+          .filter((entry) => entry.status === "regressed")
+          .map((entry) => entry.exerciseId)
+      },
       cycleSummary:
         trigger === "end-of-cycle-regeneration"
           ? {

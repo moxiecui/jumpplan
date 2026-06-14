@@ -9,6 +9,24 @@ export type TrainingDayType =
 
 export type Intensity = "low" | "medium" | "high";
 
+export type ImpactLevel = "none" | "low" | "moderate" | "high" | "variable";
+
+export type EstimatedFatigue =
+  | "very-low"
+  | "low"
+  | "moderate"
+  | "moderate-high"
+  | "high"
+  | "variable";
+
+export type BasketballLoadLevel = "none" | "light" | "moderate" | "high";
+
+export type IsometricPurpose =
+  | "maintenance"
+  | "position-control"
+  | "symptom-management"
+  | "high-force";
+
 export type TrainingItemCompletionStatus =
   | "not-started"
   | "completed"
@@ -20,6 +38,7 @@ export type TrainingBlockType =
   | "main"
   | "activeRecovery"
   | "eveningRecovery"
+  | "optionalRecovery"
   | "notes";
 
 export interface Exercise {
@@ -60,6 +79,15 @@ export interface TrainingItem {
   intensity?: Intensity;
   rest?: string;
   notes?: string;
+  optional?: boolean;
+  jumpContacts?: {
+    min: number;
+    max: number;
+    estimated?: boolean;
+    landingOnly?: boolean;
+    maxIntent?: boolean;
+  };
+  isometricPurpose?: IsometricPurpose;
 }
 
 export interface TrainingBlock {
@@ -82,7 +110,68 @@ export interface TrainingDay {
   nutritionPlanId?: string;
   contrastModuleId?: "french-contrast";
   readinessRule?: string;
+  impactLevel: ImpactLevel;
+  estimatedFatigue: EstimatedFatigue;
+  estimatedDurationMinutes?: {
+    min: number;
+    max: number;
+  };
+  plannedJumpContacts?: {
+    min: number;
+    max: number;
+  };
+  maxIntentJumpContacts?: {
+    min: number;
+    max: number;
+  };
+  conditionalRules?: string[];
+  assessmentProtocolId?: "right-side-reassessment";
   blocks: TrainingBlock[];
+}
+
+export interface JumpContactSummary {
+  plannedContacts: number;
+  completedContacts: number;
+  maxIntentContacts: number;
+  landingOnlyContacts: number;
+  estimatedBasketballContacts?: number;
+}
+
+export interface BasketballSessionLog {
+  date: string;
+  durationMinutes: number;
+  sessionRpe: number;
+  loadLevel: BasketballLoadLevel;
+  fullCourt: boolean;
+  repeatedMaxJumps: boolean;
+  estimatedJumpContacts?: number;
+  sprintLoad?: 0 | 1 | 2 | 3;
+  changeOfDirectionLoad?: 0 | 1 | 2 | 3;
+  notes?: string;
+}
+
+export interface RightSideAssessment {
+  date: string;
+  dayNumber: 1 | 14 | 20 | 21;
+  rightFootExternalRotation: 0 | 1 | 2 | 3;
+  rightKneeValgus: 0 | 1 | 2 | 3;
+  pelvisStability: 1 | 2 | 3 | 4 | 5;
+  landingQuietness: 1 | 2 | 3 | 4 | 5;
+  holdTwoSeconds: boolean;
+  shiftTowardLeft: 0 | 1 | 2 | 3;
+  notes?: string;
+}
+
+export interface JumpTestResult {
+  date: string;
+  cmjBest?: number;
+  approachJumpBest?: number;
+  unit: "cm" | "in" | "reach-mark";
+  cmjAttempts: number;
+  approachJumpAttempts: number;
+  movementQuality: 1 | 2 | 3 | 4 | 5;
+  stoppedForDecline: boolean;
+  notes?: string;
 }
 
 export interface OuraDailyReadinessInput {
@@ -100,6 +189,14 @@ export interface SubjectiveReadinessInput {
   patellarPain: number;
   calfTightness: number;
   sleepQuality: 1 | 2 | 3 | 4 | 5;
+  hamstringSoreness: number;
+  upperBodySoreness: number;
+  generalDoms: number;
+  generalFatigue: 1 | 2 | 3 | 4 | 5;
+  movementQualityToday: 1 | 2 | 3 | 4 | 5;
+  legsFeelHeavy: boolean;
+  basketballLoadLast24h: BasketballLoadLevel;
+  basketballLoadLast48h: BasketballLoadLevel;
   notes?: string;
 }
 

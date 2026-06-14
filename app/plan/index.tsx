@@ -3,7 +3,12 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { trainingPlan } from "@/data/plan";
-import { getTrainingDayTypeLabel } from "@/logic/trainingDisplay";
+import { RollingLoadSummaryCard } from "@/components/RollingLoadSummaryCard";
+import {
+  estimatedFatigueLabels,
+  getTrainingDayTypeLabel,
+  impactLevelLabels
+} from "@/logic/trainingDisplay";
 import type { TrainingDay, TrainingDayType } from "@/types/training";
 
 type PlanFilter = TrainingDayType | "upper-body" | "core" | "isometric" | "all";
@@ -51,6 +56,7 @@ export default function PlanScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>21天计划</Text>
       <Text style={styles.subtitle}>三阶段垂直弹跳计划：控制建立、力量转化、整合测试。</Text>
+      <RollingLoadSummaryCard />
 
       <View style={styles.filterRow}>
         {filterOptions.map((option) => (
@@ -88,6 +94,10 @@ export default function PlanScreen() {
           ) : null}
           <Text style={styles.dayTitle}>{day.title}</Text>
           <Text style={styles.goal}>{day.goal}</Text>
+          <Text style={styles.loadMeta}>
+            冲击：{impactLevelLabels[day.impactLevel]} · 疲劳：{estimatedFatigueLabels[day.estimatedFatigue]}
+            {day.plannedJumpContacts ? ` · 跳跃 ${day.plannedJumpContacts.min}–${day.plannedJumpContacts.max}` : ""}
+          </Text>
           {day.performanceFocus?.length ? (
             <View style={styles.focusRow}>
               {day.performanceFocus.slice(0, 4).map((focus) => (
@@ -206,6 +216,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#57606a"
+  },
+  loadMeta: {
+    marginTop: 7,
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#57606a",
+    fontWeight: "800"
   },
   focusRow: {
     marginTop: 10,

@@ -2,6 +2,10 @@ import { exercises } from "@/data/exercises";
 import { glossaryEntries } from "@/data/glossary";
 import { dailyNutritionPlans, nutritionItems } from "@/data/nutrition";
 import { trainingPlan } from "@/data/plan";
+import {
+  singleLegProgressionLadder,
+  singleLegStiffnessExerciseIds
+} from "@/data/singleLegStiffness";
 import { buildRollingSevenDaySummaries } from "@/logic/jumpContacts";
 
 const hardHamstringIds = new Set([
@@ -30,6 +34,16 @@ export function validateTrainingPlan() {
   const referencedGlossaryIds = glossaryEntries.flatMap((entry) => entry.relatedTerms ?? []);
   const rollingWindows = buildRollingSevenDaySummaries(trainingPlan);
   const consecutiveModerateHighLowerBodyDays: string[] = [];
+  const duplicateExerciseIds = unique(
+    exercises
+      .map((exercise) => exercise.id)
+      .filter((id, index, allIds) => allIds.indexOf(id) !== index)
+  );
+  const requestedSingleLegContactDays = [1, 8, 11, 13, 19, 20];
+  const highImpactDays = trainingPlan
+    .filter((day) => day.impactLevel === "high")
+    .map((day) => day.day);
+  const expectedHighImpactDays = [8, 11, 13, 20];
 
   for (let index = 1; index < trainingPlan.length; index += 1) {
     const previous = trainingPlan[index - 1];
@@ -94,6 +108,39 @@ export function validateTrainingPlan() {
       })
       .map((day) => day.day),
     recoveryDayProblems,
+    recoveryDaysUnder35Minutes: trainingPlan
+      .filter((day) => day.type === "recovery" || day.type === "rest")
+      .every((day) => (day.estimatedDurationMinutes?.max ?? 0) <= 35),
+    highImpactDays,
+    noNewHighImpactDays:
+      highImpactDays.length === expectedHighImpactDays.length &&
+      highImpactDays.every((day, index) => day === expectedHighImpactDays[index]),
+    updatedPlannedJumpContacts: requestedSingleLegContactDays.map((dayNumber) => {
+      const day = trainingPlan.find((item) => item.day === dayNumber);
+      return {
+        day: dayNumber,
+        plannedJumpContacts: day?.plannedJumpContacts
+          ? `${day.plannedJumpContacts.min}-${day.plannedJumpContacts.max}`
+          : "none",
+        maxIntentJumpContacts: day?.maxIntentJumpContacts
+          ? `${day.maxIntentJumpContacts.min}-${day.maxIntentJumpContacts.max}`
+          : "none"
+      };
+    }),
+    newSingleLegExerciseIds: singleLegStiffnessExerciseIds,
+    missingSingleLegExerciseIds: singleLegStiffnessExerciseIds.filter((id) => !exerciseIds.has(id)),
+    singleLegExercisesMissingProgressionSets: singleLegStiffnessExerciseIds.filter((id) => {
+      const exercise = exercises.find((item) => item.id === id);
+      return !exercise?.progressions?.length || !exercise.regressions?.length || !exercise.progressionCriteria?.length || !exercise.regressionCriteria?.length;
+    }),
+    singleLegExercisesMissingTrackingFields: singleLegStiffnessExerciseIds.filter((id) => {
+      const exercise = exercises.find((item) => item.id === id);
+      return !exercise?.trackingFields?.length;
+    }),
+    missingProgressionLadderExerciseIds: unique(
+      singleLegProgressionLadder.flatMap((step) => step.exercises).filter((id) => !exerciseIds.has(id))
+    ),
+    duplicateExerciseIds,
     missingExerciseIds: unique(referencedExerciseIds.filter((id) => !exerciseIds.has(id))),
     missingNutritionItemIds: unique(referencedNutritionIds.filter((id) => !nutritionIds.has(id))),
     missingNutritionPlanIds: unique(

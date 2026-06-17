@@ -21,7 +21,10 @@ type SubjectiveField =
   | "upperBodySoreness"
   | "generalDoms"
   | "generalFatigue"
-  | "movementQualityToday";
+  | "movementQualityToday"
+  | "rightFootExternalRotation"
+  | "rightFootControl"
+  | "rightKneeTracking";
 type OuraField = "readinessScore" | "restingHeartRate" | "hrv" | "sleepScore";
 type BaselineField = "restingHeartRate" | "hrv";
 
@@ -34,7 +37,10 @@ const subjectiveLabels: Record<SubjectiveField, { label: string; min: number; ma
   upperBodySoreness: { label: "上肢酸痛", min: 0, max: 10 },
   generalDoms: { label: "全身 DOMS", min: 0, max: 10 },
   generalFatigue: { label: "整体疲劳", min: 1, max: 5 },
-  movementQualityToday: { label: "今日动作质量", min: 1, max: 5 }
+  movementQualityToday: { label: "今日动作质量", min: 1, max: 5 },
+  rightFootExternalRotation: { label: "右脚外旋", min: 0, max: 3 },
+  rightFootControl: { label: "右脚控制", min: 1, max: 5 },
+  rightKneeTracking: { label: "右膝轨迹", min: 1, max: 5 }
 };
 
 const loadOptions: BasketballLoadLevel[] = ["none", "light", "moderate", "high"];
@@ -92,6 +98,9 @@ export default function CheckInScreen() {
     generalDoms: 0,
     generalFatigue: 2,
     movementQualityToday: 4,
+    rightFootExternalRotation: 0,
+    rightFootControl: 4,
+    rightKneeTracking: 4,
     legsFeelHeavy: false,
     basketballLoadLast24h: "none",
     basketballLoadLast48h: "none"
@@ -150,6 +159,7 @@ export default function CheckInScreen() {
       ...current,
       [field]:
         field === "sleepQuality" || field === "generalFatigue" || field === "movementQualityToday"
+          || field === "rightFootExternalRotation" || field === "rightFootControl" || field === "rightKneeTracking"
           ? Math.round(nextValue)
           : nextValue
     }));

@@ -58,6 +58,28 @@ const regressionReasons = [
   "时间不够"
 ];
 
+const trackingFieldLabels: Record<NonNullable<Exercise["trackingFields"]>[number], string> = {
+  durationSec: "保持秒数",
+  painScore: "疼痛分",
+  rightFootControl: "右脚控制",
+  rightKneeTracking: "右膝轨迹",
+  rpe: "RPE",
+  landingQuality: "落地质量",
+  landingQuietness: "落地安静",
+  rightFootExternalRotation: "右脚外旋",
+  pelvisStability: "骨盆稳定",
+  holdTwoSeconds: "定住 2 秒",
+  weight: "重量",
+  reps: "次数",
+  topPositionStability: "顶部稳定",
+  balanceQuality: "平衡质量",
+  contactRhythm: "触地节奏",
+  jumpContacts: "跳跃接触",
+  takeoffLeg: "起跳腿",
+  jumpHeightCm: "跳高 cm",
+  reachHeightCm: "摸高 cm"
+};
+
 function formatPrescription(item: TrainingItem): string {
   const parts = [
     item.sets ? `${item.sets} 组` : undefined,
@@ -108,6 +130,16 @@ function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
       <DetailList title="常见错误" items={exercise.commonMistakes} />
       <DetailList title="降低难度" items={exercise.regressions} />
       <DetailList title="提高难度" items={exercise.progressions} />
+      <DetailList title="什么时候退阶" items={exercise.regressionCriteria} />
+      <DetailList title="什么时候进阶" items={exercise.progressionCriteria} />
+      {exercise.trackingFields?.length ? (
+        <View style={styles.detailBlock}>
+          <Text style={styles.detailTitle}>本次记录</Text>
+          <Text style={styles.detailParagraph}>
+            {exercise.trackingFields.map((field) => trackingFieldLabels[field]).join(" / ")}
+          </Text>
+        </View>
+      ) : null}
       <DetailList title="疼痛 / 安全规则" items={exercise.painRules} />
       <ExerciseVideoSection exercise={exercise} compact />
     </View>

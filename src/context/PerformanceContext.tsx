@@ -3,16 +3,19 @@ import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import type {
   BasketballSessionLog,
   JumpTestResult,
-  RightSideAssessment
+  RightSideAssessment,
+  SingleLegStiffnessAssessment
 } from "@/types/training";
 
 interface PerformanceContextValue {
   basketballLogs: BasketballSessionLog[];
   assessments: RightSideAssessment[];
   jumpTests: JumpTestResult[];
+  singleLegAssessments: SingleLegStiffnessAssessment[];
   saveBasketballLog: (log: BasketballSessionLog) => void;
   saveAssessment: (assessment: RightSideAssessment) => void;
   saveJumpTest: (result: JumpTestResult) => void;
+  saveSingleLegAssessment: (assessment: SingleLegStiffnessAssessment) => void;
   getBasketballLog: (date: string) => BasketballSessionLog | undefined;
 }
 
@@ -22,12 +25,14 @@ export function PerformanceProvider({ children }: { children: ReactNode }) {
   const [basketballLogs, setBasketballLogs] = useState<BasketballSessionLog[]>([]);
   const [assessments, setAssessments] = useState<RightSideAssessment[]>([]);
   const [jumpTests, setJumpTests] = useState<JumpTestResult[]>([]);
+  const [singleLegAssessments, setSingleLegAssessments] = useState<SingleLegStiffnessAssessment[]>([]);
 
   const value = useMemo<PerformanceContextValue>(
     () => ({
       basketballLogs,
       assessments,
       jumpTests,
+      singleLegAssessments,
       saveBasketballLog: (log) => {
         setBasketballLogs((current) => [
           ...current.filter((item) => item.date !== log.date),
@@ -48,9 +53,17 @@ export function PerformanceProvider({ children }: { children: ReactNode }) {
           result
         ]);
       },
+      saveSingleLegAssessment: (assessment) => {
+        setSingleLegAssessments((current) => [
+          ...current.filter(
+            (item) => item.date !== assessment.date || item.dayNumber !== assessment.dayNumber
+          ),
+          assessment
+        ]);
+      },
       getBasketballLog: (date) => basketballLogs.find((item) => item.date === date)
     }),
-    [assessments, basketballLogs, jumpTests]
+    [assessments, basketballLogs, jumpTests, singleLegAssessments]
   );
 
   return <PerformanceContext.Provider value={value}>{children}</PerformanceContext.Provider>;

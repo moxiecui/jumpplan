@@ -59,6 +59,17 @@ const youtubeSearchQueriesByExerciseId: Record<string, string> = {
   "hurdle-hop-forward-back": "forward backward hurdle hop drill",
   "lateral-hurdle-hop": "lateral hurdle hop plyometric drill",
   "single-leg-landing-stick": "single leg landing stick drill knee control",
+  "single-leg-calf-isometric-hold": "single leg calf isometric hold Achilles ankle stiffness",
+  "single-leg-snap-down-stick": "single leg snap down to stick landing drill",
+  "step-up-knee-drive-hold": "low box step up knee drive hold single leg takeoff",
+  "single-leg-rdl-top-lock": "single leg RDL top position hold knee drive",
+  "single-leg-forward-lean-isometric": "single leg forward lean isometric sprint takeoff position",
+  "single-leg-low-pogo": "single leg low pogo ankle stiffness exercise",
+  "forward-back-single-leg-pogo": "forward backward single leg pogo ankle stiffness",
+  "lateral-single-leg-pogo": "lateral single leg pogo ankle stiffness drill",
+  "penultimate-step-drill": "basketball penultimate step single leg takeoff drill",
+  "two-step-single-leg-approach-jump": "two step single leg approach jump technique",
+  "max-single-leg-approach-jump": "single leg approach jump test technique",
   "rdl": "Romanian deadlift technique hip hinge",
   "nordic-curl": "nordic hamstring curl technique",
   "copenhagen-plank": "copenhagen plank exercise technique",
@@ -90,20 +101,7 @@ function getVideoNote(exercise: Exercise) {
   return defaultVideoNote;
 }
 
-function supportExercise(params: {
-  id: string;
-  nameZh: string;
-  nameEn?: string;
-  category: Exercise["category"];
-  purpose: string;
-  whyForUser: string;
-  instructions: string[];
-  keyCues: string[];
-  commonMistakes: string[];
-  regressions: string[];
-  progressions: string[];
-  painRules: string[];
-}): Exercise {
+function supportExercise(params: Exercise): Exercise {
   return params;
 }
 
@@ -845,6 +843,270 @@ const exerciseDefinitions: Exercise[] = [
     regressions: ["台阶下放", "小幅跨步定住"],
     progressions: ["增加起跳距离", "侧向落地"],
     painRules: ["疼痛或落地失控时停止。", "跟腱/髌腱 >= 3/10 时跳过。"]
+  }),
+  supportExercise({
+    id: "single-leg-calf-isometric-hold",
+    nameZh: "单脚提踵等长保持",
+    nameEn: "Single-Leg Calf Isometric Hold",
+    category: "isometric",
+    purpose: "训练单脚足踝刚性、小腿持续张力和跟腱可控负荷，为单脚起跳提供稳定的末端支撑。",
+    whyForUser:
+      "单脚起跳需要支撑脚在很短时间内保持稳定，避免脚踝塌陷和力量从足弓、膝盖或骨盆处泄掉。这个动作可以先建立右侧足踝的静态支撑能力，再进阶到单脚 Pogo 和助跑单脚起跳。",
+    instructions: [
+      "扶墙或扶固定物站立。",
+      "单脚站立，脚跟、大脚趾根、小脚趾根保持三点支撑。",
+      "缓慢提踵到中高位。",
+      "保持脚跟垂直向上，不向内或向外偏。",
+      "保持 20–40 秒，正常呼吸。",
+      "缓慢放下并完全重置。"
+    ],
+    keyCues: ["大脚趾根压地。", "脚跟直上直下。", "足弓保持。", "膝盖对准第二、三脚趾。", "身体不要左右晃。"],
+    commonMistakes: ["重心滚到脚外侧。", "右脚明显外旋。", "脚跟向内或向外偏。", "用脚趾抓地。", "为了时间忍着尖锐跟腱疼痛。"],
+    regressions: ["双脚提踵等长保持。", "扶墙单脚低位保持。", "缩短到 10–20 秒。"],
+    progressions: ["增加到 40–45 秒。", "手持轻哑铃。", "顶部加入轻微摆动腿提膝。", "进阶到单脚低幅 Pogo。"],
+    painRules: ["跟腱晨僵或疼痛 >=3/10 时改双脚版本或跳过。", "出现尖锐跟腱、足底或小腿疼痛时停止。", "第二天晨僵明显增加时，下次减少时间或组数。"],
+    glossaryTermIds: ["single-leg-stiffness", "ankle-stiffness", "tripod-foot", "plant-leg"],
+    trackingFields: ["durationSec", "painScore", "rightFootControl", "rightKneeTracking", "rpe"],
+    progressionCriteria: ["疼痛 <=1–2/10。", "右脚控制 >=4/5。", "右膝轨迹 >=4/5。", "骨盆稳定 >=4/5。"],
+    regressionCriteria: ["跟腱或髌腱症状 >=3/10。", "右脚控制 <=2/5。", "右脚外旋变明显。", "第二天晨僵增加。"]
+  }),
+  supportExercise({
+    id: "single-leg-snap-down-stick",
+    nameZh: "单腿快速下沉定住",
+    nameEn: "Single-Leg Snap Down to Stick",
+    category: "plyometric",
+    purpose: "训练单腿快速建立全腿刚性，并在落地瞬间控制足弓、膝盖和骨盆。",
+    whyForUser:
+      "你的右脚容易外旋、右侧发力偏弱。这个动作可以在低跳跃高度下观察右脚落地角度、右膝轨迹和骨盆稳定，比直接做最大单腿跳更容易控制。",
+    instructions: [
+      "先从双脚站立或脚尖轻提开始。",
+      "快速向下进入单腿支撑位。",
+      "落到目标腿后，髋和膝轻微弯曲吸收冲击。",
+      "保持足弓和脚三点支撑。",
+      "定住 2–3 秒。",
+      "每次完全重置后再做下一次。"
+    ],
+    keyCues: ["快下沉，稳住。", "落地声音轻。", "膝盖对准脚尖。", "骨盆保持水平。", "右脚不要外八逃避。"],
+    commonMistakes: ["膝盖锁死。", "落地过深变成单腿深蹲。", "右脚外旋。", "膝盖内扣。", "落地后晃动很大仍继续做。"],
+    regressions: ["双脚 Snap Down 定住。", "跨步到单腿定住。", "扶墙单腿下沉定住。"],
+    progressions: ["小幅跳起后单腿落地定住。", "侧向小跳到单腿定住。", "低箱跳深单腿落地，仅在动作稳定后。"],
+    painRules: ["跟腱或髌腱疼痛 >=3/10 时取消。", "落地无法安静或膝盖明显内扣时退阶。", "不要为了增加高度牺牲落地质量。"],
+    glossaryTermIds: ["single-leg-stiffness", "tripod-foot", "pelvis-stability", "plant-leg"],
+    trackingFields: ["landingQuality", "rightFootExternalRotation", "rightKneeTracking", "pelvisStability", "holdTwoSeconds", "painScore"],
+    progressionCriteria: ["落地安静。", "定住 2 秒。", "右脚外旋没有增加。", "右膝轨迹 >=4/5。"],
+    regressionCriteria: ["落地质量 <=2/5。", "右脚控制 <=2/5。", "右膝轨迹 <=2/5。", "动作变慢、变响或疼痛出现。"]
+  }),
+  supportExercise({
+    id: "step-up-knee-drive-hold",
+    nameZh: "低箱上步提膝保持",
+    nameEn: "Low Box Step-Up Knee Drive Hold",
+    category: "strength",
+    purpose: "训练支撑腿髋膝踝协同伸展、摆动腿驱动和单腿顶部稳定。",
+    whyForUser:
+      "这个动作与单脚起跳的发力位置接近，但冲击比实际跳跃低。它可以帮助右侧在脚三点支撑、膝盖对线和骨盆稳定的前提下完成向上发力。",
+    instructions: [
+      "一只脚完整踩在低箱上。",
+      "前脚保持脚三点支撑。",
+      "身体轻微前倾，核心稳定。",
+      "用箱上的腿把身体推上去。",
+      "对侧膝盖快速向上提。",
+      "顶部提踵并保持 1–2 秒。",
+      "缓慢下放并完全重置。"
+    ],
+    keyCues: ["前脚推箱。", "后脚不偷力。", "摆动腿主动提膝。", "顶部站高、站稳。", "膝盖不内扣。"],
+    commonMistakes: ["箱子太高。", "后脚蹬地太多。", "右脚外旋。", "顶部身体歪向一侧。", "为了速度失去控制。"],
+    regressions: ["普通低箱上步。", "扶墙上步提膝。", "降低箱高。"],
+    progressions: ["手持轻哑铃。", "增加顶部停顿。", "低箱上步提膝跳。", "与倒数第二步技术连接。"],
+    painRules: ["髌腱疼痛 >=3/10 时降低箱高或改等长分腿蹲。", "右脚或右膝控制不住时停止加重量。", "不要把后脚蹬地当作主要动力。"],
+    glossaryTermIds: ["plant-leg", "swing-leg-drive", "force-transfer", "tripod-foot"],
+    trackingFields: ["weight", "reps", "rpe", "rightFootControl", "rightKneeTracking", "topPositionStability"],
+    progressionCriteria: ["顶部稳定 >=4/5。", "右脚控制 >=4/5。", "右膝轨迹 >=4/5。", "髌腱反应安静。"],
+    regressionCriteria: ["髌腱疼痛 >=3/10。", "顶部身体歪斜明显。", "后脚蹬地变成主要动力。", "右脚外旋增加。"]
+  }),
+  supportExercise({
+    id: "single-leg-rdl-top-lock",
+    nameZh: "单腿 RDL 顶部锁定",
+    nameEn: "Single-Leg RDL with Top Position Lock",
+    category: "strength",
+    purpose: "训练单腿后侧链、髋稳定、骨盆抗旋转和顶部支撑能力。",
+    whyForUser:
+      "单脚起跳效率不仅取决于小腿，还依赖臀肌、腘绳肌和骨盆能否在单腿支撑时稳定传力。这个动作可以改善右侧髋控制，减少起跳时骨盆旋转和身体向左侧转移。",
+    instructions: [
+      "单脚站立，支撑脚保持三点支撑。",
+      "髋向后推，躯干向前倾。",
+      "非支撑腿向后延伸。",
+      "保持骨盆朝向地面，不打开。",
+      "支撑腿臀部和腘绳肌发力回到站立。",
+      "顶部提膝或保持单腿站立 1–2 秒。",
+      "完全稳定后开始下一次。"
+    ],
+    keyCues: ["髋向后。", "骨盆保持正。", "脚三点支撑。", "回到顶部后站稳。", "右脚不要外旋。"],
+    commonMistakes: ["骨盆打开。", "右膝内扣。", "下背代偿。", "回到顶部时失去平衡。", "重量太大导致动作旋转。"],
+    regressions: ["Kickstand RDL。", "扶墙单腿 RDL。", "徒手单腿髋铰链。"],
+    progressions: ["对侧手持哑铃。", "增加顶部提膝。", "底部停顿 1 秒。", "与上步提膝保持组合。"],
+    painRules: ["腰部或腘绳肌出现尖锐疼痛时停止。", "右脚控制不住时降低重量。", "腘绳肌酸痛 >=4/10 时改轻量或跳过。"],
+    glossaryTermIds: ["anti-rotation", "pelvis-stability", "force-transfer", "tripod-foot"],
+    trackingFields: ["weight", "reps", "rpe", "rightFootControl", "pelvisStability", "balanceQuality"],
+    progressionCriteria: ["骨盆稳定 >=4/5。", "右脚控制 >=4/5。", "顶部能稳定 1–2 秒。", "腘绳肌无明显酸痛。"],
+    regressionCriteria: ["腘绳肌酸痛 >=4/10。", "腰部刺痛。", "骨盆打开或身体旋转明显。", "右脚控制 <=2/5。"]
+  }),
+  supportExercise({
+    id: "single-leg-forward-lean-isometric",
+    nameZh: "单脚前倾等长支撑",
+    nameEn: "Single-Leg Forward-Lean Isometric",
+    category: "isometric",
+    purpose: "训练助跑单脚起跳接地角度下的足踝、膝髋和躯干稳定。",
+    whyForUser:
+      "单脚助跑起跳时，支撑腿需要在轻微前倾和较短触地时间内快速建立稳定。这个动作可以低冲击地练习接地姿势和整条腿的支撑刚性。",
+    instructions: [
+      "单脚站立，另一脚轻轻离地。",
+      "身体从脚踝开始轻微前倾。",
+      "支撑膝轻微弯曲。",
+      "保持脚三点支撑和足弓。",
+      "骨盆保持水平，躯干保持一条线。",
+      "保持 15–25 秒。"
+    ],
+    keyCues: ["从脚踝前倾，不是弯腰。", "脚掌压稳。", "膝盖对准脚尖。", "骨盆不转。", "身体像一个稳定支柱。"],
+    commonMistakes: ["腰部前屈。", "脚跟抬起过多。", "右脚外旋。", "膝盖内扣。", "身体左右晃动。"],
+    regressions: ["扶墙单脚前倾保持。", "双脚分腿站姿前倾保持。", "缩短保持时间。"],
+    progressions: ["增加摆动腿提膝。", "加入双臂上摆位置。", "进阶到低速度单脚起跳节奏练习。"],
+    painRules: ["跟腱、足底或膝盖出现尖锐疼痛时停止。", "无法保持脚三点支撑时退阶。"],
+    glossaryTermIds: ["single-leg-stiffness", "plant-leg", "ankle-stiffness", "ground-contact-time"],
+    trackingFields: ["durationSec", "rightFootControl", "rightKneeTracking", "pelvisStability", "painScore"],
+    progressionCriteria: ["脚三点支撑稳定。", "骨盆稳定 >=4/5。", "右膝轨迹 >=4/5。", "保持后第二天无晨僵增加。"],
+    regressionCriteria: ["跟腱、足底或膝盖刺痛。", "无法从脚踝前倾。", "右脚外旋明显。", "身体左右晃动。"]
+  }),
+  supportExercise({
+    id: "single-leg-low-pogo",
+    nameZh: "单脚低幅 Pogo",
+    nameEn: "Single-Leg Low Pogo",
+    category: "plyometric",
+    purpose: "把静态单腿刚性转化为低幅动态足踝反应能力。",
+    whyForUser:
+      "单脚起跳需要支撑脚快速、安静、短触地。这个动作只用低幅、低接触次数练节奏，帮助右侧从等长支撑过渡到动态起跳。",
+    instructions: [
+      "扶墙或自由单脚站立，先建立脚三点支撑。",
+      "用很低的幅度轻弹离地。",
+      "每侧从 2 组 x 6–8 次接触开始。",
+      "组间充分休息，不做连续疲劳跳。",
+      "节奏变慢、落地变响或右脚外旋增加时停止。"
+    ],
+    keyCues: ["安静落地。", "触地短。", "脚三点支撑。", "膝微弯。", "右脚不向外转。"],
+    commonMistakes: ["跳太高。", "连续跳到疲劳。", "膝盖锁死。", "重心滚到脚外侧。", "节奏慢了还硬撑。"],
+    regressions: ["双脚低幅 Pogo。", "扶墙踝弹。", "提踵等长保持。"],
+    progressions: ["前后单脚 Pogo。", "侧向单脚 Pogo。", "稳定耐受后再做低栏单脚跳。"],
+    painRules: ["跟腱晨僵 >=3/10 时取消。", "出现髌腱、小腿、足底或跟腱尖锐痛时取消。", "第二天晨僵增加时，下次减少 50% 接触次数或跳过。"],
+    glossaryTermIds: ["single-leg-stiffness", "ankle-stiffness", "ground-contact-time", "tripod-foot"],
+    trackingFields: ["jumpContacts", "landingQuietness", "contactRhythm", "rightFootExternalRotation", "painScore"],
+    progressionCriteria: ["落地安静。", "接触节奏保持快速。", "第二天跟腱晨僵没有增加。", "右脚外旋没有增加。"],
+    regressionCriteria: ["肌腱症状 >=3/10。", "落地质量 <=2/5。", "右脚控制 <=2/5。", "节奏变慢或声音变重。"]
+  }),
+  supportExercise({
+    id: "forward-back-single-leg-pogo",
+    nameZh: "前后单脚 Pogo",
+    nameEn: "Forward/Back Single-Leg Pogo",
+    category: "plyometric",
+    purpose: "在单脚低幅 Pogo 稳定后，小幅加入前后方向的足踝反应控制。",
+    whyForUser:
+      "单脚起跳和篮球脚步需要支撑脚在轻微前后位移中仍保持足弓、膝盖和骨盆稳定。这个动作只作为进阶，不是当前每周必做项目。",
+    instructions: ["先完成单脚低幅 Pogo 热身。", "用很小幅度向前、向后轻弹。", "每组 4–6 次总接触即可。", "每次保持右脚不外旋、落地安静。"],
+    keyCues: ["幅度小。", "触地轻。", "脚三点。", "右膝走正。", "节奏不变慢。"],
+    commonMistakes: ["向前跳太远。", "右脚外旋。", "落地声音变大。", "连续跳到疲劳。"],
+    regressions: ["单脚低幅 Pogo。", "提踵等长保持。", "单脚前倾等长支撑。"],
+    progressions: ["侧向单脚 Pogo。", "低栏单脚跳。", "两步单脚助跑起跳。"],
+    painRules: ["跟腱或髌腱 >=3/10 时取消。", "篮球高负荷后 24 小时内不做。", "第二天晨僵增加时下次减半或跳过。"],
+    glossaryTermIds: ["single-leg-stiffness", "ankle-stiffness", "ground-contact-time", "tripod-foot"],
+    trackingFields: ["jumpContacts", "landingQuietness", "contactRhythm", "rightFootExternalRotation", "painScore"],
+    progressionCriteria: ["单脚低幅 Pogo 落地安静。", "右脚控制 >=4/5。", "接触节奏稳定。", "没有第二天跟腱晨僵增加。"],
+    regressionCriteria: ["肌腱症状 >=3/10。", "右脚外旋 >=2。", "落地质量 <=2/5。", "节奏变慢。"]
+  }),
+  supportExercise({
+    id: "lateral-single-leg-pogo",
+    nameZh: "侧向单脚 Pogo",
+    nameEn: "Lateral Single-Leg Pogo",
+    category: "plyometric",
+    purpose: "在单脚刚性稳定后，低量训练侧向小幅反应和膝脚对线。",
+    whyForUser:
+      "篮球横移和急停会给右脚、右膝和髋部侧向挑战。这个动作只有在静态和前后动态质量稳定后才使用。",
+    instructions: ["从单脚站稳开始。", "向左右小幅轻弹，幅度只需几厘米。", "每组 4–6 次总接触。", "每组后完全休息并检查右脚角度。"],
+    keyCues: ["小幅侧移。", "膝盖对脚尖。", "骨盆平。", "落地安静。", "不追数量。"],
+    commonMistakes: ["跳幅太大。", "膝盖内扣。", "骨盆左右甩。", "疲劳后继续。"],
+    regressions: ["侧向跨步定住。", "单脚低幅 Pogo。", "单腿快速下沉定住。"],
+    progressions: ["低栏侧向单脚跳。", "侧向停步到起跳。", "篮球急停转化。"],
+    painRules: ["跟腱、髌腱、足底或膝盖刺痛时停止。", "右膝轨迹 <=2/5 时取消。"],
+    glossaryTermIds: ["single-leg-stiffness", "pelvis-stability", "ground-contact-time", "tripod-foot"],
+    trackingFields: ["jumpContacts", "landingQuietness", "contactRhythm", "rightKneeTracking", "pelvisStability", "painScore"],
+    progressionCriteria: ["前后单脚 Pogo 稳定。", "右膝轨迹 >=4/5。", "骨盆稳定 >=4/5。", "肌腱反应安静。"],
+    regressionCriteria: ["落地声音变重。", "膝盖内扣。", "骨盆晃动明显。", "肌腱症状 >=3/10。"]
+  }),
+  supportExercise({
+    id: "penultimate-step-drill",
+    nameZh: "倒数第二步技术练习",
+    nameEn: "Penultimate Step Drill",
+    category: "basketball-skill",
+    purpose: "训练助跑单脚起跳前的倒数第二步节奏、身体角度和支撑腿准备。",
+    whyForUser:
+      "单脚起跳效率不只看最后一步。倒数第二步如果过大、过重或身体失控，最后支撑脚容易外旋、右膝更难对线。",
+    instructions: ["用 50–70% 速度助跑 2–3 步。", "倒数第二步保持可控，不要跨太大。", "最后一步踩稳后可以只定住，不一定起跳。", "每次记录右脚角度和右膝轨迹。"],
+    keyCues: ["倒二步可控。", "最后一步踩稳。", "身体向上组织。", "右脚不外八。", "先质量后高度。"],
+    commonMistakes: ["倒数第二步过大。", "身体向前冲。", "最后一步外旋。", "为了跳高忽略膝盖轨迹。"],
+    regressions: ["上步提膝保持。", "单脚前倾等长支撑。", "走步节奏不跳。"],
+    progressions: ["两步单脚助跑起跳。", "加入摸高目标。", "测试日低次数最大尝试。"],
+    painRules: ["跟腱或髌腱 >=3/10 时不做起跳版本。", "右膝轨迹 <=2/5 时只做走步定住。"],
+    glossaryTermIds: ["plant-leg", "swing-leg-drive", "leverage-efficiency", "force-transfer"],
+    trackingFields: ["rightFootExternalRotation", "rightKneeTracking", "pelvisStability", "takeoffLeg", "painScore"],
+    progressionCriteria: ["最后一步脚三点稳定。", "右膝轨迹 >=4/5。", "前 24–48 小时无高篮球负荷。", "热身感觉轻快。"],
+    regressionCriteria: ["右脚外旋 >=2。", "右膝轨迹 <=2/5。", "助跑节奏变重。", "肌腱症状 >=3/10。"]
+  }),
+  supportExercise({
+    id: "two-step-single-leg-approach-jump",
+    nameZh: "两步单脚助跑起跳",
+    nameEn: "Two-Step Single-Leg Approach Jump",
+    category: "basketball-skill",
+    purpose: "把支撑腿刚性、摆动腿提膝和摆臂整合到低量单脚起跳。",
+    whyForUser:
+      "这是单脚起跳转化动作，不是体能训练。它帮助你把右脚三点支撑、右膝轨迹和摆动腿驱动放进真实助跑节奏。",
+    instructions: [
+      "从两步慢速助跑开始。",
+      "倒数第二步保持身体可控，最后一步脚三点踩稳。",
+      "摆动腿主动提膝，双臂配合上摆。",
+      "起跳强度先控制在 75–85%。",
+      "每次落地后完全重置，记录右脚角度和右膝轨迹。"
+    ],
+    keyCues: ["最后一步踩稳。", "摆动腿主动提。", "向上跳。", "落地安静。", "右脚不外八。"],
+    commonMistakes: ["为了跳高牺牲支撑脚角度。", "倒数第二步过大。", "右膝内扣。", "连续做成疲劳跳。", "高篮球负荷后还硬测。"],
+    regressions: ["上步提膝保持。", "单脚前倾等长支撑。", "70% 技术起跳。"],
+    progressions: ["提高到 85–90%。", "加入摸高目标。", "测试日做正式单脚起跳尝试。"],
+    painRules: ["跟腱或髌腱 >=3/10 时取消。", "右膝轨迹 <=2/5 时取消最大版本。", "前 24–48 小时篮球负荷高时不做最大起跳。"],
+    glossaryTermIds: ["plant-leg", "swing-leg-drive", "force-transfer", "leverage-efficiency"],
+    trackingFields: ["jumpContacts", "takeoffLeg", "jumpHeightCm", "reachHeightCm", "rightFootExternalRotation", "rightKneeTracking", "painScore"],
+    progressionCriteria: ["支撑脚控制 >=4/5。", "右膝轨迹 >=4/5。", "前 24–48 小时没有高篮球负荷。", "Readiness 为绿色或稳定。"],
+    regressionCriteria: ["肌腱症状 >=3/10。", "右脚外旋 >=2。", "右膝轨迹 <=2/5。", "触地变慢或落地变响。"]
+  }),
+  supportExercise({
+    id: "max-single-leg-approach-jump",
+    nameZh: "单脚助跑最大测试跳",
+    nameEn: "Max Single-Leg Approach Jump",
+    category: "basketball-skill",
+    purpose: "在测试日低次数评估左右单脚起跳表现差异。",
+    whyForUser:
+      "你右侧单脚起跳偏弱。正式测试只在疼痛低、动作质量好、篮球负荷不高时进行，用来判断下一周期是否能进阶，而不是额外训练量。",
+    instructions: [
+      "完成完整动态热身和低强度技术跳。",
+      "每条起跳腿最多 3 次正式尝试。",
+      "每次间充分休息，记录摸高或跳高。",
+      "连续两次下降、落地变重或右膝轨迹变差就停止。",
+      "测试后不再加入刚性训练或额外跳跃。"
+    ],
+    keyCues: ["次数少。", "质量先于高度。", "支撑脚踩稳。", "摆动腿主动。", "疲劳前停止。"],
+    commonMistakes: ["把测试做成训练。", "疼痛时硬测。", "篮球高负荷后测试。", "落地变差还继续。"],
+    regressions: ["两步单脚助跑 75–85%。", "上步提膝保持。", "恢复-only。"],
+    progressions: ["下一周期增加技术一致性。", "只在连续几次质量稳定后提高强度。"],
+    painRules: ["疼痛 >1/10 不做正式最大测试。", "右脚控制或右膝轨迹 <4/5 不测最大。", "前 48 小时篮球高负荷时取消。"],
+    glossaryTermIds: ["plant-leg", "swing-leg-drive", "leverage-efficiency", "ground-contact-time"],
+    trackingFields: ["takeoffLeg", "jumpHeightCm", "reachHeightCm", "rightFootExternalRotation", "rightKneeTracking", "landingQuietness", "painScore"],
+    progressionCriteria: ["疼痛 <=1/10。", "右脚控制 >=4/5。", "右膝轨迹 >=4/5。", "热身感觉轻快。"],
+    regressionCriteria: ["疼痛出现。", "连续两次表现下降。", "落地变重。", "右脚外旋或右膝内扣增加。"]
   }),
   supportExercise({
     id: "rdl",

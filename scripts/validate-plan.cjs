@@ -86,5 +86,12 @@ assert(trainingPlan[0].blocks[1].items.some((item) => item.exerciseId === "low-p
 
 const report = validateTrainingPlan();
 assert(report.recoveryDayProblems.length === 0, "recovery-day duration and item limits");
+assert(report.noNewHighImpactDays, "single-leg module must not add high-impact days");
+assert(report.missingExerciseIds.length === 0, "plan references missing exercise IDs");
+assert(report.missingSingleLegExerciseIds.length === 0, "new single-leg exercise IDs must exist");
+assert(report.singleLegExercisesMissingProgressionSets.length === 0, "new single-leg exercises need progression/regression criteria");
+assert(report.singleLegExercisesMissingTrackingFields.length === 0, "new single-leg exercises need tracking fields");
+assert(report.exercisesMissingYoutubeQuery.length === 0, "all exercises need YouTube search queries");
+assert(report.duplicateExerciseIds.length === 0, "duplicate exercise IDs");
 
 console.log(JSON.stringify({ checks: "passed", report }, null, 2));

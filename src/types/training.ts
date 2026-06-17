@@ -27,6 +27,27 @@ export type IsometricPurpose =
   | "symptom-management"
   | "high-force";
 
+export type SingleLegTrackingField =
+  | "durationSec"
+  | "painScore"
+  | "rightFootControl"
+  | "rightKneeTracking"
+  | "rpe"
+  | "landingQuality"
+  | "landingQuietness"
+  | "rightFootExternalRotation"
+  | "pelvisStability"
+  | "holdTwoSeconds"
+  | "weight"
+  | "reps"
+  | "topPositionStability"
+  | "balanceQuality"
+  | "contactRhythm"
+  | "jumpContacts"
+  | "takeoffLeg"
+  | "jumpHeightCm"
+  | "reachHeightCm";
+
 export type TrainingItemCompletionStatus =
   | "not-started"
   | "completed"
@@ -65,6 +86,10 @@ export interface Exercise {
   regressions?: string[];
   progressions?: string[];
   painRules?: string[];
+  glossaryTermIds?: string[];
+  trackingFields?: SingleLegTrackingField[];
+  progressionCriteria?: string[];
+  regressionCriteria?: string[];
   youtubeSearchQuery?: string;
   youtubeUrl?: string;
   videoNote?: string;
@@ -88,6 +113,7 @@ export interface TrainingItem {
     maxIntent?: boolean;
   };
   isometricPurpose?: IsometricPurpose;
+  moduleTag?: "single-leg-stiffness";
 }
 
 export interface TrainingBlock {
@@ -162,6 +188,26 @@ export interface RightSideAssessment {
   notes?: string;
 }
 
+export interface SingleLegStiffnessAssessment {
+  date: string;
+  dayNumber: number;
+  singleLegStiffnessQuality: 1 | 2 | 3 | 4 | 5;
+  rightFootExternalRotation: 0 | 1 | 2 | 3;
+  rightFootControl: 1 | 2 | 3 | 4 | 5;
+  rightKneeTracking: 1 | 2 | 3 | 4 | 5;
+  pelvisStability: 1 | 2 | 3 | 4 | 5;
+  topPositionStability: 1 | 2 | 3 | 4 | 5;
+  landingQuietness: 1 | 2 | 3 | 4 | 5;
+  contactRhythm: 1 | 2 | 3 | 4 | 5;
+  holdDurationSec?: number;
+  jumpContacts?: number;
+  takeoffLeg?: "left" | "right";
+  jumpHeightCm?: number;
+  reachHeightCm?: number;
+  painScore?: number;
+  notes?: string;
+}
+
 export interface JumpTestResult {
   date: string;
   cmjBest?: number;
@@ -194,6 +240,9 @@ export interface SubjectiveReadinessInput {
   generalDoms: number;
   generalFatigue: 1 | 2 | 3 | 4 | 5;
   movementQualityToday: 1 | 2 | 3 | 4 | 5;
+  rightFootExternalRotation?: 0 | 1 | 2 | 3;
+  rightFootControl?: 1 | 2 | 3 | 4 | 5;
+  rightKneeTracking?: 1 | 2 | 3 | 4 | 5;
   legsFeelHeavy: boolean;
   basketballLoadLast24h: BasketballLoadLevel;
   basketballLoadLast48h: BasketballLoadLevel;

@@ -40,8 +40,8 @@ const dayLoadMetadata: Record<number, DayLoadMetadata> = {
   16: { impactLevel: "none", estimatedFatigue: "low", estimatedDurationMinutes: { min: 25, max: 35 }, plannedJumpContacts: { min: 0, max: 0 } },
   17: { impactLevel: "moderate", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 35, max: 75 }, conditionalRules: ["如果篮球变成高负荷，第 19 天激活量减少。"] },
   18: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 0, max: 0 } },
-  19: { impactLevel: "low", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 4, max: 8 }, maxIntentJumpContacts: { min: 0, max: 0 }, conditionalRules: ["Pogo 为短时激活，不纳入 4–8 次正式技术跳；高篮球负荷或腿沉重时取消 Pogo，只保留 2–4 次 70–80% CMJ。"] },
-  20: { impactLevel: "high", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 35, max: 50 }, plannedJumpContacts: { min: 7, max: 9 }, maxIntentJumpContacts: { min: 7, max: 9 }, conditionalRules: ["连续两次成绩下降或动作质量变差时立即停止。"], assessmentProtocolId: "right-side-reassessment" },
+  19: { impactLevel: "low", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 20, max: 30 }, plannedJumpContacts: { min: 8, max: 16 }, maxIntentJumpContacts: { min: 0, max: 0 }, conditionalRules: ["单脚 Pogo 和两步单脚起跳都只是短时激活；高篮球负荷、腿沉重或肌腱 >=3/10 时取消，只保留 2–4 次 70–80% CMJ。"] },
+  20: { impactLevel: "high", estimatedFatigue: "moderate", estimatedDurationMinutes: { min: 35, max: 50 }, plannedJumpContacts: { min: 7, max: 15 }, maxIntentJumpContacts: { min: 7, max: 15 }, conditionalRules: ["连续两次成绩下降或动作质量变差时立即停止；单脚最大测试每条腿最多 3 次，且只在疼痛 <=1/10、右脚/右膝控制 >=4/5 时进行。"], assessmentProtocolId: "right-side-reassessment" },
   21: { impactLevel: "none", estimatedFatigue: "very-low", estimatedDurationMinutes: { min: 15, max: 30 }, plannedJumpContacts: { min: 0, max: 0 }, conditionalRules: ["周期结束后必须选择重复、修改、生成新计划或延后周期；不自动静默重复。"], assessmentProtocolId: "right-side-reassessment" }
 };
 
@@ -102,10 +102,12 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "20–30 秒", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
           { exerciseId: "low-pogo", sets: 1, reps: "8 次", intensity: "low", rest: "60 秒", notes: "低幅、安静，非疲劳。", jumpContacts: { min: 8, max: 8 } },
-          { exerciseId: "cmj", sets: 2, reps: "2 次", intensity: "medium", rest: "90 秒", notes: "70–80%，落地定住。", jumpContacts: { min: 4, max: 4 } },
+          { exerciseId: "cmj", sets: 1, reps: "2 次", intensity: "medium", rest: "90 秒", notes: "70–80%，落地定住；今天不做最大跳。", jumpContacts: { min: 2, max: 2 } },
+          { exerciseId: "single-leg-snap-down-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", rest: "60 秒", notes: "低高度快速下沉定住，观察右脚外旋和右膝轨迹。", jumpContacts: { min: 4, max: 4, landingOnly: true }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "step-down", sets: 3, reps: "5 次", side: "each", intensity: "low", notes: "右膝轨迹优先。" },
-          { exerciseId: "single-leg-hamstring-bridge", sets: 2, reps: "6 次", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-rdl-top-lock", sets: 2, reps: "5 次", side: "each", intensity: "low", notes: "轻量，顶部站稳 1–2 秒，不追重量。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" },
           { exerciseId: "side-plank", sets: 2, duration: "20–30 秒", side: "each", intensity: "low" }
         ]
@@ -130,6 +132,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "3 次/方向", intensity: "low", notes: "只做低速观察右脚角度。" },
+          { exerciseId: "step-up-knee-drive-hold", sets: 1, reps: "4 次", side: "each", intensity: "low", notes: "篮球前低冲击支撑腿检查；篮球负荷中高时不加单脚 Pogo。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" }
         ]
@@ -157,7 +160,8 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "bulgarian-split-squat-eccentric", sets: 3, reps: "5 次", side: "each", intensity: "medium" },
           { exerciseId: "hamstring-slider-curl", sets: 2, reps: "5 次", intensity: "medium", notes: "不做到腘绳肌抽筋。" },
           { exerciseId: "spanish-squat-isometric", sets: 3, duration: "30 秒", intensity: "low" },
-          { exerciseId: "step-down", sets: 2, reps: "5 次", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "25–35 秒", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
+          { exerciseId: "single-leg-rdl-top-lock", sets: 2, reps: "5 次", side: "each", intensity: "low", notes: "作为右侧髋和骨盆控制，不与主力动作抢疲劳。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "dead-bug", sets: 2, reps: "6 次/侧", intensity: "low" },
           { exerciseId: "farmer-carry", sets: 3, duration: "20–30 米", intensity: "medium" }
         ]
@@ -180,7 +184,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "easy-bike", duration: "15–20 分钟", intensity: "low", notes: "可替代轻松步行。" },
-          { exerciseId: "single-leg-balance-reach", sets: 2, reps: "5 次", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 2, duration: "15–20 秒", side: "each", intensity: "low", notes: "只练支撑角度，不做动态弹跳。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }
         ]
       },
@@ -207,6 +211,7 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "landmine-press", sets: 3, reps: "6 次", side: "each", intensity: "medium" },
           { exerciseId: "one-arm-dumbbell-row", sets: 3, reps: "8 次", side: "each", intensity: "medium" },
           { exerciseId: "pull-up-or-lat-pulldown", sets: 3, reps: "5–8 次", intensity: "medium" },
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "20 秒", side: "each", intensity: "low", optional: true, notes: "可选静态维护；今天默认不做 Pogo。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "pallof-press", sets: 3, reps: "8 次", side: "each", intensity: "low" },
           { exerciseId: "suitcase-carry", sets: 2, duration: "20 米/侧", intensity: "medium" }
         ]
@@ -230,6 +235,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low", notes: "作为篮球前质量检查。" },
+          { exerciseId: "step-up-knee-drive-hold", sets: 1, reps: "4 次", side: "each", intensity: "low", notes: "篮球前支撑腿和摆动腿检查；硬篮球后不加动态刚性训练。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "easy-walk", duration: "按篮球安排", intensity: "low", notes: "本项代表篮球训练本身；中高负荷时不追加任何跳跃。" }
         ]
       },
@@ -255,7 +261,7 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "easy-walk", duration: "10–20 分钟，可选", intensity: "low" },
           { exerciseId: "short-foot", sets: 1, reps: "5 次", side: "each", intensity: "low" },
           { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" },
-          { exerciseId: "spanish-squat-isometric", sets: 2, duration: "20–30 秒", intensity: "low", optional: true, isometricPurpose: "maintenance", notes: "可选；髌腱感觉安静才做，RPE 5–7。" }
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 1, duration: "15 秒", side: "each", intensity: "low", optional: true, isometricPurpose: "maintenance", notes: "可选；今天只选一个轻静态动作，不和其他等长叠加。", moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5–6 分钟", intensity: "low" }] },
@@ -270,17 +276,16 @@ export const trainingPlan: TrainingDay[] = [
     goal: "在中等总量内训练反应弹性、单腿落地和核心刚性。",
     performanceFocus: ["反应弹性", "单腿落地", "侧向控制", "核心刚性"],
     coreIncluded: true,
-    readinessRule: "保持中等总量；肌腱 >= 3/10 时取消跨栏跳和单腿落地。",
+    readinessRule: "保持中等总量；肌腱 >= 3/10 时取消单脚 Pogo、单脚助跑跳和单腿落地。",
     blocks: [
       { type: "warmup", title: "Complete Warmup", items: warmupBase },
       {
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 1, reps: "10 次", intensity: "low", rest: "60 秒", jumpContacts: { min: 10, max: 10 } },
-          { exerciseId: "hurdle-hop-forward-back", sets: 2, reps: "3 次", intensity: "medium", rest: "90 秒", jumpContacts: { min: 6, max: 6 } },
-          { exerciseId: "lateral-hurdle-hop", sets: 1, reps: "3 次/方向", intensity: "medium", rest: "90 秒", jumpContacts: { min: 6, max: 6 } },
-          { exerciseId: "single-leg-landing-stick", sets: 1, reps: "2 次", side: "each", intensity: "low", jumpContacts: { min: 4, max: 4, landingOnly: true } },
+          { exerciseId: "single-leg-snap-down-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", rest: "60 秒", notes: "控制练习；右脚外旋或膝内扣明显就退阶。", jumpContacts: { min: 4, max: 4, landingOnly: true }, moduleTag: "single-leg-stiffness" },
+          { exerciseId: "single-leg-low-pogo", sets: 2, reps: "6–8 次总量/侧", side: "each", intensity: "medium", rest: "90–120 秒", notes: "低幅、安静，接触节奏变慢就停止。", jumpContacts: { min: 12, max: 16 }, moduleTag: "single-leg-stiffness" },
+          { exerciseId: "two-step-single-leg-approach-jump", sets: 2, reps: "1–2 次", side: "each", intensity: "medium", rest: "2 分钟", notes: "75–85%，只练两步单脚起跳质量。", jumpContacts: { min: 4, max: 8 }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "copenhagen-plank", sets: 2, duration: "15–20 秒", side: "each", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" }
         ]
@@ -305,7 +310,7 @@ export const trainingPlan: TrainingDay[] = [
         items: [
           { exerciseId: "easy-bike", duration: "20–30 分钟", intensity: "low", notes: "无篮球时执行；有篮球可跳过。" },
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low", notes: "只做低速控制。" },
-          { exerciseId: "single-leg-balance-reach", sets: 2, reps: "5 次", side: "each", intensity: "low" }
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 2, duration: "15 秒", side: "each", intensity: "low", optional: true, notes: "无篮球时可做；如果当天打球，取消动态单腿刚性训练。", moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "backward-walk", duration: "5–8 分钟", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] },
@@ -329,8 +334,8 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "rdl", sets: 3, reps: "5 次", intensity: "medium", rest: "2 分钟", notes: "RPE 7，不做硬拉酸痛赛。" },
-          { exerciseId: "single-leg-rdl-contralateral", sets: 3, reps: "6 次", side: "each", intensity: "medium" },
-          { exerciseId: "hamstring-slider-curl", sets: 2, reps: "5 次", intensity: "medium" },
+          { exerciseId: "step-up-knee-drive-hold", sets: 3, reps: "5 次", side: "each", intensity: "medium", notes: "顶部提膝站稳，右侧只在质量稳定时多 1 个低强度控制组。", moduleTag: "single-leg-stiffness" },
+          { exerciseId: "single-leg-rdl-top-lock", sets: 3, reps: "5 次", side: "each", intensity: "medium", notes: "与对侧哑铃单腿 RDL 二选一，不额外叠满量。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "nordic-curl", sets: 1, reps: "2–4 次", intensity: "medium", optional: true, notes: "可选；仅 readiness 绿色、腘绳肌酸痛 <=1/10，且 48 小时内无硬篮球或测试时做。先增加控制和活动范围，不自动加次数。" },
           { exerciseId: "split-squat-isometric", sets: 2, duration: "20–30 秒", side: "each", intensity: "low", isometricPurpose: "position-control", notes: "RPE 5–7，保持无尖锐痛。" },
           { exerciseId: "suitcase-carry", sets: 3, duration: "20 米/侧", intensity: "medium" }
@@ -357,7 +362,7 @@ export const trainingPlan: TrainingDay[] = [
         items: [
           { exerciseId: "trap-bar-deadlift", sets: 3, reps: "2 次", intensity: "medium", rest: "2.5–4 分钟", notes: "RPE 7–8，速度干净。" },
           { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", notes: "与助跑跳二选一；高度下降就停。", jumpContacts: { min: 6, max: 6, maxIntent: true } },
-          { exerciseId: "approach-jump", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", optional: true, notes: "与 CMJ 二选一，不同时完成。", jumpContacts: { min: 0, max: 6, maxIntent: true } },
+          { exerciseId: "two-step-single-leg-approach-jump", sets: 1, reps: "1 次", side: "each", intensity: "medium", rest: "2 分钟", optional: true, notes: "可选收尾；若 readiness 非绿色、肌腱 >=3/10、第 9 天篮球中高负荷或动作质量差，直接取消。", jumpContacts: { min: 0, max: 2 }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "lateral-stop-jump", sets: 1, reps: "1 次/方向", intensity: "medium", rest: "90 秒", optional: true, notes: "可选；动作质量和肌腱状态持续良好才做。", jumpContacts: { min: 0, max: 2 } }
         ]
       },
@@ -383,7 +388,8 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "easy-bike", duration: "10–15 分钟", intensity: "low" },
           { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" },
-          { exerciseId: "one-arm-dumbbell-row", sets: 2, reps: "8 次", side: "each", intensity: "low" }
+          { exerciseId: "one-arm-dumbbell-row", sets: 2, reps: "8 次", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 2, duration: "15 秒", side: "each", intensity: "low", optional: true, notes: "可选，今天不叠加其他下肢刚性训练。", moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }, { exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }] },
@@ -405,7 +411,8 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "lateral-stop-jump", sets: 2, reps: "2 次/方向", intensity: "medium", rest: "90 秒", notes: "主要跳跃练习一；落地安静。", jumpContacts: { min: 8, max: 8 } },
+          { exerciseId: "step-up-knee-drive-hold", sets: 2, reps: "4 次", side: "each", intensity: "low", notes: "低冲击准备，检查支撑脚和摆动腿。", moduleTag: "single-leg-stiffness" },
+          { exerciseId: "two-step-single-leg-approach-jump", sets: 3, reps: "2 次总量/侧", side: "each", intensity: "medium", rest: "2 分钟", notes: "主要单脚起跳练习；不要再叠加所有跳跃项目。", jumpContacts: { min: 8, max: 12 }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "catch-and-jump", sets: 3, reps: "3 次", intensity: "medium", rest: "90 秒", notes: "主要跳跃练习二；不追疲劳。", jumpContacts: { min: 9, max: 9 } },
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" }
@@ -431,7 +438,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "easy-walk", duration: "12–20 分钟", intensity: "low" },
-          { exerciseId: "single-leg-balance-reach", sets: 1, reps: "4 次", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "20 秒", side: "each", intensity: "low", optional: true, notes: "静态-only；也可以改为前倾等长，二选一。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "hip-90-90", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }
         ]
       },
@@ -456,11 +463,12 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "trap-bar-deadlift", sets: 3, reps: "3 次", intensity: "medium", rest: "2 分钟", notes: "RPE 6–7。" },
+          { exerciseId: "step-up-knee-drive-hold", sets: 2, reps: "4–5 次", side: "each", intensity: "medium", notes: "支撑脚和顶部稳定优先，不做成疲劳单腿训练。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "spanish-squat-isometric", sets: 3, duration: "20–30 秒", intensity: "low", isometricPurpose: "maintenance", notes: "RPE 5–7，疼痛保持可接受且不能尖锐。" },
-          { exerciseId: "calf-isometric-hold", sets: 3, duration: "20–30 秒", intensity: "low", isometricPurpose: "maintenance", notes: "RPE 5–7；等长只是渐进负荷工具之一，不替代动态力量。" },
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "25–30 秒", side: "each", intensity: "low", isometricPurpose: "maintenance", notes: "RPE 5–7；等长只是渐进负荷工具之一，不替代动态力量。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "push-up", sets: 3, reps: "6–10 次", intensity: "medium" },
           { exerciseId: "one-arm-dumbbell-row", sets: 3, reps: "8 次", side: "each", intensity: "medium" },
-          { exerciseId: "farmer-carry", sets: 3, duration: "20–30 米", intensity: "medium" }
+          { exerciseId: "single-leg-rdl-top-lock", sets: 2, reps: "4 次", side: "each", intensity: "low", notes: "轻到中等，避免酸痛。", moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: recoveryFinish },
@@ -486,7 +494,8 @@ export const trainingPlan: TrainingDay[] = [
           { exerciseId: "easy-bike", duration: "12–18 分钟", intensity: "low" },
           { exerciseId: "band-pull-apart", sets: 2, reps: "12 次", intensity: "low" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "8 次", intensity: "low" },
-          { exerciseId: "pallof-press", sets: 2, reps: "6 次/侧", side: "each", intensity: "low" }
+          { exerciseId: "pallof-press", sets: 2, reps: "6 次/侧", side: "each", intensity: "low" },
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 1, duration: "15 秒", side: "each", intensity: "low", optional: true, notes: "可选静态维护；不做动态单腿弹跳。", moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "legs-up-breathing", duration: "5–6 分钟", intensity: "low" }] },
@@ -508,6 +517,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
+          { exerciseId: "step-up-knee-drive-hold", sets: 1, reps: "4 次", side: "each", intensity: "low", notes: "篮球前起跳位置检查；如果篮球变成中高负荷，取消所有额外单脚 Pogo。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "catch-and-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "可选，轻到中等；不做重复最大跳。", jumpContacts: { min: 0, max: 4 } }
         ]
       },
@@ -532,7 +542,8 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "easy-walk", duration: "15–25 分钟", intensity: "low" },
-          { exerciseId: "hamstring-walkout", sets: 1, reps: "3 次", intensity: "low" },
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 2, duration: "15 秒", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
+          { exerciseId: "single-leg-rdl-top-lock", sets: 1, reps: "4 次", side: "each", intensity: "low", optional: true, notes: "腘绳肌不酸时才做轻量模式，不做硬离心。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "side-plank", sets: 2, duration: "20 秒", side: "each", intensity: "low" },
           { exerciseId: "dead-bug", sets: 2, reps: "5 次/侧", intensity: "low" }
         ]
@@ -556,9 +567,10 @@ export const trainingPlan: TrainingDay[] = [
         type: "main",
         title: "Main Training",
         items: [
-          { exerciseId: "low-pogo", sets: 2, duration: "8–10 秒", intensity: "low", notes: "低幅、快速、安静；可输入实际次数，未输入时按估算记录。", jumpContacts: { min: 8, max: 12, estimated: true } },
+          { exerciseId: "single-leg-calf-isometric-hold", sets: 1, duration: "15–20 秒", side: "each", intensity: "low", notes: "轻激活，不做到酸胀。", moduleTag: "single-leg-stiffness" },
+          { exerciseId: "single-leg-low-pogo", sets: 1, reps: "4–6 次/侧", side: "each", intensity: "low", notes: "仅跟腱和髌腱状态良好时做；节奏变慢立即停止。", jumpContacts: { min: 8, max: 12, estimated: true }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "cmj", sets: 2, reps: "1–2 次", intensity: "low", rest: "90 秒", notes: "75–85% 激活，绝不追最大。", jumpContacts: { min: 2, max: 4 } },
-          { exerciseId: "approach-jump", sets: 2, reps: "节奏演练", intensity: "low", rest: "60–90 秒", optional: true, notes: "只走助跑节奏或做低幅起跳，不追高度。", jumpContacts: { min: 0, max: 4 } },
+          { exerciseId: "two-step-single-leg-approach-jump", sets: 2, reps: "1 次/侧", side: "each", intensity: "low", rest: "60–90 秒", optional: true, notes: "75–85%，测试前只要感觉弹，不追高度。", jumpContacts: { min: 0, max: 4 }, moduleTag: "single-leg-stiffness" },
           { exerciseId: "scapular-push-up", sets: 2, reps: "6 次", intensity: "low" },
           { exerciseId: "pallof-press", sets: 2, reps: "6 次", side: "each", intensity: "low" }
         ]
@@ -582,7 +594,8 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "cmj", sets: 3, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "最多 3 次正式尝试，记录最佳和左右感觉。", jumpContacts: { min: 3, max: 3, maxIntent: true } },
-          { exerciseId: "approach-jump", sets: 4, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "最多 4–6 次正式尝试；连续两次下降或动作变差立即停止。", jumpContacts: { min: 4, max: 6, maxIntent: true } }
+          { exerciseId: "approach-jump", sets: 4, reps: "1 次", intensity: "high", rest: "2–3 分钟", notes: "最多 4–6 次正式尝试；连续两次下降或动作变差立即停止。", jumpContacts: { min: 4, max: 6, maxIntent: true } },
+          { exerciseId: "max-single-leg-approach-jump", sets: 3, reps: "每条起跳腿最多 3 次", side: "each", intensity: "high", rest: "2–3 分钟", optional: true, notes: "仅在疼痛 <=1/10、右脚控制和右膝轨迹 >=4/5、前 48 小时无高篮球负荷时测试。测试后不加刚性训练。", jumpContacts: { min: 0, max: 6, maxIntent: true }, moduleTag: "single-leg-stiffness" }
         ]
       },
       { type: "activeRecovery", title: "Active Recovery", items: [{ exerciseId: "easy-walk", duration: "10–15 分钟", intensity: "low" }, { exerciseId: "worlds-greatest-stretch", sets: 1, reps: "4 次", side: "each", intensity: "low" }] },
@@ -604,7 +617,7 @@ export const trainingPlan: TrainingDay[] = [
         title: "Main Training",
         items: [
           { exerciseId: "easy-walk", duration: "10–20 分钟，可选", intensity: "low" },
-          { exerciseId: "single-leg-balance-reach", sets: 1, reps: "4 次", side: "each", intensity: "low", notes: "只做质量复盘。" },
+          { exerciseId: "single-leg-forward-lean-isometric", sets: 1, duration: "15 秒", side: "each", intensity: "low", optional: true, notes: "只做质量复盘；记录单腿提踵保持、单脚 Pogo 节奏、右脚外旋、右膝轨迹和左右单脚起跳差异。", moduleTag: "single-leg-stiffness" },
           { exerciseId: "legs-up-breathing", duration: "6 分钟", intensity: "low", notes: "结束后生成下一阶段计划。" }
         ]
       },

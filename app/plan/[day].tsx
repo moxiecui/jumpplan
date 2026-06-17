@@ -11,10 +11,12 @@ import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceC
 import { JumpTestCard } from "@/components/JumpTestCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
+import { SingleLegStiffnessAssessmentCard } from "@/components/SingleLegStiffnessAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
+import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
 import { getPlanDate, getTrainingDay } from "@/logic/schedule";
 import { applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
@@ -57,6 +59,9 @@ export default function DayDetailScreen() {
   ].filter(Boolean) as string[];
   const relatedTerms = getRelatedGlossaryTermsForDay(day);
   const totalActions = day.blocks.reduce((count, block) => count + block.items.length, 0);
+  const hasSingleLegModule = day.blocks.some((block) =>
+    block.items.some((item) => isSingleLegStiffnessItem(item))
+  );
   const positioning = [
     day.goal,
     day.upperBodyIncluded ? "包含上肢支持" : undefined,
@@ -109,6 +114,9 @@ export default function DayDetailScreen() {
 
       {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
       {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {hasSingleLegModule ? (
+        <SingleLegStiffnessAssessmentCard date={planDate} dayNumber={day.day} />
+      ) : null}
       {day.assessmentProtocolId ? (
         <RightSideAssessmentCard date={planDate} dayNumber={day.day as 1 | 14 | 20 | 21} />
       ) : null}

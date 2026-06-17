@@ -61,6 +61,9 @@ function hasModerateSubjectiveWarning(subjective?: SubjectiveReadinessInput) {
     subjective.generalDoms >= 5 ||
     subjective.generalFatigue >= 4 ||
     subjective.movementQualityToday <= 2 ||
+    (subjective.rightFootExternalRotation !== undefined && subjective.rightFootExternalRotation >= 2) ||
+    (subjective.rightFootControl !== undefined && subjective.rightFootControl <= 2) ||
+    (subjective.rightKneeTracking !== undefined && subjective.rightKneeTracking <= 2) ||
     subjective.legsFeelHeavy ||
     subjective.basketballLoadLast24h === "moderate" ||
     subjective.basketballLoadLast24h === "high"
@@ -172,6 +175,11 @@ function getPositiveUpgradeSignal(
     (subjective.achillesStiffness <= 1 &&
       subjective.patellarPain <= 1 &&
       subjective.calfTightness <= 1);
+  const singleLegControlOk =
+    !subjective ||
+    ((subjective.rightFootExternalRotation ?? 0) <= 1 &&
+      (subjective.rightFootControl ?? 5) >= 4 &&
+      (subjective.rightKneeTracking ?? 5) >= 4);
 
   return Boolean(
     upgradeDay &&
@@ -179,7 +187,8 @@ function getPositiveUpgradeSignal(
       oura.readinessScore >= 85 &&
       rhrOk &&
       hrvOk &&
-      tendonsOk
+      tendonsOk &&
+      singleLegControlOk
   );
 }
 
@@ -188,6 +197,9 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
   const wearable = getWearableWarnings(oura, baseline);
   const hamstringHigh = Boolean(subjective && subjective.hamstringSoreness >= 4);
   const movementQualityLow = Boolean(subjective && subjective.movementQualityToday <= 2);
+  const rightFootDynamicBlock = Boolean(subjective?.rightFootExternalRotation !== undefined && subjective.rightFootExternalRotation >= 2);
+  const rightFootControlLow = Boolean(subjective?.rightFootControl !== undefined && subjective.rightFootControl <= 2);
+  const rightKneeTrackingLow = Boolean(subjective?.rightKneeTracking !== undefined && subjective.rightKneeTracking <= 2);
   const highBasketball24h = subjective?.basketballLoadLast24h === "high";
   const highBasketball48h = subjective?.basketballLoadLast48h === "high";
 
@@ -208,7 +220,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       explanation:
         "跟腱晨僵或髌腱疼痛已经进入需要保护的范围。即使 Oura 分数看起来不错，疼痛和动作质量仍然优先于穿戴设备信号。",
       modifications: [
-        "取消 Pogo、最大跳、PAP、French Contrast、深度跳和冲刺。",
+        "取消 Pogo、单脚 Pogo、单脚助跑跳、最大跳、PAP、French Contrast、深度跳和冲刺。",
         "只做热身、Zone 2、活动度、呼吸恢复，以及无痛低强度等长。",
         "如果疼痛持续或加重，考虑暂停下肢冲击训练。"
       ],
@@ -240,7 +252,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       explanation:
         "过去 48 小时篮球负荷高，同时肌腱已有预警。今天不做 PAP、最大跳、冲刺或重复变向，动作质量和肌腱反应优先于 Oura。",
       modifications: [
-        "取消最大跳、PAP、French Contrast、冲刺和高冲击篮球。",
+        "取消最大跳、单脚助跑跳、PAP、French Contrast、冲刺和高冲击篮球。",
         "只保留恢复或 RPE 6–7 的受控力量、核心和无痛等长。",
         "如果腿仍沉重或落地质量差，改为短恢复日。"
       ],
@@ -311,6 +323,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         "腘绳肌酸痛达到 4/10 或以上。今天可以保留不受影响的上肢、核心和轻量控制，但不做 Nordic、硬 RDL、冲刺或最大跳。",
       modifications: [
         "取消 Nordic、硬 RDL、冲刺和最大跳。",
+        "单腿 RDL 顶部锁定改轻量技术或跳过。",
         "下肢总量减少约 40%，避免长肌长位重离心。",
         "上肢和核心可以保留，但不要影响呼吸、支撑和整体恢复。"
       ],
@@ -325,6 +338,35 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
     });
   }
 
+  if (rightFootDynamicBlock || rightFootControlLow || rightKneeTrackingLow) {
+    return baseAdjustment(params, {
+      level: "yellow",
+      adjustmentType: dayType === "strength" ? "strength-only" : "reduce-impact",
+      headline: "右侧控制不足，今天不进阶单脚动态",
+      explanation:
+        "右脚外旋、右脚控制或右膝轨迹提示今天不适合单脚 Pogo、单脚助跑跳或最大单脚起跳。先用三点支撑、单脚前倾等长、上步提膝保持和受控 RDL 找回位置。",
+      modifications: [
+        "取消单脚 Pogo、两步单脚助跑跳和最大单脚起跳。",
+        "保留脚三点支撑、单脚前倾等长、上步提膝保持、轻量单腿 RDL 顶部锁定。",
+        "如果右膝轨迹 <=2/5，落地和起跳练习全部退阶。",
+        "不要用增加右侧次数来弥补动作质量。"
+      ],
+      removeExerciseCategories: ["plyometric", "basketball-skill"],
+      reduceVolumePercent: 40,
+      intensityCap: "RPE 7",
+      allowMaxJump: false,
+      allowPogo: false,
+      allowPAP: false,
+      allowBasketball: dayType === "basketball",
+      cautionFlags: unique([
+        ...wearable.cautionFlags,
+        rightFootDynamicBlock ? "右脚外旋达到 2/3 或以上，禁止动态进阶。" : "",
+        rightFootControlLow ? "右脚控制为 2/5 或以下。" : "",
+        rightKneeTrackingLow ? "右膝轨迹为 2/5 或以下，不做最大单脚跳。" : ""
+      ].filter(Boolean))
+    });
+  }
+
   if (movementQualityLow || highBasketball24h) {
     return baseAdjustment(params, {
       level: "yellow",
@@ -334,7 +376,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         ? "今天动作质量评分较低，不做进阶、高速或单腿高难度内容。"
         : "过去 24 小时篮球负荷高，今天不安排 PAP、最大跳或额外高冲击健身房训练。",
       modifications: [
-        "取消 PAP、最大跳和高速度单腿动作。",
+        "取消 PAP、最大跳、单脚 Pogo、单脚助跑跳和高速度单腿动作。",
         "可保留受控力量、核心、上肢和低幅技术练习。",
         "动作质量下降时直接停止，不用完成预定总量。"
       ],
@@ -371,7 +413,8 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         "肌腱已经有中等预警，今天可以训练，但需要取消最大努力和高冲击内容。Oura 只能辅助判断，不能覆盖疼痛信号。",
       modifications: [
         "取消最大跳、PAP 和 French Contrast。",
-        achillesIssue ? "取消 Pogo 或至少减少 50% 组数。" : "Pogo 组数减少 50%，只保留安静低幅版本。",
+        achillesIssue ? "取消 Pogo 和单脚 Pogo。" : "Pogo 组数减少 50%，只保留安静低幅版本。",
+        "取消单脚助跑跳；落地会疼时也取消 Snap Down。",
         "把动态跳跃替换为 Spanish squat、提踵等长或分腿蹲等长等疼痛友好选项。",
         "篮球只做低强度技术和轻松投篮，避免连续冲跳。"
       ],

@@ -462,6 +462,104 @@ export const glossaryEntries: GlossaryEntry[] = [
     relatedTerms: ["anti-rotation", "anti-extension", "anti-lateral-flexion"]
   },
   {
+    id: "single-leg-stiffness",
+    term: "单腿刚性",
+    fullName: "Single-Leg Stiffness",
+    category: "jump-training",
+    shortDefinition: "单腿支撑时，足弓、踝、膝、髋快速形成稳定支柱的能力。",
+    detailedExplanation:
+      "单腿刚性不是把膝盖锁死，而是在触地和发力时快速稳定，减少足弓塌陷、膝盖内扣、骨盆侧晃和力量泄漏，同时落地时仍保留正常缓冲。",
+    whyItMattersForUser:
+      "你的右侧单脚起跳偏弱，右脚容易外旋。提高单腿刚性可以让支撑脚更稳、触地更短、力量更容易传到地面。",
+    practicalUse: ["先做静态等长和上步控制，再进阶到单脚 Pogo 和助跑单脚起跳。", "只在疼痛低、动作质量好时进阶动态动作。"],
+    watchOut: ["跟腱或髌腱 >=3/10 时不做动态单腿刚性训练。", "不要同时增加跳跃强度和接触次数。"],
+    relatedTerms: ["ankle-stiffness", "tripod-foot", "plant-leg", "ground-contact-time"]
+  },
+  {
+    id: "ankle-stiffness",
+    term: "踝部刚性",
+    fullName: "Ankle Stiffness",
+    category: "jump-training",
+    shortDefinition: "踝和小腿在短触地中快速支撑并反弹的能力。",
+    detailedExplanation: "踝部刚性帮助单脚起跳时减少脚踝塌陷和触地时间，但它必须建立在无痛跟腱和良好足弓控制上。",
+    whyItMattersForUser: "右脚如果外旋或足弓掉下去，踝部刚性会变成代偿而不是传力。",
+    practicalUse: ["用提踵等长、单脚前倾等长和低幅 Pogo 逐步建立。"],
+    watchOut: ["晨起跟腱僵硬增加时，下次减少 50% 或跳过动态弹跳。"],
+    relatedTerms: ["single-leg-stiffness", "ground-contact-time"]
+  },
+  {
+    id: "plant-leg",
+    term: "支撑腿",
+    fullName: "Plant Leg",
+    category: "jump-training",
+    shortDefinition: "助跑起跳最后踩地并把力量传向地面的腿。",
+    detailedExplanation: "支撑腿需要在很短时间内完成踩地、制动、稳定和向上发力。足弓、踝、膝、髋和骨盆都要协同。",
+    whyItMattersForUser: "右侧支撑腿越稳定，单脚起跳越不容易把力量漏到右脚外旋、膝盖内扣或骨盆旋转里。",
+    practicalUse: ["观察最后一步是否踩稳、膝盖是否对准脚尖、摆动腿是否主动提膝。"],
+    watchOut: ["支撑脚控制差时不要做最大单脚起跳。"],
+    relatedTerms: ["swing-leg-drive", "tripod-foot", "force-transfer"]
+  },
+  {
+    id: "tripod-foot",
+    term: "脚三点支撑",
+    fullName: "Tripod Foot",
+    category: "jump-training",
+    shortDefinition: "脚跟、大脚趾根、小脚趾根三点稳定压地。",
+    detailedExplanation: "脚三点支撑让足弓保持形状，帮助膝盖对准脚尖，并让起跳力量更稳定地通过脚传到地面。",
+    whyItMattersForUser: "右脚外旋时常会丢掉大脚趾根压力，导致膝盖和骨盆连锁代偿。",
+    practicalUse: ["短足、上步提膝、单脚等长和落地定住时都先找三点支撑。"],
+    watchOut: ["不要用脚趾抓地代替足弓控制。"],
+    relatedTerms: ["single-leg-stiffness", "ankle-stiffness"]
+  },
+  {
+    id: "swing-leg-drive",
+    term: "摆动腿驱动",
+    fullName: "Swing-Leg Drive",
+    category: "jump-training",
+    shortDefinition: "非支撑腿主动提膝，帮助助跑单脚起跳向上转化。",
+    detailedExplanation: "摆动腿提膝配合摆臂和支撑腿伸展，可以让单脚起跳更像向上发力，而不是向前冲或侧向泄力。",
+    whyItMattersForUser: "右侧单脚起跳弱时，支撑腿稳定和摆动腿提膝需要一起练，不只是多跳右腿。",
+    practicalUse: ["用低箱上步提膝保持和两步单脚助跑起跳练节奏。"],
+    watchOut: ["摆动腿用力不应换来支撑脚外旋或膝盖内扣。"],
+    relatedTerms: ["plant-leg", "force-transfer"]
+  },
+  {
+    id: "pelvis-stability",
+    term: "骨盆稳定",
+    fullName: "Pelvis Stability",
+    category: "strength-training",
+    shortDefinition: "单腿支撑时骨盆不明显侧倾、旋转或塌陷。",
+    detailedExplanation: "骨盆稳定连接髋、核心和膝盖轨迹。骨盆不稳时，单腿起跳容易向一侧漏力，右膝轨迹也更难保持。",
+    whyItMattersForUser: "你的右侧力量和膝脚控制都需要骨盆稳定参与，尤其在单腿 RDL、上步提膝和单脚落地中。",
+    practicalUse: ["用单腿 RDL 顶部锁定、Pallof Press、侧桥和上步提膝保持观察。"],
+    watchOut: ["骨盆晃动明显时先退阶，不要加速度或加跳高。"],
+    relatedTerms: ["anti-rotation", "single-leg-stiffness"]
+  },
+  {
+    id: "ground-contact-time",
+    term: "触地时间",
+    fullName: "Ground Contact Time",
+    category: "jump-training",
+    shortDefinition: "脚接触地面的时间。",
+    detailedExplanation: "单脚起跳和反应弹性需要在合适触地时间内快速稳定并发力。触地越短不一定越好，前提是落地安静、方向正确、肌腱无痛。",
+    whyItMattersForUser: "如果右脚外旋、落地变响或节奏变慢，说明触地质量下降，不应继续进阶。",
+    practicalUse: ["Pogo 看节奏是否轻快，两步助跑看最后一步是否短而稳。"],
+    watchOut: ["疲劳时追求短触地会增加肌腱和膝盖风险。"],
+    relatedTerms: ["ankle-stiffness", "single-leg-stiffness", "rsi"]
+  },
+  {
+    id: "leverage-efficiency",
+    term: "杠杆效率",
+    fullName: "Leverage Efficiency",
+    category: "jump-training",
+    shortDefinition: "身体各关节位置能否把助跑和力量有效转成向上起跳。",
+    detailedExplanation: "单脚起跳的效率来自支撑脚位置、身体前倾角度、摆动腿、摆臂和骨盆控制的组合，不是单纯多练右腿次数。",
+    whyItMattersForUser: "右脚外旋和右膝轨迹问题会降低杠杆效率，让同样的力量跳不高。",
+    practicalUse: ["用低箱上步提膝、前倾等长和两步单脚助跑起跳练位置。"],
+    watchOut: ["动作质量差时不要用更多接触次数弥补。"],
+    relatedTerms: ["plant-leg", "swing-leg-drive", "force-transfer"]
+  },
+  {
     id: "force-transfer",
     term: "传力",
     fullName: "Force Transfer",

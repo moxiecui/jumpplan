@@ -12,10 +12,12 @@ import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceC
 import { JumpTestCard } from "@/components/JumpTestCard";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
+import { SingleLegStiffnessAssessmentCard } from "@/components/SingleLegStiffnessAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
+import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
 import { getBasketballLoadWarning } from "@/logic/basketballLoad";
 import { getPlanDate, getTodayTrainingDay } from "@/logic/schedule";
 import { applyAdjustmentToDay, applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
@@ -53,6 +55,9 @@ export default function TodayScreen() {
   );
   const relatedTerms = useMemo(() => getRelatedGlossaryTermsForDay(visibleDay), [visibleDay]);
   const totalActions = visibleDay.blocks.reduce((count, block) => count + block.items.length, 0);
+  const hasSingleLegModule = visibleDay.blocks.some((block) =>
+    block.items.some((item) => isSingleLegStiffnessItem(item))
+  );
   const focusFlags = [
     day.upperBodyIncluded ? "上肢" : undefined,
     day.coreIncluded ? "核心" : undefined,
@@ -150,6 +155,9 @@ export default function TodayScreen() {
 
       {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
       {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {hasSingleLegModule ? (
+        <SingleLegStiffnessAssessmentCard date={planDate} dayNumber={day.day} />
+      ) : null}
       {day.assessmentProtocolId ? (
         <RightSideAssessmentCard
           date={planDate}

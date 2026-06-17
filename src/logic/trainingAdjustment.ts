@@ -14,6 +14,10 @@ const explicitHighImpactIds = new Set([
   "hurdle-hop-forward-back",
   "lateral-hurdle-hop",
   "single-leg-landing-stick",
+  "single-leg-snap-down-stick",
+  "single-leg-low-pogo",
+  "two-step-single-leg-approach-jump",
+  "max-single-leg-approach-jump",
   "defensive-slide-stop"
 ]);
 
@@ -21,6 +25,10 @@ const controlledStrengthIds = new Set([
   "bulgarian-split-squat-eccentric",
   "single-leg-calf-raise",
   "single-leg-rdl-contralateral",
+  "single-leg-calf-isometric-hold",
+  "single-leg-forward-lean-isometric",
+  "step-up-knee-drive-hold",
+  "single-leg-rdl-top-lock",
   "trap-bar-deadlift",
   "spanish-squat-isometric",
   "calf-isometric-hold",
@@ -142,7 +150,7 @@ function applyReduceImpact(day: TrainingDay, adjustment: DailyTrainingAdjustment
           ...block,
           items: block.items
             .filter((item) => {
-              if (!adjustment.allowPogo && item.exerciseId === "low-pogo") {
+              if (!adjustment.allowPogo && (item.exerciseId === "low-pogo" || item.exerciseId === "single-leg-low-pogo")) {
                 return false;
               }
 

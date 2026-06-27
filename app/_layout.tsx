@@ -2,14 +2,16 @@ import { Stack } from "expo-router";
 
 import { ReadinessProvider } from "@/context/ReadinessContext";
 import { PerformanceProvider } from "@/context/PerformanceContext";
+import { PlanProgressProvider } from "@/context/PlanProgressContext";
 import { TrainingLogProvider } from "@/context/TrainingLogContext";
 
 export default function RootLayout() {
   return (
     <ReadinessProvider>
       <PerformanceProvider>
-        <TrainingLogProvider>
-          <Stack
+        <PlanProgressProvider>
+          <TrainingLogProvider>
+            <Stack
           screenOptions={{
             headerStyle: { backgroundColor: "#f6f8fa" },
             headerTitleStyle: { fontWeight: "800" },
@@ -27,8 +29,9 @@ export default function RootLayout() {
           <Stack.Screen name="plan/index" options={{ title: "21天计划" }} />
           <Stack.Screen name="plan/[day]" options={{ title: "训练日" }} />
           <Stack.Screen name="exercise/[id]" options={{ title: "动作详情" }} />
-          </Stack>
-        </TrainingLogProvider>
+            </Stack>
+          </TrainingLogProvider>
+        </PlanProgressProvider>
       </PerformanceProvider>
     </ReadinessProvider>
   );

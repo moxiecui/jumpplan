@@ -3,9 +3,9 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 
 import { ReadinessIntelligenceCard } from "@/components/ReadinessIntelligenceCard";
 import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
+import { usePlanProgress } from "@/context/PlanProgressContext";
 import { useReadiness } from "@/context/ReadinessContext";
 import { evaluateDailyReadiness } from "@/logic/readinessScore";
-import { getTodayTrainingDay } from "@/logic/schedule";
 import type {
   BasketballLoadLevel,
   OuraDailyReadinessInput,
@@ -15,6 +15,10 @@ import type {
 type SubjectiveField =
   | "achillesStiffness"
   | "patellarPain"
+  | "anteriorKneeSoreness"
+  | "painWithStairs"
+  | "painWithSquat"
+  | "painWithJumpLanding"
   | "calfTightness"
   | "sleepQuality"
   | "hamstringSoreness"
@@ -31,6 +35,10 @@ type BaselineField = "restingHeartRate" | "hrv";
 const subjectiveLabels: Record<SubjectiveField, { label: string; min: number; max: number }> = {
   achillesStiffness: { label: "跟腱晨僵", min: 0, max: 10 },
   patellarPain: { label: "髌腱疼痛", min: 0, max: 10 },
+  anteriorKneeSoreness: { label: "膝前侧 / 髌骨上方酸痛", min: 0, max: 10 },
+  painWithStairs: { label: "上下楼疼痛", min: 0, max: 10 },
+  painWithSquat: { label: "下蹲疼痛", min: 0, max: 10 },
+  painWithJumpLanding: { label: "起跳 / 落地疼痛", min: 0, max: 10 },
   calfTightness: { label: "小腿紧绷", min: 0, max: 10 },
   sleepQuality: { label: "睡眠质量", min: 1, max: 5 },
   hamstringSoreness: { label: "腘绳肌酸痛", min: 0, max: 10 },
@@ -44,11 +52,18 @@ const subjectiveLabels: Record<SubjectiveField, { label: string; min: number; ma
 };
 
 const loadOptions: BasketballLoadLevel[] = ["none", "light", "moderate", "high"];
+type KneeWarmupResponse = NonNullable<SubjectiveReadinessInput["kneeWarmupResponse"]>;
+const kneeWarmupOptions: KneeWarmupResponse[] = ["better", "same", "worse"];
 const loadLabels: Record<BasketballLoadLevel, string> = {
   none: "无",
   light: "轻",
   moderate: "中等",
   high: "高"
+};
+const kneeWarmupLabels: Record<KneeWarmupResponse, string> = {
+  better: "热身后变好",
+  same: "差不多",
+  worse: "热身后变差"
 };
 
 const ouraLabels: Record<OuraField, { label: string; min: number; max: number; suffix?: string }> = {
@@ -84,13 +99,18 @@ function parseOptional(rawValue: string, min: number, max: number): number | und
 }
 
 export default function CheckInScreen() {
-  const day = getTodayTrainingDay();
+  const { currentDay: day } = usePlanProgress();
   const { saveReadinessEntry } = useReadiness();
   const [savedMessage, setSavedMessage] = useState("");
   const [subjective, setSubjective] = useState<SubjectiveReadinessInput>({
     date: todayDate(),
     achillesStiffness: 0,
     patellarPain: 0,
+    anteriorKneeSoreness: 0,
+    painWithStairs: 0,
+    painWithSquat: 0,
+    painWithJumpLanding: 0,
+    kneeWarmupResponse: "same",
     calfTightness: 0,
     sleepQuality: 4,
     hamstringSoreness: 0,
@@ -283,6 +303,23 @@ export default function CheckInScreen() {
           </View>
         </View>
       ))}
+
+      <View style={styles.loadCard}>
+        <Text style={styles.label}>膝前侧热身反应</Text>
+        <View style={styles.loadRow}>
+          {kneeWarmupOptions.map((option) => (
+            <Pressable
+              key={option}
+              style={[styles.loadButton, subjective.kneeWarmupResponse === option && styles.loadButtonActive]}
+              onPress={() => setSubjective((current) => ({ ...current, kneeWarmupResponse: option }))}
+            >
+              <Text style={[styles.loadText, subjective.kneeWarmupResponse === option && styles.loadTextActive]}>
+                {kneeWarmupLabels[option]}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       <BasketballLoadLogger date={subjective.date} />
 

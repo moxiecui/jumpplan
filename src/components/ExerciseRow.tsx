@@ -114,6 +114,7 @@ function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
   return (
     <View style={styles.details}>
       <Text style={styles.category}>{categoryLabels[exercise.category]}</Text>
+      {exercise.sourceNote ? <Text style={styles.sourceNote}>{exercise.sourceNote}</Text> : null}
 
       <View style={styles.detailBlock}>
         <Text style={styles.detailTitle}>训练目的</Text>
@@ -600,6 +601,18 @@ const styles = StyleSheet.create({
     color: "#24292f",
     fontSize: 12,
     fontWeight: "800",
+    marginBottom: 8
+  },
+  sourceNote: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: "#fff8c5",
+    color: "#6e5500",
+    fontSize: 12,
+    fontWeight: "900",
     marginBottom: 8
   },
   detailBlock: {

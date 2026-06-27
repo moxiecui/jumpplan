@@ -7,7 +7,7 @@ import type { RightSideAssessment } from "@/types/training";
 
 type NumericField = Exclude<keyof RightSideAssessment, "date" | "dayNumber" | "holdTwoSeconds" | "notes">;
 
-export function RightSideAssessmentCard({ date, dayNumber }: { date: string; dayNumber: 1 | 14 | 20 | 21 }) {
+export function RightSideAssessmentCard({ date, dayNumber }: { date: string; dayNumber: RightSideAssessment["dayNumber"] }) {
   const { saveAssessment } = usePerformance();
   const [values, setValues] = useState<Record<NumericField, number>>({
     rightFootExternalRotation: 0,

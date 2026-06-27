@@ -17,19 +17,36 @@ export function getTrainingDay(day: number): TrainingDay | undefined {
   return trainingPlan.find((trainingDay) => trainingDay.day === day);
 }
 
-export function getTodayTrainingDay(date = new Date()): TrainingDay {
+function getPlanStartDate() {
   const startDateValue = process.env.EXPO_PUBLIC_PLAN_START_DATE ?? DEFAULT_PLAN_START_DATE;
 
   const startDate = new Date(`${startDateValue}T00:00:00`);
   if (Number.isNaN(startDate.getTime())) {
-    return trainingPlan[0];
+    return undefined;
+  }
+
+  return new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+}
+
+function clampPlanIndex(index: number) {
+  return Math.min(Math.max(index, 0), PLAN_LENGTH_DAYS - 1);
+}
+
+export function getPlanDayNumberForDate(date = new Date(), dayOffset = 0): number {
+  const startDay = getPlanStartDate();
+  if (!startDay) {
+    return 1;
   }
 
   const currentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const startDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
   const diffDays = Math.floor((currentDate.getTime() - startDay.getTime()) / MS_PER_DAY);
-  const planIndex =
-    diffDays < 0 ? 0 : Math.min(diffDays, PLAN_LENGTH_DAYS - 1);
+  const planIndex = clampPlanIndex(diffDays + dayOffset);
 
-  return trainingPlan[planIndex] ?? trainingPlan[0];
+  return planIndex + 1;
+}
+
+export function getTodayTrainingDay(date = new Date(), dayOffset = 0): TrainingDay {
+  const planDayNumber = getPlanDayNumberForDate(date, dayOffset);
+
+  return getTrainingDay(planDayNumber) ?? trainingPlan[0];
 }

@@ -20,10 +20,28 @@ import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
 import { getPlanDate, getTrainingDay } from "@/logic/schedule";
 import { applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
+import type { TrainingDay } from "@/types/training";
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
+
+const phaseLabels = {
+  "control-capacity": "控制容量",
+  "strength-conversion": "力量转化",
+  "reactive-basketball-transfer": "篮球专项转化",
+  "taper-test-review": "减量测试"
+};
+
+const priorityLabels: Record<NonNullable<TrainingDay["todayPriority"]>, string> = {
+  "knee-calm": "膝部安静",
+  "right-foot-control": "右脚控制",
+  strength: "力量",
+  elasticity: "弹性",
+  "basketball-transfer": "篮球转化",
+  test: "测试",
+  recovery: "恢复"
+};
 
 export default function DayDetailScreen() {
   const { day: dayParam } = useLocalSearchParams<{ day?: string }>();
@@ -37,17 +55,17 @@ export default function DayDetailScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.missingTitle}>找不到这个训练日</Text>
-        <Text style={styles.missingText}>请从 21天计划选择第 1 天到第 21 天。</Text>
+        <Text style={styles.missingText}>请从 12 周计划选择第 1 天到第 84 天。</Text>
       </View>
     );
   }
-  const day9BasketballLog = getBasketballLog(getPlanDate(9));
+  const previousBasketballLog = baseDay.day > 2 ? getBasketballLog(getPlanDate(baseDay.day - 2)) : undefined;
   const day =
-    baseDay.day === 11 &&
-    (day9BasketballLog?.loadLevel === "moderate" || day9BasketballLog?.loadLevel === "high")
+    baseDay.dayInCycle === 11 &&
+    (previousBasketballLog?.loadLevel === "moderate" || previousBasketballLog?.loadLevel === "high")
       ? applyDay11PapDowngrade(
           baseDay,
-          `第 9 天篮球负荷为${day9BasketballLog.loadLevel === "high" ? "高" : "中等"}`
+          `前 48 小时篮球负荷为${previousBasketballLog.loadLevel === "high" ? "高" : "中等"}`
         )
       : baseDay;
   const planDate = getPlanDate(day.day);
@@ -75,18 +93,25 @@ export default function DayDetailScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.eyebrow}>
-        第 {day.day} 天 · 第 {day.phase} 阶段
+        Week {day.weekNumber} · Cycle {day.cycleNumber} · Day {day.macrocycleDay}
       </Text>
+      <Text style={styles.cycleMeta}>21 天周期：第 {day.dayInCycle} 天 · {day.cycleTitle}</Text>
       <Text style={styles.title}>{day.title}</Text>
       <View style={styles.badgeRow}>
         <Text style={styles.type}>{getTrainingDayTypeLabel(day.type)}</Text>
         {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
+        <Text style={styles.phaseBadge}>{phaseLabels[day.macrocyclePhase]}</Text>
+        {day.todayPriority ? <Text style={styles.priorityBadge}>{priorityLabels[day.todayPriority]}</Text> : null}
       </View>
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>今日定位</Text>
         <Text style={styles.goal}>{positioning}</Text>
       </View>
       <DayLoadCard day={day} />
+      {day.kneeLoadNote ? <Text style={styles.metaNote}>膝部负荷：{day.kneeLoadNote}</Text> : null}
+      {day.basketballLoadDependency ? (
+        <Text style={styles.metaNote}>篮球负荷会决定今天是否需要删减健身房冲击。</Text>
+      ) : null}
 
       {day.performanceFocus?.length ? (
         <View style={styles.focusCompact}>
@@ -109,18 +134,18 @@ export default function DayDetailScreen() {
       ) : null}
 
       {day.blocks.map((block) => (
-        <DaySection key={block.type} block={block} dayLabel={`第 ${day.day} 天`} />
+        <DaySection key={block.type} block={block} dayLabel={`第 ${day.macrocycleDay} 天`} />
       ))}
 
       {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
-      {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {day.type === "test" ? <JumpTestCard date={planDate} /> : null}
       {hasSingleLegModule ? (
         <SingleLegStiffnessAssessmentCard date={planDate} dayNumber={day.day} />
       ) : null}
       {day.assessmentProtocolId ? (
-        <RightSideAssessmentCard date={planDate} dayNumber={day.day as 1 | 14 | 20 | 21} />
+        <RightSideAssessmentCard date={planDate} dayNumber={day.day as 1 | 21 | 42 | 63 | 84} />
       ) : null}
-      {day.day === 21 ? <CycleReviewCard /> : null}
+      {day.dayInCycle === 21 ? <CycleReviewCard /> : null}
 
       <DayCompletionPanel
         dayKey={`day-${day.day}`}
@@ -166,6 +191,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase"
   },
+  cycleMeta: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#57606a",
+    fontWeight: "800"
+  },
   title: {
     marginTop: 6,
     fontSize: 28,
@@ -196,6 +228,16 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: "#dafbe1",
     color: "#116329",
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  priorityBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#fff8c5",
+    color: "#6e5500",
     fontSize: 12,
     fontWeight: "800"
   },
@@ -240,6 +282,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: "#57606a"
+  },
+  metaNote: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#57606a",
+    fontWeight: "700"
   },
   warning: {
     marginTop: 12,

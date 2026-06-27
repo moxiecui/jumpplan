@@ -10,40 +10,60 @@ import { DaySection } from "@/components/DaySection";
 import { DailyNutritionCard } from "@/components/DailyNutritionCard";
 import { FrenchContrastGuidanceCard } from "@/components/FrenchContrastGuidanceCard";
 import { JumpTestCard } from "@/components/JumpTestCard";
+import { PlanProgressControls } from "@/components/PlanProgressControls";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
 import { SingleLegStiffnessAssessmentCard } from "@/components/SingleLegStiffnessAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
 import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
+import { usePlanProgress } from "@/context/PlanProgressContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
 import { getBasketballLoadWarning } from "@/logic/basketballLoad";
-import { getPlanDate, getTodayTrainingDay } from "@/logic/schedule";
+import { getPlanDate } from "@/logic/schedule";
 import { applyAdjustmentToDay, applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
+import type { TrainingDay } from "@/types/training";
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+const phaseLabels = {
+  "control-capacity": "控制容量",
+  "strength-conversion": "力量转化",
+  "reactive-basketball-transfer": "篮球专项转化",
+  "taper-test-review": "减量测试"
+};
+
+const priorityLabels: Record<NonNullable<TrainingDay["todayPriority"]>, string> = {
+  "knee-calm": "膝部安静",
+  "right-foot-control": "右脚控制",
+  strength: "力量",
+  elasticity: "弹性",
+  "basketball-transfer": "篮球转化",
+  test: "测试",
+  recovery: "恢复"
+};
+
 export default function TodayScreen() {
   const router = useRouter();
-  const day = getTodayTrainingDay();
+  const { currentDay: day } = usePlanProgress();
   const { getReadinessEntry } = useReadiness();
   const { getBasketballLog } = usePerformance();
   const readinessEntry = getReadinessEntry(todayDate());
-  const planDate = getPlanDate(day.day);
-  const day9BasketballLog = getBasketballLog(getPlanDate(9));
+  const planDate = todayDate();
+  const previousBasketballLog = day.day > 2 ? getBasketballLog(getPlanDate(day.day - 2)) : undefined;
   const [showAdjustedPlan, setShowAdjustedPlan] = useState(false);
   const adjustedDay = useMemo(
     () => (readinessEntry ? applyAdjustmentToDay(day, readinessEntry.adjustment) : day),
     [day, readinessEntry]
   );
   const papDowngradeReason =
-    day.day === 11 &&
-    (day9BasketballLog?.loadLevel === "moderate" || day9BasketballLog?.loadLevel === "high")
-      ? `第 9 天篮球负荷为${day9BasketballLog.loadLevel === "high" ? "高" : "中等"}`
+    day.dayInCycle === 11 &&
+    (previousBasketballLog?.loadLevel === "moderate" || previousBasketballLog?.loadLevel === "high")
+      ? `前 48 小时篮球负荷为${previousBasketballLog.loadLevel === "high" ? "高" : "中等"}`
       : undefined;
   const baseVisibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
   const visibleDay = papDowngradeReason
@@ -82,15 +102,23 @@ export default function TodayScreen() {
       </View>
 
       <Text style={styles.sectionKicker}>今日概览</Text>
+      <PlanProgressControls />
       <Text style={styles.eyebrow}>
-        第 {day.day} 天 · 第 {day.phase} 阶段
+        Week {day.weekNumber} · Cycle {day.cycleNumber} · Day {day.macrocycleDay}
       </Text>
+      <Text style={styles.cycleMeta}>21 天周期：第 {day.dayInCycle} 天 · {day.cycleTitle}</Text>
       <Text style={styles.title}>{day.title}</Text>
       <View style={styles.badgeRow}>
         <Text style={styles.type}>{getTrainingDayTypeLabel(day.type)}</Text>
         {day.phaseTitle ? <Text style={styles.phaseBadge}>{day.phaseTitle}</Text> : null}
+        <Text style={styles.phaseBadge}>{phaseLabels[day.macrocyclePhase]}</Text>
+        {day.todayPriority ? <Text style={styles.priorityBadge}>{priorityLabels[day.todayPriority]}</Text> : null}
       </View>
       <Text style={styles.goal}>{day.goal}</Text>
+      {day.kneeLoadNote ? <Text style={styles.metaNote}>膝部负荷：{day.kneeLoadNote}</Text> : null}
+      {day.basketballLoadDependency ? (
+        <Text style={styles.metaNote}>篮球负荷会决定今天是否需要删减健身房冲击。</Text>
+      ) : null}
       <DayLoadCard day={visibleDay} />
 
       <View style={styles.readinessCard}>
@@ -132,7 +160,7 @@ export default function TodayScreen() {
       {showAdjustedPlan && readinessEntry ? (
         <View style={styles.adjustedBanner}>
           <Text style={styles.adjustedTitle}>正在预览 Readiness 调整版</Text>
-          <Text style={styles.adjustedText}>这是临时 overlay，不会修改原始 21 天计划数据。</Text>
+          <Text style={styles.adjustedText}>这是临时 overlay，不会修改原始 84 天宏周期数据。</Text>
         </View>
       ) : null}
 
@@ -150,25 +178,25 @@ export default function TodayScreen() {
       ) : null}
 
       {visibleDay.blocks.map((block, index) => (
-        <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.day} 天`} />
+        <DaySection key={`${block.type}-${index}`} block={block} dayLabel={`第 ${visibleDay.macrocycleDay} 天`} />
       ))}
 
       {day.type === "basketball" ? <BasketballLoadLogger date={planDate} /> : null}
-      {day.day === 20 ? <JumpTestCard date={planDate} /> : null}
+      {day.type === "test" ? <JumpTestCard date={planDate} /> : null}
       {hasSingleLegModule ? (
         <SingleLegStiffnessAssessmentCard date={planDate} dayNumber={day.day} />
       ) : null}
       {day.assessmentProtocolId ? (
         <RightSideAssessmentCard
           date={planDate}
-          dayNumber={day.day as 1 | 14 | 20 | 21}
+          dayNumber={day.day as 1 | 21 | 42 | 63 | 84}
         />
       ) : null}
-      {day.day === 21 ? <CycleReviewCard /> : null}
+      {day.dayInCycle === 21 ? <CycleReviewCard /> : null}
 
       <DayCompletionPanel
         dayKey={`day-${visibleDay.day}`}
-        dayLabel={`第 ${visibleDay.day} 天`}
+        dayLabel={`第 ${visibleDay.macrocycleDay} 天`}
         dayTitle={visibleDay.title}
         totalActions={totalActions}
       />
@@ -251,6 +279,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "uppercase"
   },
+  cycleMeta: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#57606a",
+    fontWeight: "800"
+  },
   title: {
     marginTop: 6,
     fontSize: 28,
@@ -284,11 +319,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800"
   },
+  priorityBadge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#fff8c5",
+    color: "#6e5500",
+    fontSize: 12,
+    fontWeight: "800"
+  },
   goal: {
     marginTop: 14,
     fontSize: 16,
     lineHeight: 24,
     color: "#24292f"
+  },
+  metaNote: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#57606a",
+    fontWeight: "700"
   },
   focusCard: {
     marginTop: 18,

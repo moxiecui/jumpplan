@@ -21,6 +21,24 @@ export type EstimatedFatigue =
 
 export type BasketballLoadLevel = "none" | "light" | "moderate" | "high";
 
+export type MacrocyclePhase =
+  | "control-capacity"
+  | "strength-conversion"
+  | "reactive-basketball-transfer"
+  | "taper-test-review";
+
+export interface TrainingCycle {
+  cycleNumber: 1 | 2 | 3 | 4;
+  startDay: number;
+  endDay: number;
+  title: string;
+  phase: MacrocyclePhase;
+  goals: string[];
+  progressionRules: string[];
+  deloadRules: string[];
+  testDays: number[];
+}
+
 export type IsometricPurpose =
   | "maintenance"
   | "position-control"
@@ -93,6 +111,7 @@ export interface Exercise {
   youtubeSearchQuery?: string;
   youtubeUrl?: string;
   videoNote?: string;
+  sourceNote?: string;
 }
 
 export interface TrainingItem {
@@ -124,6 +143,12 @@ export interface TrainingBlock {
 
 export interface TrainingDay {
   day: number;
+  macrocycleDay: number;
+  cycleNumber: 1 | 2 | 3 | 4;
+  dayInCycle: number;
+  weekNumber: number;
+  cycleTitle: string;
+  macrocyclePhase: MacrocyclePhase;
   title: string;
   type: TrainingDayType;
   goal: string;
@@ -152,6 +177,15 @@ export interface TrainingDay {
   };
   conditionalRules?: string[];
   assessmentProtocolId?: "right-side-reassessment";
+  basketballLoadDependency?: boolean;
+  kneeLoadNote?: string;
+  todayPriority?: "knee-calm" | "right-foot-control" | "strength" | "elasticity" | "basketball-transfer" | "test" | "recovery";
+  rightSideFocus?: string[];
+  hamstringFocus?: string[];
+  singleLegStiffnessFocus?: string[];
+  upperBodyFocus?: string[];
+  coreFocus?: string[];
+  isometricFocus?: string[];
   blocks: TrainingBlock[];
 }
 
@@ -178,7 +212,7 @@ export interface BasketballSessionLog {
 
 export interface RightSideAssessment {
   date: string;
-  dayNumber: 1 | 14 | 20 | 21;
+  dayNumber: 1 | 21 | 42 | 63 | 84;
   rightFootExternalRotation: 0 | 1 | 2 | 3;
   rightKneeValgus: 0 | 1 | 2 | 3;
   pelvisStability: 1 | 2 | 3 | 4 | 5;
@@ -243,6 +277,11 @@ export interface SubjectiveReadinessInput {
   rightFootExternalRotation?: 0 | 1 | 2 | 3;
   rightFootControl?: 1 | 2 | 3 | 4 | 5;
   rightKneeTracking?: 1 | 2 | 3 | 4 | 5;
+  anteriorKneeSoreness?: number;
+  painWithStairs?: number;
+  painWithSquat?: number;
+  painWithJumpLanding?: number;
+  kneeWarmupResponse?: "better" | "same" | "worse";
   legsFeelHeavy: boolean;
   basketballLoadLast24h: BasketballLoadLevel;
   basketballLoadLast48h: BasketballLoadLevel;

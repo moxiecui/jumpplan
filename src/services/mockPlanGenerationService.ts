@@ -4,6 +4,7 @@ import {
   detectTendonRisk,
   suggestPlanLength
 } from "@/logic/feedbackAnalysis";
+import { getTrainingCycle } from "@/data/macrocycle";
 import type {
   GeneratedAdaptivePlan,
   PlanGenerationRequest,
@@ -40,6 +41,28 @@ function generatedPhaseTitle(day: number) {
   }
 
   return "整合、减量与测试";
+}
+
+function generatedMacroMetadata(day: number): Pick<
+  TrainingDay,
+  | "macrocycleDay"
+  | "cycleNumber"
+  | "dayInCycle"
+  | "weekNumber"
+  | "cycleTitle"
+  | "macrocyclePhase"
+> {
+  const cycleNumber = Math.min(Math.floor((day - 1) / 21) + 1, 4) as 1 | 2 | 3 | 4;
+  const cycle = getTrainingCycle(cycleNumber);
+
+  return {
+    macrocycleDay: day,
+    cycleNumber,
+    dayInCycle: ((day - 1) % 21) + 1,
+    weekNumber: Math.floor((day - 1) / 7) + 1,
+    cycleTitle: cycle.title,
+    macrocyclePhase: cycle.phase
+  };
 }
 
 function hasPainAtOrAbove(feedback: TrainingFeedback[], threshold: number) {
@@ -113,6 +136,7 @@ function recoveryDay(day: number, title = "肌腱安全恢复日"): TrainingDay 
     type: "recovery",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedMacroMetadata(day),
     ...generatedLoad("none", "very-low", 20, 35),
     plannedJumpContacts: { min: 0, max: 0 },
     performanceFocus: ["肌腱安全", "Zone 2", "活动度", "呼吸恢复"],
@@ -150,6 +174,7 @@ function movementQualityDay(day: number): TrainingDay {
     type: "skill",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedMacroMetadata(day),
     ...generatedLoad("low", "low", 30, 45),
     plannedJumpContacts: { min: 0, max: 4 },
     performanceFocus: ["右脚 tripod", "右膝轨迹", "安静落地", "低速控制"],
@@ -187,6 +212,7 @@ function strengthControlDay(day: number, highBasketballLoad: boolean): TrainingD
     type: "strength",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedMacroMetadata(day),
     ...generatedLoad("low", "moderate", 40, 55),
     plannedJumpContacts: { min: 0, max: 0 },
     performanceFocus: ["力量维持", "右膝控制", "肌腱负荷", "核心支撑"],
@@ -220,6 +246,7 @@ function lowImpactJumpDay(day: number): TrainingDay {
     type: "jump",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedMacroMetadata(day),
     ...generatedLoad("moderate", "moderate", 35, 50),
     plannedJumpContacts: { min: 19, max: 25 },
     performanceFocus: ["低量弹跳", "起跳节奏", "落地质量", "右膝轨迹"],
@@ -250,6 +277,7 @@ function basketballSkillDay(day: number): TrainingDay {
     type: "basketball",
     phase: generatedPhase(day),
     phaseTitle: generatedPhaseTitle(day),
+    ...generatedMacroMetadata(day),
     ...generatedLoad("variable", "variable", 30, 75),
     performanceFocus: ["篮球手感", "脚步控制", "右膝轨迹", "赛后恢复"],
     goal: "保留投篮和脚步感觉，避免连续最大跳和高强度急停。",
@@ -300,7 +328,7 @@ function buildDays(request: PlanGenerationRequest, length: PlanLength): Training
     });
   }
 
-  const pattern: Array<"jump" | "movement" | "strength" | "recovery" | "basketball"> =
+  const pattern: ("jump" | "movement" | "strength" | "recovery" | "basketball")[] =
     completionLow || highBasketballLoad
       ? ["movement", "strength", "recovery", "basketball", "recovery", "movement", "recovery"]
       : ["jump", "recovery", "strength", "movement", "recovery", "basketball", "recovery"];
@@ -350,7 +378,6 @@ export const mockPlanGenerationService: PlanGenerationService = {
     const length = suggestPlanLength(request);
     const days = buildDays(request, length);
     const tendonRisk = detectTendonRisk(request.recentFeedback);
-    const highBasketballLoad = hasExtraBasketball(request);
 
     return {
       metadata: {

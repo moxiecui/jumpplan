@@ -97,11 +97,11 @@ export function getVisibleNutritionItems(
   });
 }
 
-export function groupNutritionItemsByTiming(items: NutritionItem[]): Array<{
+export function groupNutritionItemsByTiming(items: NutritionItem[]): {
   timing: NutritionTiming;
   label: string;
   items: NutritionItem[];
-}> {
+}[] {
   const timingOrder: NutritionTiming[] = [
     "morning",
     "anytime",

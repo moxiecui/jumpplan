@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { trainingPlan } from "@/data/plan";
+import { trainingCycles } from "@/data/macrocycle";
+import { usePlanProgress } from "@/context/PlanProgressContext";
 import { RollingLoadSummaryCard } from "@/components/RollingLoadSummaryCard";
 import {
   estimatedFatigueLabels,
@@ -12,8 +14,9 @@ import {
 import type { TrainingDay, TrainingDayType } from "@/types/training";
 
 type PlanFilter = TrainingDayType | "upper-body" | "core" | "isometric" | "all";
+type PlanView = "cycle" | "macrocycle" | "tests" | "basketball" | "summary";
 
-const filterOptions: Array<{ value: PlanFilter; label: string }> = [
+const filterOptions: { value: PlanFilter; label: string }[] = [
   { value: "all", label: "全部" },
   { value: "jump", label: "弹跳" },
   { value: "strength", label: "力量" },
@@ -22,6 +25,14 @@ const filterOptions: Array<{ value: PlanFilter; label: string }> = [
   { value: "upper-body", label: "上肢" },
   { value: "core", label: "核心" },
   { value: "isometric", label: "等长" }
+];
+
+const viewOptions: { value: PlanView; label: string }[] = [
+  { value: "cycle", label: "21天周期" },
+  { value: "macrocycle", label: "12周宏周期" },
+  { value: "tests", label: "测试日" },
+  { value: "basketball", label: "篮球负荷" },
+  { value: "summary", label: "周期总结" }
 ];
 
 function matchesFilter(day: TrainingDay, filter: PlanFilter) {
@@ -46,17 +57,49 @@ function matchesFilter(day: TrainingDay, filter: PlanFilter) {
 
 export default function PlanScreen() {
   const router = useRouter();
+  const { currentDay } = usePlanProgress();
   const [activeFilter, setActiveFilter] = useState<PlanFilter>("all");
+  const [activeView, setActiveView] = useState<PlanView>("cycle");
   const visiblePlan = useMemo(
-    () => trainingPlan.filter((day) => matchesFilter(day, activeFilter)),
-    [activeFilter]
+    () =>
+      trainingPlan.filter((day) => {
+        const viewMatch =
+          activeView === "cycle"
+            ? day.cycleNumber === currentDay.cycleNumber
+            : activeView === "tests"
+              ? day.type === "test" || Boolean(day.assessmentProtocolId)
+              : activeView === "basketball"
+                ? day.type === "basketball" || day.type === "skill" || Boolean(day.basketballLoadDependency)
+                : activeView === "summary"
+                  ? false
+                  : true;
+
+        return viewMatch && matchesFilter(day, activeFilter);
+      }),
+    [activeFilter, activeView, currentDay.cycleNumber]
   );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>21天计划</Text>
-      <Text style={styles.subtitle}>三阶段垂直弹跳计划：控制建立、力量转化、整合测试。</Text>
+      <Text style={styles.title}>12周 JumpPlan</Text>
+      <Text style={styles.subtitle}>
+        当前：Week {currentDay.weekNumber} · Cycle {currentDay.cycleNumber} · Macro Day {currentDay.macrocycleDay}；21 天周期第 {currentDay.dayInCycle} 天。
+      </Text>
       <RollingLoadSummaryCard />
+
+      <View style={styles.viewRow}>
+        {viewOptions.map((option) => (
+          <Pressable
+            key={option.value}
+            style={[styles.viewButton, activeView === option.value && styles.viewButtonActive]}
+            onPress={() => setActiveView(option.value)}
+          >
+            <Text style={[styles.viewText, activeView === option.value && styles.viewTextActive]}>
+              {option.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
       <View style={styles.filterRow}>
         {filterOptions.map((option) => (
@@ -72,6 +115,23 @@ export default function PlanScreen() {
         ))}
       </View>
 
+      {activeView === "summary" ? (
+        <View>
+          {trainingCycles.map((cycle) => (
+            <View key={cycle.cycleNumber} style={styles.cycleCard}>
+              <Text style={styles.cycleTitle}>
+                Cycle {cycle.cycleNumber} · Day {cycle.startDay}-{cycle.endDay}
+              </Text>
+              <Text style={styles.cycleName}>{cycle.title}</Text>
+              {cycle.goals.slice(0, 5).map((goal) => (
+                <Text key={goal} style={styles.goal}>• {goal}</Text>
+              ))}
+              <Text style={styles.loadMeta}>测试 / 复盘日：{cycle.testDays.join("、")}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       {visiblePlan.map((day) => (
         <Pressable
           key={day.day}
@@ -84,12 +144,15 @@ export default function PlanScreen() {
           }
         >
           <View style={styles.dayHeader}>
-            <Text style={styles.dayNumber}>第 {day.day} 天</Text>
+            <Text style={styles.dayNumber}>Day {day.macrocycleDay}</Text>
             <Text style={styles.dayType}>{getTrainingDayTypeLabel(day.type)}</Text>
           </View>
+          <Text style={styles.phase}>
+            Week {day.weekNumber} · Cycle {day.cycleNumber} · 21 天周期第 {day.dayInCycle} 天
+          </Text>
           {day.phaseTitle ? (
             <Text style={styles.phase}>
-              第 {day.phase} 阶段 · {day.phaseTitle}
+              {day.cycleTitle} · {day.phaseTitle}
             </Text>
           ) : null}
           <Text style={styles.dayTitle}>{day.title}</Text>
@@ -148,6 +211,34 @@ const styles = StyleSheet.create({
   generateButtonText: {
     color: "#ffffff",
     fontWeight: "900"
+  },
+  viewRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 12
+  },
+  viewButton: {
+    minHeight: 38,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#ffffff",
+    justifyContent: "center"
+  },
+  viewButtonActive: {
+    borderColor: "#0969da",
+    backgroundColor: "#ddf4ff"
+  },
+  viewText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#57606a"
+  },
+  viewTextActive: {
+    color: "#0969da"
   },
   filterRow: {
     flexDirection: "row",
@@ -244,5 +335,25 @@ const styles = StyleSheet.create({
     color: "#0969da",
     fontSize: 13,
     fontWeight: "900"
+  },
+  cycleCard: {
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff",
+    marginBottom: 12
+  },
+  cycleTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#0969da"
+  },
+  cycleName: {
+    marginTop: 6,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#1f2328"
   }
 });

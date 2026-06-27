@@ -56,6 +56,8 @@ dist/                      Generated static web export for GitHub Pages.
 
 `app/adaptive-plan.tsx` collects feedback and uses `mockPlanGenerationService` to preview a generated adaptive plan. Backend integration is intentionally separated so API keys are not placed in the client app.
 
+Exercise detail and expanded exercise rows use `youtubeSearchQuery` to show video help. Without a YouTube API key, the app shows a safe search button. If `EXPO_PUBLIC_YOUTUBE_API_KEY` is configured, the app fetches the top YouTube search results client-side and shows thumbnails, titles, and channel names, then falls back to the search link if the API request fails.
+
 ## Important Data Files
 
 - `src/data/plan.ts`: 21-day, 3-phase vertical jump plan.
@@ -181,6 +183,7 @@ Recommended data checks:
 - Every day includes warmup, main, activeRecovery, and eveningRecovery.
 - Plan exercise ids all resolve in `src/data/exercises.ts`.
 - New exercises include `youtubeSearchQuery`.
+- YouTube thumbnails are optional and require `EXPO_PUBLIC_YOUTUBE_API_KEY`; do not commit API keys.
 - Glossary uppercase abbreviation scan reports no uncovered app terms.
 - Nutrition schedule references only ids defined in `src/data/nutrition.ts`.
 

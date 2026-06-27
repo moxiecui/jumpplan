@@ -55,6 +55,11 @@ function hasModerateSubjectiveWarning(subjective?: SubjectiveReadinessInput) {
   return (
     subjective.achillesStiffness >= 3 ||
     subjective.patellarPain >= 3 ||
+    (subjective.anteriorKneeSoreness ?? 0) >= 3 ||
+    (subjective.painWithStairs ?? 0) >= 3 ||
+    (subjective.painWithSquat ?? 0) >= 3 ||
+    (subjective.painWithJumpLanding ?? 0) >= 3 ||
+    subjective.kneeWarmupResponse === "worse" ||
     subjective.calfTightness >= 4 ||
     subjective.sleepQuality <= 2 ||
     subjective.hamstringSoreness >= 3 ||
@@ -75,7 +80,12 @@ function hasRedSubjectivePain(subjective?: SubjectiveReadinessInput) {
     return false;
   }
 
-  return subjective.achillesStiffness >= 4 || subjective.patellarPain >= 4;
+  return (
+    subjective.achillesStiffness >= 4 ||
+    subjective.patellarPain >= 4 ||
+    (subjective.anteriorKneeSoreness ?? 0) >= 4 ||
+    (subjective.painWithJumpLanding ?? 0) >= 4
+  );
 }
 
 function getWearableWarnings(
@@ -202,6 +212,17 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
   const rightKneeTrackingLow = Boolean(subjective?.rightKneeTracking !== undefined && subjective.rightKneeTracking <= 2);
   const highBasketball24h = subjective?.basketballLoadLast24h === "high";
   const highBasketball48h = subjective?.basketballLoadLast48h === "high";
+  const anteriorKneeRed = Boolean(
+    (subjective?.anteriorKneeSoreness ?? 0) >= 4 ||
+      (subjective?.painWithJumpLanding ?? 0) >= 4
+  );
+  const anteriorKneeYellow = Boolean(
+    (subjective?.anteriorKneeSoreness ?? 0) >= 3 ||
+      (subjective?.painWithStairs ?? 0) >= 3 ||
+      (subjective?.painWithSquat ?? 0) >= 3 ||
+      (subjective?.painWithJumpLanding ?? 0) >= 3 ||
+      subjective?.kneeWarmupResponse === "worse"
+  );
 
   if (hasRedSubjectivePain(subjective)) {
     const tendonFlags = [
@@ -210,18 +231,27 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         : undefined,
       subjective?.patellarPain !== undefined && subjective.patellarPain >= 4
         ? "髌腱疼痛达到 4/10 或以上。"
+        : undefined,
+      subjective?.anteriorKneeSoreness !== undefined && subjective.anteriorKneeSoreness >= 4
+        ? "膝前侧或髌骨上方酸痛达到 4/10 或以上。"
+        : undefined,
+      subjective?.painWithJumpLanding !== undefined && subjective.painWithJumpLanding >= 4
+        ? "起跳或落地疼痛达到 4/10 或以上。"
         : undefined
     ].filter(Boolean) as string[];
 
     return baseAdjustment(params, {
       level: "red",
-      adjustmentType: "recovery-only",
-      headline: "今天不适合下肢冲击训练",
+      adjustmentType: anteriorKneeRed && dayType === "strength" ? "strength-only" : "recovery-only",
+      headline: anteriorKneeRed ? "今天先保护膝前侧负荷" : "今天不适合下肢冲击训练",
       explanation:
-        "跟腱晨僵或髌腱疼痛已经进入需要保护的范围。即使 Oura 分数看起来不错，疼痛和动作质量仍然优先于穿戴设备信号。",
+        "跟腱、髌腱或膝前侧疼痛已经进入需要保护的范围。即使 Oura 分数看起来不错，疼痛和动作质量仍然优先于穿戴设备信号。",
       modifications: [
-        "取消 Pogo、单脚 Pogo、单脚助跑跳、最大跳、PAP、French Contrast、深度跳和冲刺。",
-        "只做热身、Zone 2、活动度、呼吸恢复，以及无痛低强度等长。",
+        "取消 Pogo、单脚 Pogo、单脚助跑跳、最大跳、PAP、French Contrast、深度跳、弓步跳和冲刺。",
+        anteriorKneeRed
+          ? "只保留受控浅幅力量、髋主导练习、核心、上肢或无痛低强度等长；不做深膝角高量训练。"
+          : "只做热身、Zone 2、活动度、呼吸恢复，以及无痛低强度等长。",
+        "膝敏感热身替代：轻走或单车 3–5 分钟、踝膝墙 8 次/侧、浅 Spanish squat 或 wall sit 2 x 15–20 秒、弹力带侧走 2 x 8、自重单腿 RDL 1 x 5/侧。",
         "如果疼痛持续或加重，考虑暂停下肢冲击训练。"
       ],
       removeExerciseCategories: ["plyometric", "basketball-skill"],
@@ -234,7 +264,7 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
       cautionFlags: unique([
         ...wearable.cautionFlags,
         ...tendonFlags,
-        "主观肌腱疼痛优先级高于 Oura 恢复分。",
+        "主观膝部/肌腱疼痛优先级高于 Oura 恢复分。",
         "篮球仅建议轻松投篮或完全取消下肢冲击。"
       ])
     });
@@ -364,6 +394,46 @@ export function evaluateDailyReadiness(params: EvaluationParams): DailyTrainingA
         rightFootControlLow ? "右脚控制为 2/5 或以下。" : "",
         rightKneeTrackingLow ? "右膝轨迹为 2/5 或以下，不做最大单脚跳。" : ""
       ].filter(Boolean))
+    });
+  }
+
+  if (anteriorKneeYellow) {
+    const kneeFlags = [
+      subjective?.anteriorKneeSoreness !== undefined && subjective.anteriorKneeSoreness >= 3
+        ? `膝前侧酸痛 ${subjective.anteriorKneeSoreness}/10。`
+        : undefined,
+      subjective?.painWithStairs !== undefined && subjective.painWithStairs >= 3
+        ? `上下楼疼痛 ${subjective.painWithStairs}/10。`
+        : undefined,
+      subjective?.painWithSquat !== undefined && subjective.painWithSquat >= 3
+        ? `下蹲疼痛 ${subjective.painWithSquat}/10。`
+        : undefined,
+      subjective?.painWithJumpLanding !== undefined && subjective.painWithJumpLanding >= 3
+        ? `起跳或落地疼痛 ${subjective.painWithJumpLanding}/10。`
+        : undefined,
+      subjective?.kneeWarmupResponse === "worse" ? "膝前侧热身后变差。" : undefined
+    ].filter(Boolean) as string[];
+
+    return baseAdjustment(params, {
+      level: "yellow",
+      adjustmentType: dayType === "strength" ? "strength-only" : "reduce-impact",
+      headline: "膝前侧有预警，今天移除高冲击",
+      explanation:
+        "膝前侧、上下楼、下蹲或落地疼痛提示今天不能追求最大跳和深膝角高量。热身后变差时必须立即降级。",
+      modifications: [
+        "取消最大跳、PAP、深度跳、弓步跳、连续蹲跳、连续屈膝跳和高强度篮球。",
+        "如果热身后仍 >2/10，不做最大跳、不做硬篮球、不做深膝角高量。",
+        "使用浅 Spanish squat、wall sit、受控 step-down、髋主导力量、核心和恢复替代。",
+        "低幅 Pogo 或 Snap-down 只有疼痛 0–1/10 且热身不变差时才可选。"
+      ],
+      removeExerciseCategories: ["plyometric", "basketball-skill"],
+      reduceVolumePercent: 50,
+      intensityCap: "RPE 7",
+      allowMaxJump: false,
+      allowPogo: false,
+      allowPAP: false,
+      allowBasketball: false,
+      cautionFlags: unique([...wearable.cautionFlags, ...kneeFlags])
     });
   }
 

@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { NutritionScheduleTimeline } from "@/components/NutritionScheduleTimeline";
 import { NutritionSection } from "@/components/NutritionSection";
+import { usePlanProgress } from "@/context/PlanProgressContext";
 import { useReadiness } from "@/context/ReadinessContext";
 import {
   getNutritionPlanForDayType,
@@ -10,7 +11,6 @@ import {
   isTrainingActiveForNutrition
 } from "@/logic/nutrition";
 import { getNutritionScheduleForTrainingTime } from "@/logic/nutritionSchedule";
-import { getTodayTrainingDay } from "@/logic/schedule";
 
 const defaultTrainingTime = "18:00"; // TODO: move to app settings when settings exist.
 
@@ -19,7 +19,7 @@ function todayDate() {
 }
 
 export default function NutritionScreen() {
-  const day = getTodayTrainingDay();
+  const { currentDay: day } = usePlanProgress();
   const { getReadinessEntry } = useReadiness();
   const readinessEntry = getReadinessEntry(todayDate());
   const adjustment = readinessEntry?.adjustment;
@@ -31,7 +31,9 @@ export default function NutritionScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.eyebrow}>Today · Day {day.day}</Text>
+      <Text style={styles.eyebrow}>
+        Today · Week {day.weekNumber} · Cycle {day.cycleNumber} · Day {day.macrocycleDay}
+      </Text>
       <Text style={styles.title}>今日营养与补剂</Text>
       <Text style={styles.subtitle}>{plan.title}</Text>
       <Text style={styles.summary}>{plan.summary}</Text>

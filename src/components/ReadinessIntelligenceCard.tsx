@@ -16,17 +16,17 @@ interface ReadinessIntelligenceCardProps {
 
 const levelStyles = {
   green: {
-    label: "Green",
+    label: "绿色",
     backgroundColor: "#dafbe1",
     borderColor: "#2da44e"
   },
   yellow: {
-    label: "Yellow",
+    label: "黄色",
     backgroundColor: "#fff8c5",
     borderColor: "#bf8700"
   },
   red: {
-    label: "Red",
+    label: "红色",
     backgroundColor: "#ffebe9",
     borderColor: "#cf222e"
   }
@@ -44,6 +44,11 @@ function getSubjectiveFlags(subjective?: SubjectiveReadinessInput) {
   const flags = [
     subjective.achillesStiffness >= 3 ? `跟腱晨僵 ${subjective.achillesStiffness}/10` : undefined,
     subjective.patellarPain >= 3 ? `髌腱疼痛 ${subjective.patellarPain}/10` : undefined,
+    (subjective.anteriorKneeSoreness ?? 0) >= 3 ? `膝前侧酸痛 ${subjective.anteriorKneeSoreness}/10` : undefined,
+    (subjective.painWithStairs ?? 0) >= 3 ? `上下楼疼痛 ${subjective.painWithStairs}/10` : undefined,
+    (subjective.painWithSquat ?? 0) >= 3 ? `下蹲疼痛 ${subjective.painWithSquat}/10` : undefined,
+    (subjective.painWithJumpLanding ?? 0) >= 3 ? `起跳/落地疼痛 ${subjective.painWithJumpLanding}/10` : undefined,
+    subjective.kneeWarmupResponse === "worse" ? "膝前侧热身后变差" : undefined,
     subjective.calfTightness >= 4 ? `小腿紧张 ${subjective.calfTightness}/10` : undefined,
     subjective.sleepQuality <= 2 ? `睡眠主观质量 ${subjective.sleepQuality}/5` : undefined
   ].filter(Boolean);

@@ -9,6 +9,7 @@
     "ios": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli start --ios",
     "web": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli start --web",
     "tsc": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/typescript/bin/tsc --noEmit",
+    "test:ui": ".tools\\node-v22.16.0-win-x64\\node.exe scripts/ui-smoke-test.cjs",
     "export:web": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli export -p web && .tools\\node-v22.16.0-win-x64\\node.exe .tools/copy-gh-pages-404.js",
     "predeploy": "npm run export:web",
     "deploy": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/gh-pages/bin/gh-pages.js --nojekyll -d dist --repo https://github.com/moxiecui/jumpplan.git --git .tools\\PortableGit\\bin\\git.exe"
@@ -23,7 +24,10 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~56.0.4",
     "gh-pages": "^6.3.0",
+    "playwright": "^1.60.0",
     "typescript": "~6.0.3"
   }
 }

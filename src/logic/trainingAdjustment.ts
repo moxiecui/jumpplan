@@ -18,7 +18,17 @@ const explicitHighImpactIds = new Set([
   "single-leg-low-pogo",
   "two-step-single-leg-approach-jump",
   "max-single-leg-approach-jump",
-  "defensive-slide-stop"
+  "defensive-slide-stop",
+  "tuck-jump",
+  "continuous-tuck-jump",
+  "lunge-jump",
+  "continuous-lunge-jump",
+  "box-jump",
+  "squat-jump",
+  "continuous-squat-jump",
+  "depth-drop",
+  "single-leg-depth-drop",
+  "single-leg-hurdle-jump-to-squat-jump"
 ]);
 
 const controlledStrengthIds = new Set([
@@ -30,6 +40,22 @@ const controlledStrengthIds = new Set([
   "step-up-knee-drive-hold",
   "single-leg-rdl-top-lock",
   "trap-bar-deadlift",
+  "front-squat",
+  "goblet-squat",
+  "reverse-lunge",
+  "reverse-lunge-with-height",
+  "bulgarian-split-squat",
+  "bulgarian-split-squat-with-heel-up",
+  "side-lunge",
+  "single-leg-good-morning",
+  "eccentric-single-leg-squat",
+  "calf-raise-with-plate-under-front-foot",
+  "single-leg-calf-raise-with-plate-under-front-foot",
+  "tibialis-raise",
+  "lunge-hold",
+  "bulgarian-squat-hold",
+  "single-leg-bridge",
+  "bridge",
   "spanish-squat-isometric",
   "calf-isometric-hold",
   "split-squat-isometric",
@@ -333,7 +359,7 @@ export function applyAdjustmentToDay(
 }
 
 export function applyDay11PapDowngrade(day: TrainingDay, reason: string): TrainingDay {
-  if (day.day !== 11) {
+  if (day.dayInCycle !== 11) {
     return cloneDay(day);
   }
 

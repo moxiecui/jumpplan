@@ -1,6 +1,7 @@
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { getExerciseVideoUrl } from "@/logic/videoLinks";
+import { YouTubeSearchPreview } from "@/components/YouTubeSearchPreview";
 import type { Exercise } from "@/types/training";
 
 interface ExerciseVideoSectionProps {
@@ -11,12 +12,16 @@ interface ExerciseVideoSectionProps {
 export function ExerciseVideoSection({ exercise, compact = false }: ExerciseVideoSectionProps) {
   const videoUrl = getExerciseVideoUrl(exercise);
 
-  if (!videoUrl) {
+  if (!videoUrl && !exercise.youtubeSearchQuery) {
     return null;
   }
 
   const openVideo = () => {
-    Linking.openURL(videoUrl).catch(() => {
+    if (!exercise.youtubeUrl) {
+      return;
+    }
+
+    Linking.openURL(exercise.youtubeUrl).catch(() => {
       // Keep the UI stable if the platform cannot open the URL.
     });
   };
@@ -25,9 +30,12 @@ export function ExerciseVideoSection({ exercise, compact = false }: ExerciseVide
     <View style={[styles.block, compact && styles.compactBlock]}>
       <Text style={styles.blockTitle}>参考视频</Text>
       {exercise.videoNote ? <Text style={styles.note}>{exercise.videoNote}</Text> : null}
-      <Pressable style={styles.button} onPress={openVideo}>
-        <Text style={styles.buttonText}>在 YouTube 查看动作示范</Text>
-      </Pressable>
+      {exercise.youtubeUrl ? (
+        <Pressable style={styles.button} onPress={openVideo}>
+          <Text style={styles.buttonText}>打开指定示范视频</Text>
+        </Pressable>
+      ) : null}
+      <YouTubeSearchPreview query={exercise.youtubeSearchQuery} compact={compact} />
     </View>
   );
 }

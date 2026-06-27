@@ -15,13 +15,13 @@ import type {
   TrainingFeedback
 } from "@/types/adaptivePlan";
 
-const triggerOptions: Array<{ value: PlanGenerationTrigger; label: string }> = [
+const triggerOptions: { value: PlanGenerationTrigger; label: string }[] = [
   { value: "mid-cycle-adjustment", label: "训练中微调" },
   { value: "end-of-cycle-regeneration", label: "周期结束后生成" },
   { value: "manual-request", label: "手动生成" }
 ];
 
-const lengthOptions: Array<{ value: PlanLength; label: string }> = [
+const lengthOptions: { value: PlanLength; label: string }[] = [
   { value: "3-days", label: "3 天" },
   { value: "7-days", label: "7 天" },
   { value: "10-days", label: "10 天" },

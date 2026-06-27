@@ -11,6 +11,7 @@ import {
 
 import { buildYouTubeSearchUrl } from "@/logic/videoLinks";
 import {
+  hasCachedYouTubeSearchResults,
   hasYouTubeSearchApiKey,
   searchYouTubeVideos,
   type YouTubeSearchResult
@@ -36,6 +37,7 @@ export function YouTubeSearchPreview({ query, compact = false }: YouTubeSearchPr
   const safeQuery = query ?? "";
   const hasQuery = safeQuery.length > 0;
   const hasApiKey = hasYouTubeSearchApiKey();
+  const cachedAtRender = hasQuery ? hasCachedYouTubeSearchResults(safeQuery) : false;
 
   useEffect(() => {
     let cancelled = false;
@@ -74,7 +76,11 @@ export function YouTubeSearchPreview({ query, compact = false }: YouTubeSearchPr
     <View style={[styles.card, compact && styles.compactCard]}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>相关视频，可选观看</Text>
-        {hasApiKey ? <Text style={styles.pill}>Top search</Text> : <Text style={styles.pill}>搜索链接</Text>}
+        {hasApiKey ? (
+          <Text style={styles.pill}>{cachedAtRender ? "已缓存" : "Top search"}</Text>
+        ) : (
+          <Text style={styles.pill}>搜索链接</Text>
+        )}
       </View>
 
       {!hasApiKey ? (

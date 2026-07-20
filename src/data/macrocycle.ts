@@ -5,24 +5,24 @@ export const trainingCycles: TrainingCycle[] = [
     cycleNumber: 1,
     startDay: 1,
     endDay: 21,
-    title: "控制、容量与膝部负荷管理",
+    title: "整合准备期：控制 + 力量 + 低剂量进阶弹跳",
     phase: "control-capacity",
     goals: [
-      "右脚 tripod 和右膝轨迹",
-      "膝前侧负荷管理",
-      "低冲击弹性",
-      "腘绳肌、小腿和胫骨前肌基础容量",
-      "核心抗旋转和上肢维护"
+      "保留右脚 tripod 和右膝轨迹",
+      "维持肌腱和膝前侧安全",
+      "低剂量整合进阶弹跳",
+      "技术性加入髋伸展 power primer",
+      "避免与高篮球负荷叠加"
     ],
     progressionRules: [
-      "疼痛 <=1–2/10 且第二天不加重，才增加跳跃接触。",
-      "右脚外旋和右膝轨迹稳定，才从静态控制进入低幅弹跳。",
-      "Cycle 1 不使用连续弓步跳、连续蹲跳、单脚失重落地或高级组合跳。"
+      "用户已完成 14 天跳跃块和 21 天准备块；Cycle 1 可低剂量加入进阶技术动作。",
+      "疼痛 <=1–2/10、右脚/右膝控制稳定、无高篮球负荷，才使用短触地 depth jump、DB squat jump 或 power primer。",
+      "Olympic-lift-derived 动作只做技术低量，默认用 clean pull、DB power snatch 或 kettlebell swing。"
     ],
     deloadRules: [
       "第 3 周降低力量和跳跃总量。",
       "膝前侧或肌腱 >=3/10 时改恢复或受控力量。",
-      "篮球负荷高时取消额外跳跃。"
+      "篮球负荷高时取消额外跳跃和所有 advanced-only 动作。"
     ],
     testDays: [1, 21]
   },
@@ -30,7 +30,7 @@ export const trainingCycles: TrainingCycle[] = [
     cycleNumber: 2,
     startDay: 22,
     endDay: 42,
-    title: "基础力量与低量弹跳转化",
+    title: "力量转化与弹性加强",
     phase: "strength-conversion",
     goals: [
       "深蹲、髋铰链和分腿蹲力量",
@@ -55,7 +55,7 @@ export const trainingCycles: TrainingCycle[] = [
     cycleNumber: 3,
     startDay: 43,
     endDay: 63,
-    title: "反应弹性、单脚起跳与篮球专项转化",
+    title: "最大肌力与爆发转化",
     phase: "reactive-basketball-transfer",
     goals: [
       "更高质量反应弹性",
@@ -80,7 +80,7 @@ export const trainingCycles: TrainingCycle[] = [
     cycleNumber: 4,
     startDay: 64,
     endDay: 84,
-    title: "整合、减量、测试与下一阶段生成",
+    title: "高质量爆发、测试与下一阶段生成",
     phase: "taper-test-review",
     goals: [
       "维持力量",

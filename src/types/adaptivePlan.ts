@@ -17,7 +17,8 @@ export type PlanLength =
   | "7-days"
   | "10-days"
   | "21-days"
-  | "4-weeks";
+  | "4-weeks"
+  | "12-weeks";
 
 export type FeedbackSeverity =
   | "none"

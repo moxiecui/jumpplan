@@ -27,8 +27,16 @@ const explicitHighImpactIds = new Set([
   "squat-jump",
   "continuous-squat-jump",
   "depth-drop",
+  "depth-jump-less-contact",
+  "depth-jump-to-vertical-jump-with-weight",
+  "concentric-jump-to-vertical-jump-with-weight",
   "single-leg-depth-drop",
-  "single-leg-hurdle-jump-to-squat-jump"
+  "single-leg-hurdle-jump-to-squat-jump",
+  "db-squat-jump",
+  "assist-squat-jump",
+  "penultimate-jump",
+  "single-leg-tuck-jump",
+  "single-leg-double-tuck-jump"
 ]);
 
 const controlledStrengthIds = new Set([
@@ -41,6 +49,7 @@ const controlledStrengthIds = new Set([
   "single-leg-rdl-top-lock",
   "trap-bar-deadlift",
   "front-squat",
+  "back-squat-on-bench",
   "goblet-squat",
   "reverse-lunge",
   "reverse-lunge-with-height",
@@ -56,6 +65,14 @@ const controlledStrengthIds = new Set([
   "bulgarian-squat-hold",
   "single-leg-bridge",
   "bridge",
+  "front-bulgarian-squat",
+  "full-range-lunge",
+  "good-morning",
+  "band-hamstring-curl",
+  "kettlebell-swing",
+  "clean-pull",
+  "db-power-snatch",
+  "single-leg-snatch-with-body-control",
   "spanish-squat-isometric",
   "calf-isometric-hold",
   "split-squat-isometric",

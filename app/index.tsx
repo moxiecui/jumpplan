@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 
 import { DayCompletionPanel } from "@/components/DayCompletionPanel";
 import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
+import { BodySignalsCard } from "@/components/BodySignalsCard";
 import { CycleReviewCard } from "@/components/CycleReviewCard";
 import { DayLoadCard } from "@/components/DayLoadCard";
 import { DaySection } from "@/components/DaySection";
@@ -15,16 +16,26 @@ import { RelatedTermsSection } from "@/components/RelatedTermsSection";
 import { RightSideAssessmentCard } from "@/components/RightSideAssessmentCard";
 import { SingleLegStiffnessAssessmentCard } from "@/components/SingleLegStiffnessAssessmentCard";
 import { TrainingLogPanel } from "@/components/TrainingLogPanel";
+import { TrainingReminderCard } from "@/components/TrainingReminderCard";
+import { useBodySignals } from "@/context/BodySignalsContext";
 import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { usePlanProgress } from "@/context/PlanProgressContext";
+import { useSessionProgress } from "@/context/SessionProgressContext";
+import { getSessionUnit, weeklySessionTargets } from "@/data/adaptiveProgram";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
+import {
+  applyAdvancedExerciseSubstitutions,
+  getBlockedAdvancedExerciseSubstitutions
+} from "@/logic/advancedExerciseGates";
 import { getBasketballLoadWarning } from "@/logic/basketballLoad";
+import { evaluateBasketballLoad, generateTrainingReminders } from "@/logic/bodySignalEvaluation";
+import { getWeeklySessionProgress, recommendNextSession } from "@/logic/nextSessionRecommendation";
 import { getPlanDate } from "@/logic/schedule";
 import { applyAdjustmentToDay, applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
-import type { TrainingDay } from "@/types/training";
+import type { SessionUnitType, TrainingDay } from "@/types/training";
 
 function todayDate() {
   return new Date().toISOString().slice(0, 10);
@@ -47,15 +58,56 @@ const priorityLabels: Record<NonNullable<TrainingDay["todayPriority"]>, string> 
   recovery: "恢复"
 };
 
+const sessionTypeLabels: Record<SessionUnitType, string> = {
+  "strength-a": "力量 A",
+  "strength-b": "力量 B",
+  "power-a": "爆发转化",
+  "reactive-a": "反应弹性",
+  "single-leg-takeoff": "单脚起跳",
+  "upper-body-core": "上肢/核心",
+  recovery: "恢复",
+  "basketball-skill": "篮球技术",
+  "pre-test-activation": "测试前激活",
+  test: "测试",
+  review: "复盘"
+};
+
+function getHoursSinceLast(
+  entries: ReturnType<typeof useSessionProgress>["completedSessionUnits"],
+  predicate: (entry: ReturnType<typeof useSessionProgress>["completedSessionUnits"][number]) => boolean
+) {
+  const latest = entries.find(predicate);
+  if (!latest) {
+    return 999;
+  }
+
+  return Math.max(0, (Date.now() - new Date(latest.completedAt).getTime()) / 3600000);
+}
+
 export default function TodayScreen() {
   const router = useRouter();
   const { currentDay: day } = usePlanProgress();
+  const {
+    completedSessionUnits,
+    completeSessionUnit,
+    currentAdaptiveDay,
+    currentAdaptiveWeek,
+    currentBlock,
+    currentBlockTitle,
+    getCompletedSessionUnitIdsLast14Days,
+    latestJumpReadinessResult
+  } = useSessionProgress();
   const { getReadinessEntry } = useReadiness();
+  const { getBodySignals, getBodySignalBaseline } = useBodySignals();
   const { getBasketballLog } = usePerformance();
   const readinessEntry = getReadinessEntry(todayDate());
+  const bodySignals = getBodySignals(todayDate());
+  const bodySignalBaseline = getBodySignalBaseline(todayDate());
+  const subjectiveReadiness = readinessEntry?.subjective;
   const planDate = todayDate();
   const previousBasketballLog = day.day > 2 ? getBasketballLog(getPlanDate(day.day - 2)) : undefined;
   const [showAdjustedPlan, setShowAdjustedPlan] = useState(false);
+  const [showRecommendedSession, setShowRecommendedSession] = useState(true);
   const adjustedDay = useMemo(
     () => (readinessEntry ? applyAdjustmentToDay(day, readinessEntry.adjustment) : day),
     [day, readinessEntry]
@@ -66,9 +118,33 @@ export default function TodayScreen() {
       ? `前 48 小时篮球负荷为${previousBasketballLog.loadLevel === "high" ? "高" : "中等"}`
       : undefined;
   const baseVisibleDay = showAdjustedPlan && readinessEntry ? adjustedDay : day;
-  const visibleDay = papDowngradeReason
+  const papVisibleDay = papDowngradeReason
     ? applyDay11PapDowngrade(baseVisibleDay, papDowngradeReason)
     : baseVisibleDay;
+  const advancedSubstitutions = useMemo(
+    () =>
+      readinessEntry
+        ? getBlockedAdvancedExerciseSubstitutions(papVisibleDay, {
+            readinessLevel: readinessEntry.adjustment.level,
+            anteriorKneeSoreness: subjectiveReadiness?.anteriorKneeSoreness,
+            achillesStiffness: subjectiveReadiness?.achillesStiffness,
+            patellarPain: subjectiveReadiness?.patellarPain,
+            hamstringSoreness: subjectiveReadiness?.hamstringSoreness,
+            rightFootExternalRotation: subjectiveReadiness?.rightFootExternalRotation,
+            rightKneeTracking: subjectiveReadiness?.rightKneeTracking,
+            landingQuality: subjectiveReadiness?.movementQualityToday,
+            movementQualityToday: subjectiveReadiness?.movementQualityToday,
+            basketballLoadLast24h: subjectiveReadiness?.basketballLoadLast24h ?? "none",
+            basketballLoadLast48h: subjectiveReadiness?.basketballLoadLast48h ?? "none",
+            userEnabledAdvancedExercise: false
+          })
+        : [],
+    [papVisibleDay, readinessEntry, subjectiveReadiness]
+  );
+  const visibleDay = useMemo(
+    () => applyAdvancedExerciseSubstitutions(papVisibleDay, advancedSubstitutions),
+    [papVisibleDay, advancedSubstitutions]
+  );
   const basketballWarning = getBasketballLoadWarning(
     readinessEntry?.subjective?.basketballLoadLast24h ?? "none",
     readinessEntry?.subjective?.basketballLoadLast48h ?? "none"
@@ -83,6 +159,51 @@ export default function TodayScreen() {
     day.coreIncluded ? "核心" : undefined,
     day.isometricIncluded ? "等长" : undefined
   ].filter(Boolean) as string[];
+  const bodySignalReminders = useMemo(
+    () => (bodySignals ? generateTrainingReminders(bodySignals, bodySignalBaseline).slice(0, 3) : []),
+    [bodySignalBaseline, bodySignals]
+  );
+  const basketballLoadToday = bodySignals?.basketballLoad
+    ? evaluateBasketballLoad(bodySignals.basketballLoad)
+    : readinessEntry?.subjective?.basketballLoadLast24h ?? "none";
+  const recommendation = useMemo(
+    () =>
+      recommendNextSession({
+        date: todayDate(),
+        currentBlock,
+        completedSessionUnitsLast14Days: getCompletedSessionUnitIdsLast14Days(),
+        latestSessionUnit: getSessionUnit(completedSessionUnits[0]?.sessionUnitId),
+        hoursSinceLastHighImpact: getHoursSinceLast(completedSessionUnits, (entry) => {
+          const unit = getSessionUnit(entry.sessionUnitId);
+          return unit?.impactLevel === "high";
+        }),
+        hoursSinceLastLowerBodyStrength: getHoursSinceLast(completedSessionUnits, (entry) =>
+          entry.sessionType === "strength-a" || entry.sessionType === "strength-b"
+        ),
+        cmjReadiness: latestJumpReadinessResult,
+        wearableSignals: bodySignals?.wearable,
+        wearableBaseline: bodySignalBaseline,
+        painAndMovement: bodySignals?.painAndMovement,
+        basketballLoadLast24h: basketballLoadToday,
+        basketballLoadLast48h: readinessEntry?.subjective?.basketballLoadLast48h ?? "none"
+      }),
+    [
+      basketballLoadToday,
+      bodySignalBaseline,
+      bodySignals,
+      completedSessionUnits,
+      currentBlock,
+      getCompletedSessionUnitIdsLast14Days,
+      latestJumpReadinessResult,
+      readinessEntry
+    ]
+  );
+  const recommendedUnit = getSessionUnit(recommendation.recommendedSessionUnitId);
+  const weeklyProgress = useMemo(
+    () => getWeeklySessionProgress(getCompletedSessionUnitIdsLast14Days(), currentBlock, todayDate()),
+    [currentBlock, getCompletedSessionUnitIdsLast14Days]
+  );
+  const currentWeekTarget = weeklySessionTargets.find((target) => target.weekNumber === currentAdaptiveWeek);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -96,6 +217,9 @@ export default function TodayScreen() {
         <Pressable style={styles.navButton} onPress={() => router.push("/nutrition" as never)}>
           <Text style={styles.navButtonText}>营养</Text>
         </Pressable>
+        <Pressable style={styles.navButton} onPress={() => router.push("/body-signals" as never)}>
+          <Text style={styles.navButtonText}>身体</Text>
+        </Pressable>
         <Pressable style={styles.navButton} onPress={() => router.push("/glossary" as never)}>
           <Text style={styles.navButtonText}>术语</Text>
         </Pressable>
@@ -103,6 +227,89 @@ export default function TodayScreen() {
 
       <Text style={styles.sectionKicker}>今日概览</Text>
       <PlanProgressControls />
+      <View style={styles.recommendationCard}>
+        <Text style={styles.recommendationKicker}>
+          12 周自适应 · Week {currentAdaptiveWeek} · Block {currentBlock} · Day {currentAdaptiveDay}
+        </Text>
+        <Text style={styles.recommendationTitle}>{currentBlockTitle}</Text>
+        <Text style={styles.recommendationSubtitle}>
+          下一节推荐：{recommendation.title}
+        </Text>
+        <View style={styles.recommendationMetaRow}>
+          <Text style={styles.recommendationBadge}>
+            {recommendation.level === "normal"
+              ? "正常执行"
+              : recommendation.level === "modified"
+                ? "降级/调整"
+                : "恢复-only"}
+          </Text>
+          {recommendedUnit ? (
+            <>
+              <Text style={styles.recommendationBadge}>{sessionTypeLabels[recommendedUnit.type]}</Text>
+              <Text style={styles.recommendationBadge}>
+                冲击：{recommendedUnit.impactLevel === "high" ? "高" : recommendedUnit.impactLevel === "moderate" ? "中" : recommendedUnit.impactLevel === "low" ? "低" : "无"}
+              </Text>
+            </>
+          ) : null}
+        </View>
+        {recommendation.rationale.slice(0, 3).map((reason) => (
+          <Text key={reason} style={styles.recommendationText}>• {reason}</Text>
+        ))}
+        {recommendation.modifications.slice(0, 3).map((modification) => (
+          <Text key={modification} style={styles.modificationText}>调整：{modification}</Text>
+        ))}
+        <View style={styles.recommendationActions}>
+          <Pressable
+            style={styles.recommendationAction}
+            onPress={() => setShowRecommendedSession((current) => !current)}
+          >
+            <Text style={styles.recommendationActionText}>
+              {showRecommendedSession ? "收起推荐训练" : "展开推荐训练"}
+            </Text>
+          </Pressable>
+          <Pressable style={styles.recommendationAction} onPress={() => router.push("/jump-readiness" as never)}>
+            <Text style={styles.recommendationActionText}>做 Jump Readiness</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.weekProgressCard}>
+        <Text style={styles.weekProgressTitle}>本周训练单元目标</Text>
+        {currentWeekTarget?.deload ? <Text style={styles.weekProgressNote}>本周是微卸载/复盘周。</Text> : null}
+        {weeklyProgress.map((item) => (
+          <Text key={item.type} style={styles.weekProgressItem}>
+            {sessionTypeLabels[item.type]}：{item.completed}/{item.targetMin}
+            {item.targetMax !== item.targetMin ? `–${item.targetMax}` : ""}
+            {item.optional ? "（可选）" : ""}
+          </Text>
+        ))}
+      </View>
+
+      {showRecommendedSession && recommendedUnit ? (
+        <View style={styles.recommendedSessionCard}>
+          <Text style={styles.recommendedSessionTitle}>{recommendedUnit.title}</Text>
+          <Text style={styles.recommendedSessionMeta}>
+            预计 {recommendedUnit.estimatedDurationMinutes?.min ?? 20}–{recommendedUnit.estimatedDurationMinutes?.max ?? 45} 分钟
+            {recommendedUnit.plannedJumpContacts
+              ? ` · 跳跃 ${recommendedUnit.plannedJumpContacts.min}–${recommendedUnit.plannedJumpContacts.max}`
+              : ""}
+          </Text>
+          {recommendedUnit.blockReasons?.map((reason) => (
+            <Text key={reason} style={styles.recommendationText}>• {reason}</Text>
+          ))}
+          {recommendedUnit.exerciseBlocks.map((block, index) => (
+            <DaySection key={`${recommendedUnit.id}-${block.type}-${index}`} block={block} dayLabel={recommendedUnit.title} />
+          ))}
+          <Pressable
+            style={styles.completeSessionButton}
+            onPress={() => completeSessionUnit(recommendedUnit.id, recommendation.level)}
+          >
+            <Text style={styles.completeSessionButtonText}>标记这节训练已完成</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <Text style={styles.legacyTitle}>Legacy Fixed Plan（固定日历兼容）</Text>
       <Text style={styles.eyebrow}>
         Week {day.weekNumber} · Cycle {day.cycleNumber} · Day {day.macrocycleDay}
       </Text>
@@ -155,6 +362,25 @@ export default function TodayScreen() {
         )}
       </View>
 
+      <View style={styles.bodyReminderCard}>
+        <Text style={styles.bodyReminderTitle}>身体数据提醒</Text>
+        {bodySignals ? (
+          <>
+            <BodySignalsCard signals={bodySignals} compact />
+            {bodySignalReminders.map((reminder) => (
+              <TrainingReminderCard key={reminder.id} reminder={reminder} compact />
+            ))}
+          </>
+        ) : (
+          <Text style={styles.emptyText}>
+            还没有今天的 WHOOP / Oura / Withings 数据。可以手动输入，之后再接后端同步。
+          </Text>
+        )}
+        <Pressable style={styles.fillButton} onPress={() => router.push("/body-signals" as never)}>
+          <Text style={styles.fillButtonText}>查看身体数据</Text>
+        </Pressable>
+      </View>
+
       <Text style={styles.sectionTitle}>今日训练内容</Text>
 
       {showAdjustedPlan && readinessEntry ? (
@@ -174,6 +400,17 @@ export default function TodayScreen() {
         <View style={styles.warning}>
           <Text style={styles.warningTitle}>篮球负荷调整</Text>
           <Text style={styles.warningText}>{basketballWarning}</Text>
+        </View>
+      ) : null}
+      {advancedSubstitutions.length ? (
+        <View style={styles.substitutionCard}>
+          <Text style={styles.substitutionTitle}>进阶动作替换</Text>
+          {advancedSubstitutions.map((substitution) => (
+            <Text key={`${substitution.exerciseId}-${substitution.alternativeExerciseId}`} style={styles.substitutionText}>
+              今日不建议做{substitution.exerciseName}，已自动替换为：
+              {substitution.alternativeName}
+            </Text>
+          ))}
         </View>
       ) : null}
 
@@ -384,6 +621,19 @@ const styles = StyleSheet.create({
     borderColor: "#d8dee4",
     backgroundColor: "#ffffff"
   },
+  bodyReminderCard: {
+    marginTop: 16,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff"
+  },
+  bodyReminderTitle: {
+    fontSize: 18,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
   readinessTitle: {
     fontSize: 18,
     fontWeight: "900",
@@ -489,6 +739,25 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: "#24292f"
   },
+  substitutionCard: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#bf8700",
+    backgroundColor: "#fff8c5"
+  },
+  substitutionTitle: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  substitutionText: {
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#24292f"
+  },
   adaptiveLink: {
     minHeight: 44,
     marginTop: 18,
@@ -502,6 +771,148 @@ const styles = StyleSheet.create({
   adaptiveLinkText: {
     color: "#0969da",
     fontSize: 14,
+    fontWeight: "900"
+  },
+  recommendationCard: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0969da",
+    backgroundColor: "#ddf4ff"
+  },
+  recommendationKicker: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: "#57606a",
+    fontWeight: "900"
+  },
+  recommendationTitle: {
+    marginTop: 4,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  recommendationSubtitle: {
+    marginTop: 8,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  recommendationMetaRow: {
+    marginTop: 10,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  recommendationBadge: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#ffffff",
+    color: "#0969da",
+    fontSize: 12,
+    fontWeight: "900"
+  },
+  recommendationText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#24292f"
+  },
+  modificationText: {
+    marginTop: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#8250df",
+    fontWeight: "800"
+  },
+  recommendationActions: {
+    marginTop: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8
+  },
+  recommendationAction: {
+    minHeight: 44,
+    flexGrow: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#0969da",
+    backgroundColor: "#ffffff",
+    alignItems: "center"
+  },
+  recommendationActionText: {
+    color: "#0969da",
+    fontWeight: "900"
+  },
+  weekProgressCard: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff"
+  },
+  weekProgressTitle: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  weekProgressNote: {
+    marginTop: 6,
+    fontSize: 13,
+    color: "#57606a",
+    fontWeight: "800"
+  },
+  weekProgressItem: {
+    marginTop: 7,
+    fontSize: 14,
+    lineHeight: 20,
+    color: "#24292f"
+  },
+  recommendedSessionCard: {
+    marginTop: 12,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d8dee4",
+    backgroundColor: "#ffffff"
+  },
+  recommendedSessionTitle: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  recommendedSessionMeta: {
+    marginTop: 6,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#57606a",
+    fontWeight: "800"
+  },
+  completeSessionButton: {
+    minHeight: 44,
+    marginTop: 16,
+    paddingVertical: 13,
+    borderRadius: 8,
+    backgroundColor: "#0969da",
+    alignItems: "center"
+  },
+  completeSessionButtonText: {
+    color: "#ffffff",
+    fontWeight: "900"
+  },
+  legacyTitle: {
+    marginTop: 20,
+    fontSize: 16,
+    lineHeight: 22,
+    color: "#57606a",
     fontWeight: "900"
   }
 });

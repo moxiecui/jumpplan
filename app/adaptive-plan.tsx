@@ -2,10 +2,14 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { AdaptivePlanPreview } from "@/components/AdaptivePlanPreview";
+import { useBodySignals } from "@/context/BodySignalsContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { useReadiness } from "@/context/ReadinessContext";
+import { useSessionProgress } from "@/context/SessionProgressContext";
 import { useTrainingLog } from "@/context/TrainingLogContext";
+import { adaptiveMigrationSummary } from "@/data/adaptiveProgram";
 import { trainingPlan } from "@/data/plan";
+import { generateTrainingReminders } from "@/logic/bodySignalEvaluation";
 import { mockPlanGenerationService } from "@/services/mockPlanGenerationService";
 import type {
   GeneratedAdaptivePlan,
@@ -26,7 +30,8 @@ const lengthOptions: { value: PlanLength; label: string }[] = [
   { value: "7-days", label: "7 天" },
   { value: "10-days", label: "10 天" },
   { value: "21-days", label: "21 天" },
-  { value: "4-weeks", label: "4 周" }
+  { value: "4-weeks", label: "4 周" },
+  { value: "12-weeks", label: "12 周" }
 ];
 
 function todayDate() {
@@ -68,9 +73,18 @@ function ToggleButton({
 export default function AdaptivePlanScreen() {
   const { basketballLogs, assessments, jumpTests } = usePerformance();
   const { entriesByDate } = useReadiness();
+  const {
+    completedSessionUnits,
+    currentAdaptiveDay,
+    currentAdaptiveWeek,
+    currentBlock,
+    currentBlockTitle,
+    latestJumpReadinessResult
+  } = useSessionProgress();
+  const { getBodySignals, getBodySignalBaseline } = useBodySignals();
   const { entries, dayCompletions } = useTrainingLog();
   const [trigger, setTrigger] = useState<PlanGenerationTrigger>("mid-cycle-adjustment");
-  const [requestedLength, setRequestedLength] = useState<PlanLength>("21-days");
+  const [requestedLength, setRequestedLength] = useState<PlanLength>("12-weeks");
   const [completedExerciseIds, setCompletedExerciseIds] = useState("");
   const [skippedExerciseIds, setSkippedExerciseIds] = useState("");
   const [difficultExerciseIds, setDifficultExerciseIds] = useState("");
@@ -81,13 +95,24 @@ export default function AdaptivePlanScreen() {
   const [landingFeltHeavy, setLandingFeltHeavy] = useState(false);
   const [extraBasketball, setExtraBasketball] = useState(false);
   const [subjectiveEnergy, setSubjectiveEnergy] = useState("3");
-  const [basketballSessionsPerWeek, setBasketballSessionsPerWeek] = useState("3");
+  const [basketballSessionsPerWeek, setBasketballSessionsPerWeek] = useState("1");
   const [notes, setNotes] = useState("");
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedAdaptivePlan | undefined>();
   const [adoptedPlan, setAdoptedPlan] = useState<GeneratedAdaptivePlan | undefined>();
   const [isGenerating, setIsGenerating] = useState(false);
 
   const buildRequest = (): PlanGenerationRequest => {
+    const bodySignals = getBodySignals(todayDate());
+    const bodySignalBaseline = getBodySignalBaseline(todayDate());
+    const bodySignalReminderSummary = bodySignals
+      ? generateTrainingReminders(bodySignals, bodySignalBaseline)
+          .map((reminder) => `${reminder.title}: ${reminder.message}`)
+          .join(" ")
+      : "";
+    const sessionUnitSummary = completedSessionUnits
+      .slice(0, 10)
+      .map((entry) => `${entry.completedAt.slice(0, 10)} ${entry.sessionTitle}`)
+      .join("；");
     const feedback: TrainingFeedback = {
       date: todayDate(),
       completedExerciseIds: parseList(completedExerciseIds),
@@ -100,13 +125,21 @@ export default function AdaptivePlanScreen() {
       landingFeltHeavy,
       extraBasketball,
       subjectiveEnergy: parseOptionalNumber(subjectiveEnergy),
-      notes
+      notes: [
+        notes,
+        `自适应进度：Week ${currentAdaptiveWeek}，Block ${currentBlock}，Macro Day ${currentAdaptiveDay}，${currentBlockTitle}`,
+        sessionUnitSummary ? `最近训练单元：${sessionUnitSummary}` : "",
+        latestJumpReadinessResult ? `Jump Readiness：${latestJumpReadinessResult.level}，${latestJumpReadinessResult.reasons.join("；")}` : "",
+        bodySignalReminderSummary ? `身体数据提醒：${bodySignalReminderSummary}` : ""
+      ]
+        .filter(Boolean)
+        .join(" ")
     };
 
     return {
       trigger,
       requestedLength,
-      currentPlanTitle: "JumpPlan 21-day vertical jump performance plan",
+      currentPlanTitle: "JumpPlan 12-week adaptive session-unit vertical jump performance system",
       recentFeedback: [feedback],
       readinessContext: Object.values(entriesByDate).map((entry) => entry.adjustment),
       performanceContext: {
@@ -153,8 +186,8 @@ export default function AdaptivePlanScreen() {
           ? {
               startDate: todayDate(),
               endDate: todayDate(),
-              completedDays: 21,
-              plannedDays: 21,
+              completedDays: completedSessionUnits.length,
+              plannedDays: 84,
               completionRate: 1,
               achillesPainTrend: "unknown",
               patellarPainTrend: "unknown",
@@ -162,7 +195,7 @@ export default function AdaptivePlanScreen() {
             }
           : undefined,
       constraints: {
-        basketballSessionsPerWeek: parseOptionalNumber(basketballSessionsPerWeek) ?? 3,
+        basketballSessionsPerWeek: parseOptionalNumber(basketballSessionsPerWeek) ?? 1,
         maxHighImpactDaysPerWeek: 2,
         prioritizeTendonSafety: true,
         rightKneeTrackingFocus: true,
@@ -170,7 +203,10 @@ export default function AdaptivePlanScreen() {
         allowMaxJumpTesting: false,
         equipmentAvailable: ["trap-bar", "bands", "foam-roller", "bike"]
       },
-      userGoal: "篮球垂直弹跳提升，同时保护跟腱、髌腱、右脚足弓和右膝力线。"
+      userGoal: [
+        "篮球垂直弹跳提升，同时保护跟腱、髌腱、右脚足弓和右膝力线。",
+        `迁移说明：${adaptiveMigrationSummary.note}`
+      ].join(" ")
     };
   };
 
@@ -185,7 +221,7 @@ export default function AdaptivePlanScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>生成新计划</Text>
       <Text style={styles.subtitle}>
-        现在使用本地 mock 规则生成。未来可以把同样请求发到你自己的后端，不在手机端放 API key。
+        现在使用本地 mock 规则生成。未来可以把同样请求发到你自己的后端，不在手机端放 API key。篮球默认 0–1 次/周。
       </Text>
 
       <Text style={styles.sectionTitle}>Trigger</Text>
@@ -237,7 +273,7 @@ export default function AdaptivePlanScreen() {
         <TextInput style={styles.gridInput} value={patellarPain} onChangeText={setPatellarPain} keyboardType="numeric" placeholder="髌腱疼痛 0–10" />
         <TextInput style={styles.gridInput} value={calfTightness} onChangeText={setCalfTightness} keyboardType="numeric" placeholder="小腿紧绷 0–10" />
         <TextInput style={styles.gridInput} value={subjectiveEnergy} onChangeText={setSubjectiveEnergy} keyboardType="numeric" placeholder="主观能量 1–5" />
-        <TextInput style={styles.gridInput} value={basketballSessionsPerWeek} onChangeText={setBasketballSessionsPerWeek} keyboardType="numeric" placeholder="每周篮球次数" />
+        <TextInput style={styles.gridInput} value={basketballSessionsPerWeek} onChangeText={setBasketballSessionsPerWeek} keyboardType="numeric" placeholder="每周篮球次数，默认 0–1" />
       </View>
 
       <View style={styles.toggleRow}>

@@ -1217,6 +1217,11 @@ type MenuExerciseParams = {
   youtubeSearchQuery: string;
   highImpact?: boolean;
   advanced?: boolean;
+  riskTier?: Exercise["riskTier"];
+  impactLevel?: Exercise["impactLevel"];
+  safeAlternativeExerciseIds?: string[];
+  readinessGates?: string[];
+  jumpContactContribution?: Exercise["jumpContactContribution"];
 };
 
 function createMenuExercise({
@@ -1227,11 +1232,17 @@ function createMenuExercise({
   purpose,
   youtubeSearchQuery,
   highImpact,
-  advanced
+  advanced,
+  riskTier,
+  impactLevel,
+  safeAlternativeExerciseIds,
+  readinessGates,
+  jumpContactContribution
 }: MenuExerciseParams): Exercise {
   const isJump = category === "plyometric" || category === "basketball-skill";
-  const isStrength = category === "strength" || category === "isometric";
+  const isStrength = category === "strength" || category === "isometric" || category === "power" || category === "hamstring";
   const isCore = category === "core";
+  const resolvedRiskTier = riskTier ?? (advanced ? "advanced-only" : highImpact ? "high" : isJump || category === "power" ? "moderate" : "low");
   const sourceNote = "来自训练菜单动作库";
 
   return {
@@ -1243,7 +1254,9 @@ function createMenuExercise({
     whyForUser: isJump
       ? "这个动作来自训练菜单动作库，但 JumpPlan 会按你的膝前侧、跟腱、髌腱和篮球负荷重新控制剂量。它用于提高弹跳质量，不用于体能消耗。"
       : isStrength
-        ? "这个动作来自训练菜单动作库，用来支持右侧力量、膝脚对线、腘绳肌和小腿容量，而不是制造 bodybuilding 式疲劳。"
+        ? category === "power"
+          ? "这个动作来自训练菜单动作库，用来把力量转化成髋伸展速度和起跳爆发；在 JumpPlan 中只做低剂量技术质量，不做疲劳堆积。"
+          : "这个动作来自训练菜单动作库，用来支持右侧力量、膝脚对线、腘绳肌和小腿容量，而不是制造 bodybuilding 式疲劳。"
         : isCore
           ? "这个动作来自训练菜单动作库，用来提高起跳、落地和篮球对抗时的躯干传力。"
           : "这个动作来自训练菜单动作库，用来改善动作控制和恢复质量。",
@@ -1257,7 +1270,7 @@ function createMenuExercise({
       : [
           "先用轻重量或自重找到稳定动作轨迹。",
           "保持脚三点支撑、骨盆稳定和自然呼吸。",
-          "用 RPE 6–8 完成，避免力竭和动作变形。",
+          category === "power" ? "每次都要快、干净、有余量；动作慢下来就停止。" : "用 RPE 6–8 完成，避免力竭和动作变形。",
           "如果右脚外旋、右膝内扣或膝前侧不适增加，立刻降级。"
         ],
     keyCues: isJump
@@ -1275,8 +1288,8 @@ function createMenuExercise({
     painRules: [
       "膝前侧、跟腱或髌腱疼痛 >=3/10 时取消动态跳跃或深膝角版本。",
       "疼痛在热身中变差时，当天降级为恢复或受控力量。",
-      highImpact ? "这是高冲击动作，只能在后续周期低量使用，不能做成高次数体能训练。" : "保持低到中等刺激，第二天症状增加就减半或跳过。",
-      advanced ? "这是进阶动作；疼痛 <=1/10、右膝轨迹和落地质量 >=4/5、前 48 小时无高篮球负荷才考虑。" : "动作质量不稳定时先退阶。"
+      highImpact ? "这是高冲击动作，只能低量使用，不能做成高次数体能训练。" : "保持低到中等刺激，第二天症状增加就减半或跳过。",
+      resolvedRiskTier === "advanced-only" ? "这是 advanced-only 动作；必须绿色状态、疼痛 <=1/10、右膝轨迹和落地质量 >=4/5、前 48 小时无高篮球负荷，并且你确认技术/设备安全才考虑。" : "动作质量不稳定时先退阶。"
     ],
     glossaryTermIds: isJump
       ? ["plyometric", "ground-contact-time", "tripod-foot", "readiness"]
@@ -1286,26 +1299,40 @@ function createMenuExercise({
       : ["reps", "rpe", "rightFootControl", "rightKneeTracking", "painScore"],
     progressionCriteria: isJump
       ? ["疼痛 <=1–2/10。", "落地安静 >=4/5。", "右膝轨迹 >=4/5。", "前 24–48 小时没有高篮球负荷。"]
-      : ["所有组动作完成且 RPE <=7–8。", "右脚和右膝控制稳定。", "第二天膝部或肌腱没有加重。"],
+      : category === "power"
+        ? ["技术路线稳定。", "每次速度快且没有追重量。", "膝前侧、跟腱、髌腱和腘绳肌第二天没有加重。"]
+        : ["所有组动作完成且 RPE <=7–8。", "右脚和右膝控制稳定。", "第二天膝部或肌腱没有加重。"],
     regressionCriteria: isJump
       ? ["膝前侧或肌腱 >=3/10。", "落地声音变重。", "右脚外旋 >=2/3。", "右膝轨迹 <=2/5。", "篮球负荷高。"]
       : ["疼痛升高。", "动作轨迹变形。", "右脚外旋明显。", "第二天酸痛影响篮球或弹跳。"],
     youtubeSearchQuery,
-    sourceNote
+    sourceNote,
+    riskTier: resolvedRiskTier,
+    impactLevel: impactLevel ?? (highImpact ? "high" : isJump ? "moderate" : "low"),
+    jumpContactContribution,
+    readinessGates: readinessGates ?? [
+      "readiness 不能是红色。",
+      "膝前侧、跟腱和髌腱疼痛低于 3/10。",
+      "右脚外旋不明显，右膝轨迹稳定。",
+      "过去 24 小时没有高篮球负荷。"
+    ],
+    safeAlternativeExerciseIds,
+    advancedOnly: resolvedRiskTier === "advanced-only",
+    screenshotDerived: true
   };
 }
 
 const screenshotMenuExercises: Exercise[] = [
   createMenuExercise({ id: "tuck-jump", nameZh: "屈膝跳", nameEn: "Tuck Jump", category: "plyometric", purpose: "训练快速向上起跳和空中收膝协调。", youtubeSearchQuery: "tuck jump technique", highImpact: true }),
-  createMenuExercise({ id: "continuous-tuck-jump", nameZh: "连续屈膝跳", nameEn: "Continuous Tuck Jump", category: "plyometric", purpose: "低量训练连续弹跳节奏和落地再组织能力。", youtubeSearchQuery: "continuous tuck jump technique", highImpact: true, advanced: true }),
+  createMenuExercise({ id: "continuous-tuck-jump", nameZh: "连续屈膝跳", nameEn: "Continuous Tuck Jump", category: "plyometric", purpose: "低量训练连续弹跳节奏和落地再组织能力。", youtubeSearchQuery: "continuous tuck jump technique", highImpact: true, riskTier: "high", safeAlternativeExerciseIds: ["tuck-jump", "low-pogo"] }),
   createMenuExercise({ id: "lunge-jump", nameZh: "弓步跳", nameEn: "Lunge Jump", category: "plyometric", purpose: "训练分腿姿势下的垂直发力和落地对线。", youtubeSearchQuery: "lunge jump technique", highImpact: true }),
-  createMenuExercise({ id: "continuous-lunge-jump", nameZh: "连续弓步跳", nameEn: "Continuous Lunge Jump", category: "plyometric", purpose: "训练连续分腿弹跳，但只作为后期低量高质量刺激。", youtubeSearchQuery: "continuous lunge jump technique", highImpact: true, advanced: true }),
+  createMenuExercise({ id: "continuous-lunge-jump", nameZh: "连续弓步跳", nameEn: "Continuous Lunge Jump", category: "plyometric", purpose: "训练连续分腿弹跳，但只作为后期低量高质量刺激。", youtubeSearchQuery: "continuous lunge jump technique", highImpact: true, riskTier: "high", safeAlternativeExerciseIds: ["lunge-jump", "split-squat-isometric"] }),
   createMenuExercise({ id: "box-jump", nameZh: "跳箱", nameEn: "Box Jump", category: "plyometric", purpose: "用较低落地冲击练习向上发力和起跳协调。", youtubeSearchQuery: "box jump technique safe landing" }),
   createMenuExercise({ id: "squat-jump", nameZh: "蹲跳", nameEn: "Squat Jump", category: "plyometric", purpose: "训练静止下蹲位向上发力和躯干稳定。", youtubeSearchQuery: "squat jump technique" }),
-  createMenuExercise({ id: "continuous-squat-jump", nameZh: "连续蹲跳", nameEn: "Continuous Squat Jump", category: "plyometric", purpose: "低量训练重复垂直发力，不作为体能循环。", youtubeSearchQuery: "continuous squat jump technique", highImpact: true, advanced: true }),
+  createMenuExercise({ id: "continuous-squat-jump", nameZh: "连续蹲跳", nameEn: "Continuous Squat Jump", category: "plyometric", purpose: "低量训练重复垂直发力，不作为体能循环。", youtubeSearchQuery: "continuous squat jump technique", highImpact: true, riskTier: "high", safeAlternativeExerciseIds: ["squat-jump", "assist-squat-jump"] }),
   createMenuExercise({ id: "depth-drop", nameZh: "失重落地", nameEn: "Depth Drop", category: "plyometric", purpose: "训练从低高度下落后的安静落地和膝脚对线。", youtubeSearchQuery: "depth drop landing technique" }),
-  createMenuExercise({ id: "single-leg-depth-drop", nameZh: "单脚失重落地", nameEn: "Single-Leg Depth Drop", category: "plyometric", purpose: "进阶训练单脚落地刚性、骨盆稳定和缓冲质量。", youtubeSearchQuery: "single leg depth drop landing technique", highImpact: true, advanced: true }),
-  createMenuExercise({ id: "single-leg-hurdle-jump-to-squat-jump", nameZh: "单脚跨栏蹲跳", nameEn: "Single-Leg Hurdle Jump to Squat Jump", category: "plyometric", purpose: "高级组合动作，训练单脚越障后重新组织双脚发力。", youtubeSearchQuery: "single leg hurdle hop to squat jump drill", highImpact: true, advanced: true }),
+  createMenuExercise({ id: "single-leg-depth-drop", nameZh: "单脚失重落地", nameEn: "Single-Leg Depth Drop", category: "plyometric", purpose: "进阶训练单脚落地刚性、骨盆稳定和缓冲质量。", youtubeSearchQuery: "single leg depth drop landing technique", highImpact: true, riskTier: "high", safeAlternativeExerciseIds: ["single-leg-snap-down-stick", "right-single-leg-landing-stick"] }),
+  createMenuExercise({ id: "single-leg-hurdle-jump-to-squat-jump", nameZh: "单脚跨栏蹲跳", nameEn: "Single-Leg Hurdle Jump to Squat Jump", category: "plyometric", purpose: "高级组合动作，训练单脚越障后重新组织双脚发力。", youtubeSearchQuery: "single leg hurdle hop to squat jump drill", highImpact: true, riskTier: "advanced-only", safeAlternativeExerciseIds: ["single-leg-low-pogo", "single-leg-snap-down-stick", "two-step-single-leg-approach-jump"] }),
   createMenuExercise({ id: "bulgarian-split-squat", nameZh: "保加利亚分腿蹲", nameEn: "Bulgarian Split Squat", category: "strength", purpose: "训练单腿力量、髋膝控制和左右力量平衡。", youtubeSearchQuery: "Bulgarian split squat technique" }),
   createMenuExercise({ id: "bulgarian-split-squat-with-heel-up", nameZh: "保加利亚分腿蹲提踵", nameEn: "Bulgarian Split Squat with Heel Up", category: "strength", purpose: "把分腿蹲力量和小腿末端支撑结合。", youtubeSearchQuery: "Bulgarian split squat calf raise technique" }),
   createMenuExercise({ id: "reverse-lunge", nameZh: "反向弓箭步", nameEn: "Reverse Lunge", category: "strength", purpose: "训练下肢力量和膝盖可控前移，膝前侧负荷通常比前弓步更温和。", youtubeSearchQuery: "reverse lunge technique" }),
@@ -1329,7 +1356,41 @@ const screenshotMenuExercises: Exercise[] = [
   createMenuExercise({ id: "lunge-hold", nameZh: "弓箭步保持", nameEn: "Lunge Hold", category: "isometric", purpose: "训练分腿位置下的膝脚对线和等长耐受。", youtubeSearchQuery: "lunge hold isometric technique" }),
   createMenuExercise({ id: "bulgarian-squat-hold", nameZh: "保加利亚分腿蹲保持", nameEn: "Bulgarian Squat Hold", category: "isometric", purpose: "训练单腿分腿姿势下的等长控制。", youtubeSearchQuery: "Bulgarian split squat isometric hold" }),
   createMenuExercise({ id: "single-leg-bridge", nameZh: "单脚桥式", nameEn: "Single-Leg Bridge", category: "strength", purpose: "训练臀肌和腘绳肌基础激活。", youtubeSearchQuery: "single leg bridge exercise technique" }),
-  createMenuExercise({ id: "bridge", nameZh: "桥式", nameEn: "Bridge", category: "strength", purpose: "训练臀部和腘绳肌低负荷激活。", youtubeSearchQuery: "glute bridge technique" })
+  createMenuExercise({ id: "bridge", nameZh: "桥式", nameEn: "Bridge", category: "strength", purpose: "训练臀部和腘绳肌低负荷激活。", youtubeSearchQuery: "glute bridge technique" }),
+  createMenuExercise({ id: "kettlebell-swing", nameZh: "壶铃摆荡", nameEn: "Kettlebell Swing", category: "power", purpose: "训练髋伸展爆发和后侧链速度，为助跑起跳提供髋部输出。", youtubeSearchQuery: "kettlebell swing technique hip hinge", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["rdl", "bridge"] }),
+  createMenuExercise({ id: "kettlebell-swing-with-band", nameZh: "弹力绳壶铃摆荡", nameEn: "Kettlebell Swing with Band", category: "power", purpose: "用弹力阻力强化髋伸展速度，只适合壶铃摆荡技术稳定后低量使用。", youtubeSearchQuery: "band resisted kettlebell swing", riskTier: "advanced-only", impactLevel: "moderate", safeAlternativeExerciseIds: ["kettlebell-swing", "rdl"] }),
+  createMenuExercise({ id: "clean-pull", nameZh: "上膊高拉", nameEn: "Clean Pull", category: "power", purpose: "训练从地面或悬垂位快速伸髋、耸肩和全身发力协调。", youtubeSearchQuery: "clean pull technique", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["db-power-snatch", "kettlebell-swing"] }),
+  createMenuExercise({ id: "power-clean", nameZh: "顺发上膊", nameEn: "Power Clean", category: "power", purpose: "高级技术举动作，用于把力量转化为爆发，但只在技术和设备安全时作为可选项。", youtubeSearchQuery: "power clean technique", riskTier: "advanced-only", impactLevel: "moderate", safeAlternativeExerciseIds: ["clean-pull", "db-power-snatch", "kettlebell-swing"] }),
+  createMenuExercise({ id: "clean-pull-to-power-clean", nameZh: "顺发上膊高拉", nameEn: "Clean Pull to Power Clean", category: "power", purpose: "从高拉过渡到顺发上膊的高级组合进阶，不作为默认训练量。", youtubeSearchQuery: "clean pull power clean progression", riskTier: "advanced-only", impactLevel: "moderate", safeAlternativeExerciseIds: ["clean-pull", "db-power-snatch"] }),
+  createMenuExercise({ id: "db-power-snatch", nameZh: "哑铃抓举", nameEn: "Dumbbell Power Snatch", category: "power", purpose: "用较低技术门槛训练单侧髋伸展爆发、躯干传力和肩上稳定。", youtubeSearchQuery: "dumbbell power snatch technique", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["kettlebell-swing", "medicine-ball-overhead-slam"] }),
+  createMenuExercise({ id: "squat-jerk", nameZh: "下蹲挺举", nameEn: "Squat Jerk", category: "power", purpose: "高级奥举衍生动作，需要安全技术和设备，不作为默认计划动作。", youtubeSearchQuery: "squat jerk technique", riskTier: "advanced-only", impactLevel: "moderate", safeAlternativeExerciseIds: ["db-power-snatch", "medicine-ball-overhead-slam", "assist-squat-jump"] }),
+  createMenuExercise({ id: "assist-squat-jump", nameZh: "辅助蹲跳", nameEn: "Assisted Squat Jump", category: "plyometric", purpose: "用辅助或减重方式练习快速向上蹲跳，强调速度和低冲击。", youtubeSearchQuery: "assisted squat jump band assisted jump", riskTier: "moderate", impactLevel: "moderate", jumpContactContribution: { min: 4, max: 10 }, safeAlternativeExerciseIds: ["squat-jump", "box-jump"] }),
+  createMenuExercise({ id: "depth-jump-less-contact", nameZh: "落下瞬间起跳", nameEn: "Depth Jump with Short Contact", category: "plyometric", purpose: "训练短触地反应和垂直弹性，只在绿色状态下低剂量使用。", youtubeSearchQuery: "depth jump short contact technique", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 2, max: 6, maxIntent: true }, safeAlternativeExerciseIds: ["depth-drop", "box-jump"] }),
+  createMenuExercise({ id: "depth-jump-to-vertical-jump-with-weight", nameZh: "负重失重落地垂直起跳", nameEn: "Loaded Depth Jump to Vertical Jump", category: "plyometric", purpose: "非常高级的负重反应跳，不作为默认计划，除非明确启用且质量非常高。", youtubeSearchQuery: "weighted depth jump to vertical jump", highImpact: true, riskTier: "advanced-only", impactLevel: "high", jumpContactContribution: { min: 0, max: 4, maxIntent: true }, safeAlternativeExerciseIds: ["depth-drop", "depth-jump-less-contact", "box-jump"] }),
+  createMenuExercise({ id: "concentric-jump-to-vertical-jump-with-weight", nameZh: "负重向心跳跃接垂直跳", nameEn: "Loaded Concentric Jump to Vertical Jump", category: "plyometric", purpose: "低量训练负重起跳到垂直跳的力量转化，负重必须轻。", youtubeSearchQuery: "loaded concentric jump to vertical jump", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 2, max: 6 }, safeAlternativeExerciseIds: ["db-squat-jump", "squat-jump", "assist-squat-jump"] }),
+  createMenuExercise({ id: "back-squat-on-bench", nameZh: "箱上深蹲", nameEn: "Box Back Squat", category: "strength", purpose: "用箱高控制深蹲深度和起始位置，支持力量和膝部负荷管理。", youtubeSearchQuery: "box squat technique", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["goblet-squat", "trap-bar-deadlift"] }),
+  createMenuExercise({ id: "db-squat-jump", nameZh: "哑铃蹲跳", nameEn: "Dumbbell Squat Jump", category: "plyometric", purpose: "用轻负重训练垂直发力速度，不能追重量或连续疲劳。", youtubeSearchQuery: "dumbbell squat jump technique", highImpact: true, riskTier: "moderate", impactLevel: "moderate", jumpContactContribution: { min: 4, max: 8 }, safeAlternativeExerciseIds: ["squat-jump", "assist-squat-jump"] }),
+  createMenuExercise({ id: "front-bulgarian-squat", nameZh: "较重保加利亚分腿蹲", nameEn: "Heavy Front-Foot-Elevated Bulgarian Split Squat", category: "strength", purpose: "提高单腿力量和前脚支撑能力，但只做中等量，避免膝前侧刺激过高。", youtubeSearchQuery: "front foot elevated Bulgarian split squat technique", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["bulgarian-split-squat", "split-squat-isometric", "reverse-lunge"] }),
+  createMenuExercise({ id: "full-range-lunge", nameZh: "进阶弓箭步蹲", nameEn: "Full Range Lunge", category: "strength", purpose: "训练更完整分腿活动范围和膝髋控制，只在膝前侧安静时做。", youtubeSearchQuery: "full range lunge technique", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["reverse-lunge", "lunge-hold"] }),
+  createMenuExercise({ id: "hanging-abs-curl", nameZh: "悬吊抬腿", nameEn: "Hanging Abs Curl", category: "core", purpose: "训练核心抗伸展、髋屈肌控制和骨盆位置。", youtubeSearchQuery: "hanging leg raise technique", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["dead-bug", "hollow-body-hold"] }),
+  createMenuExercise({ id: "band-hip-flexor", nameZh: "弹力绳髋屈肌训练", nameEn: "Band Hip Flexor Drill", category: "basketball-skill", purpose: "训练摆动腿提膝和髋屈肌节奏，支持单脚起跳效率。", youtubeSearchQuery: "band resisted hip flexor knee drive drill", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["step-up-knee-drive-hold"] }),
+  createMenuExercise({ id: "band-hamstring-curl", nameZh: "弹力绳腿部弯举", nameEn: "Band Hamstring Curl", category: "hamstring", purpose: "低到中等强度训练腘绳肌弯曲容量，适合作为恢复或力量日配件。", youtubeSearchQuery: "band hamstring curl exercise", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["single-leg-bridge", "hamstring-slider-curl"] }),
+  createMenuExercise({ id: "penultimate-jump", nameZh: "双脚起跳 / 单脚起跳", nameEn: "Penultimate Jump or One-Foot Jump", category: "basketball-skill", purpose: "训练倒数第二步节奏、单脚/双脚起跳选择和力量转向。", youtubeSearchQuery: "penultimate step one foot jump basketball", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 2, max: 8, maxIntent: true }, safeAlternativeExerciseIds: ["penultimate-step-drill", "two-step-single-leg-approach-jump"] }),
+  createMenuExercise({ id: "single-leg-snatch-with-body-control", nameZh: "自身体重单脚抓举控制", nameEn: "Single-Leg Snatch with Body Control", category: "power", purpose: "解释为单脚爆发伸展和上肢抓举路径的身体控制练习，不做重奥举。", youtubeSearchQuery: "single leg power snatch bodyweight control drill", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["single-leg-rdl-top-lock", "db-power-snatch"] }),
+  createMenuExercise({ id: "russian-twist", nameZh: "俄式转体", nameEn: "Russian Twist", category: "core", purpose: "训练躯干旋转控制和核心耐受，不能做成疲劳甩腰。", youtubeSearchQuery: "Russian twist exercise technique", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["pallof-press", "dead-bug"] }),
+  createMenuExercise({ id: "good-morning", nameZh: "早安式", nameEn: "Good Morning", category: "strength", purpose: "训练髋铰链、臀肌和腘绳肌张力，轻中重量即可。", youtubeSearchQuery: "good morning exercise hip hinge technique", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["rdl", "bridge"] }),
+  createMenuExercise({ id: "single-leg-tuck-jump", nameZh: "单脚抬膝跳", nameEn: "Single-Leg Tuck Jump", category: "plyometric", purpose: "进阶单脚快速提膝和垂直弹跳练习，只做极低量。", youtubeSearchQuery: "single leg tuck jump drill", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 0, max: 6 }, safeAlternativeExerciseIds: ["single-leg-low-pogo", "single-leg-snap-down-stick"] }),
+  createMenuExercise({ id: "single-leg-double-tuck-jump", nameZh: "连续单脚抬膝跳", nameEn: "Single-Leg Double Tuck Jump", category: "plyometric", purpose: "非常高级连续单脚弹跳，不作为默认计划，不能高容量使用。", youtubeSearchQuery: "single leg double tuck jump plyometric", highImpact: true, riskTier: "advanced-only", impactLevel: "high", jumpContactContribution: { min: 0, max: 4 }, safeAlternativeExerciseIds: ["single-leg-low-pogo", "single-leg-snap-down-stick", "two-step-single-leg-approach-jump"] }),
+  createMenuExercise({ id: "jump-shrug", nameZh: "跳跃耸肩", nameEn: "Jump Shrug", category: "power", purpose: "训练快速伸髋、伸膝、伸踝和上拉节奏，作为 clean pull 的低技术替代。", youtubeSearchQuery: "jump shrug technique", riskTier: "moderate", impactLevel: "low", safeAlternativeExerciseIds: ["kettlebell-swing", "db-power-snatch"] }),
+  createMenuExercise({ id: "low-box-step-up-jump", nameZh: "低箱上步提膝跳", nameEn: "Low Box Step-Up Jump", category: "plyometric", purpose: "把上步提膝保持进阶成低冲击单脚起跳力量转化。", youtubeSearchQuery: "low box step up jump knee drive", highImpact: true, riskTier: "high", impactLevel: "moderate", jumpContactContribution: { min: 4, max: 8 }, safeAlternativeExerciseIds: ["step-up-knee-drive-hold", "split-squat-isometric"] }),
+  createMenuExercise({ id: "single-leg-bound", nameZh: "单脚跨步跳", nameEn: "Single-Leg Bound", category: "plyometric", purpose: "低量训练单脚水平发力、骨盆控制和落地组织。", youtubeSearchQuery: "single leg bound plyometric technique", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 2, max: 6 }, safeAlternativeExerciseIds: ["single-leg-snap-down-stick", "two-step-single-leg-approach-jump"] }),
+  createMenuExercise({ id: "reactive-box-jump", nameZh: "反应式跳箱", nameEn: "Reactive Box Jump", category: "plyometric", purpose: "训练短触地后快速上跳，但只做低量质量刺激。", youtubeSearchQuery: "reactive box jump technique", highImpact: true, riskTier: "high", impactLevel: "high", jumpContactContribution: { min: 4, max: 8, maxIntent: true }, safeAlternativeExerciseIds: ["box-jump", "depth-drop"] }),
+  createMenuExercise({ id: "hip-airplane", nameZh: "髋飞机", nameEn: "Hip Airplane", category: "hip", purpose: "训练单腿髋旋转控制和骨盆稳定，支持右侧起跳支柱。", youtubeSearchQuery: "hip airplane exercise technique", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["single-leg-rdl-top-lock", "single-leg-weight-exchange"] }),
+  createMenuExercise({ id: "single-leg-hip-thrust", nameZh: "单腿臀推", nameEn: "Single-Leg Hip Thrust", category: "strength", purpose: "训练单腿臀肌伸髋力量，减少起跳时骨盆泄力。", youtubeSearchQuery: "single leg hip thrust technique", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["single-leg-bridge", "bridge"] }),
+  createMenuExercise({ id: "cable-hip-extension", nameZh: "绳索髋伸展", nameEn: "Cable Hip Extension", category: "hip", purpose: "训练髋伸展和臀肌发力，作为低冲击后侧链配件。", youtubeSearchQuery: "cable hip extension exercise technique", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["bridge", "band-hamstring-curl"] }),
+  createMenuExercise({ id: "lateral-step-down", nameZh: "侧向下台阶", nameEn: "Lateral Step-Down", category: "knee-tendon", purpose: "训练额状面膝盖轨迹、髋控制和膝前侧负荷管理。", youtubeSearchQuery: "lateral step down knee control", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["step-down", "spanish-squat-isometric"] }),
+  createMenuExercise({ id: "monster-walk", nameZh: "怪兽走", nameEn: "Monster Walk", category: "hip", purpose: "训练臀中肌和髋外展控制，支持膝盖对线和落地稳定。", youtubeSearchQuery: "monster walk band exercise technique", riskTier: "low", impactLevel: "none", safeAlternativeExerciseIds: ["band-lateral-walk"] }),
+  createMenuExercise({ id: "bent-knee-calf-raise", nameZh: "屈膝提踵", nameEn: "Bent-Knee Calf Raise", category: "strength", purpose: "训练比目鱼肌和屈膝位小腿容量，支持跟腱复合体耐受。", youtubeSearchQuery: "bent knee calf raise soleus technique", riskTier: "low", impactLevel: "low", safeAlternativeExerciseIds: ["calf-isometric-hold", "calf-raise-with-plate-under-front-foot"] })
 ];
 
 const allExerciseDefinitions = [...exerciseDefinitions, ...screenshotMenuExercises];

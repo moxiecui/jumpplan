@@ -208,7 +208,8 @@ function makeBasketballDay(week: WeekConfig, dayOfWeek: number): TrainingDay {
       blocks: [
         block("warmup", "完整热身", [
           ...warmupBase,
-          { exerciseId: "step-up-knee-drive-hold", sets: 1, reps: "4 次", side: "each", intensity: "low", moduleTag: "single-leg-stiffness", notes: "篮球前支撑腿检查，不做疲劳。" }
+          { exerciseId: "step-up-knee-drive-hold", sets: 1, reps: "4 次", side: "each", intensity: "low", moduleTag: "single-leg-stiffness", notes: "篮球前支撑腿检查，不做疲劳。" },
+          { exerciseId: "band-hip-flexor", sets: 1, reps: "5 次", side: "each", intensity: "low", optional: true, notes: "轻量提膝节奏；篮球会很激烈时只做热身感受。" }
         ]),
         block("main", "主训练", [
           { exerciseId: "easy-walk", duration: "按篮球安排", intensity: "low", notes: "本项代表篮球训练本身；记录 session RPE、跳跃和急停负荷。" },
@@ -300,13 +301,15 @@ function makeUpperCoreDay(week: WeekConfig, dayOfWeek: number): TrainingDay {
     {
       week,
       dayOfWeek,
-      impactLevel: "none",
+      impactLevel: week.cycleNumber === 1 ? "low" : "none",
       estimatedFatigue: "moderate",
       estimatedDurationMinutes: { min: 35, max: 55 },
-      plannedJumpContacts: { min: 0, max: 0 },
+      plannedJumpContacts: week.cycleNumber === 1 ? { min: 0, max: 10 } : { min: 0, max: 0 },
       performanceFocus: ["上肢推拉", "核心抗旋转", "肩胛控制", "低负荷足踝"],
       priority: "right-foot-control",
-      kneeLoadNote: "今天不做跳跃；如果膝前侧敏感，只保留轻足踝和核心。",
+      kneeLoadNote: week.cycleNumber === 1
+        ? "辅助蹲跳只是可选低负荷速度练习；膝前侧、跟腱或髌腱不安静时直接跳过。"
+        : "今天不做跳跃；如果膝前侧敏感，只保留轻足踝和核心。",
       upperBodyIncluded: true,
       coreIncluded: true,
       isometricIncluded: true,
@@ -322,7 +325,20 @@ function makeUpperCoreDay(week: WeekConfig, dayOfWeek: number): TrainingDay {
           { exerciseId: "pull-up-or-lat-pulldown", sets: 3, reps: "5–8 次", intensity: "medium" },
           { exerciseId: "pallof-press", sets: 3, reps: "8 次", side: "each", intensity: "low" },
           { exerciseId: "side-plank-with-knee-drive-hold", sets: 2, duration: "15–20 秒", side: "each", intensity: "low" },
-          { exerciseId: "single-leg-weight-exchange", sets: 2, reps: "5 次", side: "each", intensity: "low", optional: true }
+          { exerciseId: week.cycleNumber === 1 ? "hanging-abs-curl" : "single-leg-weight-exchange", sets: 2, reps: week.cycleNumber === 1 ? "5–8 次" : "5 次", side: week.cycleNumber === 1 ? undefined : "each", intensity: "low", optional: true },
+          ...(week.cycleNumber === 1
+            ? [
+                {
+                  exerciseId: "assist-squat-jump",
+                  sets: 2,
+                  reps: "5 次",
+                  intensity: "low" as const,
+                  optional: true,
+                  notes: "只有膝前侧安静且没有中高篮球负荷时做；速度轻快，不追疲劳。",
+                  jumpContacts: contacts(0, 10)
+                }
+              ]
+            : [])
         ]),
         block("activeRecovery", "主动恢复", recoveryFinish),
         block("eveningRecovery", "晚间恢复", [{ exerciseId: "legs-up-breathing", duration: "5 分钟", intensity: "low" }])
@@ -355,7 +371,22 @@ function makeTransferDay(week: WeekConfig, dayOfWeek: number): TrainingDay {
       conditionalRules: ["只选 1–2 个主要跳跃练习；不把所有菜单动作都做成高量。"],
       coreIncluded: week.cycleNumber >= 3,
       blocks: [
-        block("warmup", "完整热身", warmupBase),
+        block("warmup", "完整热身", [
+          ...warmupBase,
+          ...(week.cycleNumber === 1
+            ? [
+                {
+                  exerciseId: "band-hip-flexor",
+                  sets: 1,
+                  reps: "5 次",
+                  side: "each" as const,
+                  intensity: "low" as const,
+                  optional: true,
+                  notes: "作为单脚起跳摆动腿提膝准备；不是额外体能。"
+                }
+              ]
+            : [])
+        ]),
         block("main", "主训练", week.transferItems),
         block("activeRecovery", "主动恢复", [
           { exerciseId: "backward-walk", duration: "5–8 分钟", intensity: "low" },
@@ -417,34 +448,38 @@ const weekConfigs: WeekConfig[] = [
     weekNumber: 1,
     cycleNumber: 1,
     title: "Week 1",
-    theme: "控制 baseline、膝部降噪、低冲击弹性",
-    strengthTitle: "控制基线 + 髋膝力量基础",
-    jumpTitle: "低冲击弹性 + 落地质量",
-    transferTitle: "篮球技术 / 低冲击脚步",
-    strengthContacts: { min: 4, max: 8 },
-    jumpContacts: { min: 16, max: 24 },
-    transferContacts: { min: 8, max: 12 },
+    theme: "整合准备、控制保留、低剂量进阶弹跳",
+    strengthTitle: "力量 + Power Primer + 膝脚控制",
+    jumpTitle: "低剂量弹性 + 技术跳",
+    transferTitle: "篮球技术 / 倒数第二步节奏",
+    strengthContacts: { min: 0, max: 8 },
+    jumpContacts: { min: 18, max: 28 },
+    transferContacts: { min: 4, max: 14 },
     jumpImpact: "low",
     transferImpact: "variable",
     jumpFatigue: "low",
     transferFatigue: "variable",
     lowerStrengthItems: [
-      { exerciseId: "goblet-squat", sets: 3, reps: "6 次", intensity: "medium", notes: "RPE 6–7，膝前侧安静。" },
-      { exerciseId: "reverse-lunge", sets: 2, reps: "5 次", side: "each", intensity: "low" },
-      { exerciseId: "single-leg-bridge", sets: 2, reps: "6 次", side: "each", intensity: "low" },
+      { exerciseId: "back-squat-on-bench", sets: 3, reps: "4 次", intensity: "medium", notes: "RPE 6–7，箱高控制深度；可替换为 trap bar 或 RDL。" },
+      { exerciseId: "kettlebell-swing", sets: 3, reps: "8 次", intensity: "medium", optional: true, notes: "髋伸展 power primer；技术不稳就改 bridge 或 RDL。" },
+      { exerciseId: "front-bulgarian-squat", sets: 2, reps: "5 次", side: "each", intensity: "medium", notes: "中等重量，不做最大努力。" },
+      { exerciseId: "band-hamstring-curl", sets: 2, reps: "10 次", intensity: "low" },
       { exerciseId: "calf-raise-with-plate-under-front-foot", sets: 2, reps: "8 次", intensity: "low" },
       { exerciseId: "tibialis-raise", sets: 2, reps: "10 次", intensity: "low" },
       { exerciseId: "wall-sit", sets: 2, duration: "20 秒", intensity: "low", isometricPurpose: "symptom-management" },
-      { exerciseId: "box-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "低箱，上箱轻、下箱走下来。", jumpContacts: contacts(4, 4) }
+      { exerciseId: "box-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "低箱，上箱轻、下箱走下来。", jumpContacts: contacts(0, 4) }
     ],
     jumpItems: [
       { exerciseId: "low-pogo", sets: 2, reps: "8 次", intensity: "low", jumpContacts: contacts(16, 16) },
       { exerciseId: "single-leg-snap-down-stick", sets: 1, reps: "2 次", side: "each", intensity: "low", jumpContacts: contacts(0, 4, { landingOnly: true }), moduleTag: "single-leg-stiffness" },
+      { exerciseId: "cmj", sets: 2, reps: "2 次", intensity: "medium", optional: true, notes: "80–85%，技术质量，不做最大跳。", jumpContacts: contacts(0, 4) },
       { exerciseId: "box-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "低箱，stick landing。", jumpContacts: contacts(0, 4) },
       { exerciseId: "pallof-press", sets: 2, reps: "8 次", side: "each", intensity: "low" }
     ],
     transferItems: [
+      { exerciseId: "band-hip-flexor", sets: 2, reps: "5 次", side: "each", intensity: "low" },
       { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
+      { exerciseId: "penultimate-jump", sets: 2, reps: "1 次/侧", side: "each", intensity: "low", optional: true, notes: "只在篮球负荷轻、膝和肌腱安静时做低强度节奏。", jumpContacts: contacts(0, 4, { maxIntent: false }) },
       { exerciseId: "catch-and-jump", sets: 2, reps: "2 次", intensity: "low", optional: true, notes: "如果篮球负荷轻且膝盖安静才做。", jumpContacts: contacts(0, 4) },
       { exerciseId: "step-up-knee-drive-hold", sets: 2, reps: "4 次", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" }
     ]
@@ -453,10 +488,10 @@ const weekConfigs: WeekConfig[] = [
     weekNumber: 2,
     cycleNumber: 1,
     title: "Week 2",
-    theme: "容量建立、受控落地、低量 Pogo 和跳箱",
-    strengthTitle: "容量建立 + 分腿蹲控制",
-    jumpTitle: "受控落地 + 低箱跳",
-    transferTitle: "篮球日 + 低量专项触地",
+    theme: "低剂量反应进阶、受控落地、力量维持",
+    strengthTitle: "力量维持 + 进阶分腿蹲控制",
+    jumpTitle: "短触地反应 + 低量跳箱",
+    transferTitle: "篮球日 + 单脚起跳节奏",
     strengthContacts: { min: 6, max: 10 },
     jumpContacts: { min: 22, max: 30 },
     transferContacts: { min: 10, max: 16 },
@@ -466,8 +501,9 @@ const weekConfigs: WeekConfig[] = [
     transferFatigue: "variable",
     lowerStrengthItems: [
       { exerciseId: "trap-bar-deadlift", sets: 3, reps: "3 次", intensity: "medium", notes: "RPE 7，不磨重量。" },
-      { exerciseId: "bulgarian-split-squat", sets: 3, reps: "5 次", side: "each", intensity: "medium" },
-      { exerciseId: "hamstring-slider-curl", sets: 2, reps: "5 次", intensity: "medium" },
+      { exerciseId: "db-power-snatch", sets: 3, reps: "3 次/侧", side: "each", intensity: "medium", optional: true, notes: "技术清爽才做；不追重量。" },
+      { exerciseId: "front-bulgarian-squat", sets: 2, reps: "5 次", side: "each", intensity: "medium" },
+      { exerciseId: "band-hamstring-curl", sets: 2, reps: "10 次", intensity: "low" },
       { exerciseId: "single-leg-calf-raise-with-plate-under-front-foot", sets: 2, reps: "6 次", side: "each", intensity: "low" },
       { exerciseId: "tibialis-raise", sets: 2, reps: "12 次", intensity: "low" },
       { exerciseId: "box-jump", sets: 2, reps: "3 次", intensity: "low", optional: true, jumpContacts: contacts(6, 6) }
@@ -475,10 +511,13 @@ const weekConfigs: WeekConfig[] = [
     jumpItems: [
       { exerciseId: "low-pogo", sets: 2, reps: "10 次", intensity: "low", jumpContacts: contacts(20, 20) },
       { exerciseId: "box-jump", sets: 3, reps: "2 次", intensity: "medium", notes: "低箱，落地安静。", jumpContacts: contacts(6, 6) },
+      { exerciseId: "depth-jump-less-contact", sets: 2, reps: "2 次", intensity: "medium", optional: true, notes: "绿色 readiness、疼痛 <=1/10 且前 48 小时无高篮球负荷才做。", jumpContacts: contacts(0, 4, { maxIntent: true }) },
       { exerciseId: "single-leg-snap-down-stick", sets: 1, reps: "2 次/侧", side: "each", intensity: "low", optional: true, notes: "低幅快速下沉定住；膝前侧敏感时取消。", jumpContacts: contacts(0, 4, { landingOnly: true }), moduleTag: "single-leg-stiffness" },
       { exerciseId: "side-plank", sets: 2, duration: "20 秒", side: "each", intensity: "low" }
     ],
     transferItems: [
+      { exerciseId: "band-hip-flexor", sets: 2, reps: "5 次", side: "each", intensity: "low" },
+      { exerciseId: "penultimate-jump", sets: 2, reps: "1 次/侧", side: "each", intensity: "low", optional: true, notes: "节奏技术，不做最大。", jumpContacts: contacts(0, 4) },
       { exerciseId: "defensive-slide-stop", sets: 2, reps: "2 次/方向", intensity: "low" },
       { exerciseId: "catch-and-jump", sets: 2, reps: "2–3 次", intensity: "low", optional: true, jumpContacts: contacts(0, 6) },
       { exerciseId: "single-leg-weight-exchange", sets: 2, reps: "5 次", side: "each", intensity: "low" }
@@ -501,6 +540,7 @@ const weekConfigs: WeekConfig[] = [
     transferFatigue: "variable",
     lowerStrengthItems: [
       { exerciseId: "goblet-squat", sets: 2, reps: "5 次", intensity: "low" },
+      { exerciseId: "band-hamstring-curl", sets: 2, reps: "10 次", intensity: "low", optional: true },
       { exerciseId: "lunge-hold", sets: 2, duration: "15–20 秒", side: "each", intensity: "low", isometricPurpose: "position-control" },
       { exerciseId: "bridge", sets: 2, reps: "8 次", intensity: "low" },
       { exerciseId: "tibialis-raise", sets: 2, reps: "10 次", intensity: "low" }
@@ -512,6 +552,7 @@ const weekConfigs: WeekConfig[] = [
     ],
     transferItems: [
       { exerciseId: "easy-walk", duration: "按篮球安排或轻投篮", intensity: "low", notes: "不做硬对抗。" },
+      { exerciseId: "band-hip-flexor", sets: 1, reps: "5 次", side: "each", intensity: "low", optional: true },
       { exerciseId: "hip-90-90-standing-rotation", sets: 1, reps: "4 次/方向", side: "each", intensity: "low" }
     ]
   }
@@ -522,9 +563,9 @@ const weekFourToTwelve: WeekConfig[] = [
     ...weekConfigs[1],
     weekNumber: 4,
     cycleNumber: 2,
-    theme: "力量建立、前蹲/高脚杯深蹲进阶、分腿蹲和小腿容量",
-    strengthTitle: "力量建立 + 小腿/胫骨前肌容量",
-    jumpTitle: "低量蹲跳 + 跳箱进阶",
+    theme: "力量转化、clean pull 技术、低量蹲跳和跳箱",
+    strengthTitle: "力量建立 + Clean Pull 技术",
+    jumpTitle: "低量蹲跳 + 短触地进阶",
     transferTitle: "篮球或单脚起跳技术",
     strengthContacts: { min: 6, max: 10 },
     jumpContacts: { min: 26, max: 36 },
@@ -532,6 +573,7 @@ const weekFourToTwelve: WeekConfig[] = [
     jumpImpact: "moderate",
     lowerStrengthItems: [
       { exerciseId: "front-squat", sets: 3, reps: "4 次", intensity: "medium", notes: "RPE 6–7；也可用高脚杯深蹲替代。" },
+      { exerciseId: "clean-pull", sets: 3, reps: "3 次", intensity: "medium", optional: true, notes: "技术高拉；没有安全技术就改 DB power snatch 或壶铃摆荡。" },
       { exerciseId: "reverse-lunge-with-height", sets: 3, reps: "5 次", side: "each", intensity: "medium" },
       { exerciseId: "single-leg-good-morning", sets: 2, reps: "5 次", side: "each", intensity: "low" },
       { exerciseId: "calf-raise-with-plate-under-front-foot", sets: 3, reps: "8 次", intensity: "medium" },
@@ -539,10 +581,11 @@ const weekFourToTwelve: WeekConfig[] = [
       { exerciseId: "box-jump", sets: 2, reps: "3 次", intensity: "low", jumpContacts: contacts(6, 6) }
     ],
     jumpItems: [
+      { exerciseId: "db-squat-jump", sets: 2, reps: "3 次", intensity: "medium", optional: true, notes: "轻哑铃；动作慢或膝前侧不适就改普通 squat jump。", jumpContacts: contacts(0, 6) },
       { exerciseId: "squat-jump", sets: 3, reps: "2 次", intensity: "medium", jumpContacts: contacts(6, 6) },
       { exerciseId: "box-jump", sets: 3, reps: "2 次", intensity: "medium", jumpContacts: contacts(6, 6) },
       { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", jumpContacts: contacts(16, 20) },
-      { exerciseId: "depth-drop", sets: 2, reps: "2 次", intensity: "low", optional: true, jumpContacts: contacts(0, 4, { landingOnly: true }) }
+      { exerciseId: "depth-jump-less-contact", sets: 2, reps: "2 次", intensity: "medium", optional: true, notes: "Cycle 1 反应良好才加入；绿色 readiness 才做。", jumpContacts: contacts(0, 4, { maxIntent: true }) }
     ],
     transferItems: [
       { exerciseId: "step-up-knee-drive-hold", sets: 2, reps: "4 次", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
@@ -565,6 +608,7 @@ const weekFourToTwelve: WeekConfig[] = [
     jumpFatigue: "moderate-high",
     lowerStrengthItems: [
       { exerciseId: "trap-bar-deadlift", sets: 3, reps: "2 次", intensity: "medium", rest: "2–3 分钟", notes: "RPE 7–8，速度干净。" },
+      { exerciseId: "db-power-snatch", sets: 3, reps: "3 次/侧", side: "each", intensity: "medium", optional: true, notes: "可替代 clean pull；不追重量。" },
       { exerciseId: "bulgarian-split-squat-with-heel-up", sets: 2, reps: "5 次", side: "each", intensity: "medium" },
       { exerciseId: "hamstring-slider-curl", sets: 2, reps: "5 次", intensity: "medium" },
       { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "25–35 秒", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
@@ -574,6 +618,7 @@ const weekFourToTwelve: WeekConfig[] = [
     jumpItems: [
       { exerciseId: "trap-bar-deadlift", sets: 3, reps: "2 次", intensity: "medium", rest: "2.5–4 分钟", notes: "低剂量 PAP，RPE 7–8。" },
       { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "high", rest: "2–3 分钟", jumpContacts: contacts(6, 6, { maxIntent: true }) },
+      { exerciseId: "db-squat-jump", sets: 2, reps: "3 次", intensity: "medium", optional: true, notes: "轻负重，膝前侧安静才做。", jumpContacts: contacts(0, 6) },
       { exerciseId: "squat-jump", sets: 3, reps: "2 次", intensity: "medium", jumpContacts: contacts(6, 6) },
       { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", jumpContacts: contacts(16, 20) },
       { exerciseId: "lunge-jump", sets: 2, reps: "2 次/侧", side: "each", intensity: "medium", optional: true, notes: "低剂量；膝前侧敏感时取消。", jumpContacts: contacts(0, 8) }
@@ -613,6 +658,7 @@ const weekFourToTwelve: WeekConfig[] = [
     jumpFatigue: "moderate-high",
     transferFatigue: "moderate",
     lowerStrengthItems: [
+      { exerciseId: "clean-pull", sets: 3, reps: "3 次", intensity: "medium", optional: true, notes: "技术低量；power clean 只作为确认技术后的替代，不写入默认量。" },
       { exerciseId: "rdl", sets: 3, reps: "4 次", intensity: "medium", notes: "RPE 7，腘绳肌不过度酸痛。" },
       { exerciseId: "eccentric-single-leg-squat", sets: 2, reps: "4 次", side: "each", intensity: "low" },
       { exerciseId: "single-leg-calf-raise-with-plate-under-front-foot", sets: 3, reps: "6 次", side: "each", intensity: "medium" },
@@ -620,9 +666,10 @@ const weekFourToTwelve: WeekConfig[] = [
       { exerciseId: "single-leg-low-pogo", sets: 1, reps: "4–6 次/侧", side: "each", intensity: "low", jumpContacts: contacts(8, 12), moduleTag: "single-leg-stiffness" }
     ],
     jumpItems: [
+      { exerciseId: "concentric-jump-to-vertical-jump-with-weight", sets: 2, reps: "2 次", intensity: "medium", optional: true, notes: "轻负重且只在绿色状态使用；不能替代主跳质量。", jumpContacts: contacts(0, 4) },
       { exerciseId: "single-leg-low-pogo", sets: 2, reps: "6–8 次/侧", side: "each", intensity: "medium", jumpContacts: contacts(24, 32), moduleTag: "single-leg-stiffness" },
       { exerciseId: "approach-jump", sets: 4, reps: "1 次", intensity: "high", jumpContacts: contacts(4, 6, { maxIntent: true }) },
-      { exerciseId: "depth-drop", sets: 2, reps: "2 次", intensity: "medium", optional: true, jumpContacts: contacts(0, 4, { landingOnly: true }) },
+      { exerciseId: "depth-jump-less-contact", sets: 2, reps: "2 次", intensity: "medium", optional: true, notes: "短触地反应；篮球负荷高或膝/肌腱提示时取消。", jumpContacts: contacts(0, 4, { maxIntent: true }) },
       { exerciseId: "single-leg-snap-down-stick", sets: 2, reps: "2 次", side: "each", intensity: "low", jumpContacts: contacts(0, 4, { landingOnly: true }), moduleTag: "single-leg-stiffness" }
     ],
     transferItems: [
@@ -648,12 +695,14 @@ const weekFourToTwelve: WeekConfig[] = [
     transferFatigue: "moderate",
     lowerStrengthItems: [
       { exerciseId: "front-squat", sets: 3, reps: "3 次", intensity: "medium", notes: "RPE 7，不磨。" },
+      { exerciseId: "clean-pull", sets: 3, reps: "2–3 次", intensity: "medium", optional: true, notes: "速度干净；技术不稳用 DB power snatch。" },
       { exerciseId: "bulgarian-split-squat", sets: 2, reps: "4 次", side: "each", intensity: "medium" },
       { exerciseId: "single-leg-good-morning", sets: 2, reps: "5 次", side: "each", intensity: "low" },
       { exerciseId: "single-leg-low-pogo", sets: 1, reps: "4–6 次/侧", side: "each", intensity: "low", jumpContacts: contacts(8, 12), moduleTag: "single-leg-stiffness" }
     ],
     jumpItems: [
       { exerciseId: "approach-jump", sets: 5, reps: "1 次", intensity: "high", jumpContacts: contacts(5, 6, { maxIntent: true }) },
+      { exerciseId: "assist-squat-jump", sets: 2, reps: "4 次", intensity: "medium", optional: true, notes: "用来锐化速度，不做累。", jumpContacts: contacts(0, 8) },
       { exerciseId: "continuous-lunge-jump", sets: 2, reps: "3 次/侧", side: "each", intensity: "medium", optional: true, notes: "仅膝盖安静时短组；不是 conditioning。", jumpContacts: contacts(0, 12) },
       { exerciseId: "tuck-jump", sets: 2, reps: "2 次", intensity: "medium", optional: true, jumpContacts: contacts(0, 4) },
       { exerciseId: "single-leg-low-pogo", sets: 2, reps: "6–8 次/侧", side: "each", intensity: "medium", jumpContacts: contacts(24, 32), moduleTag: "single-leg-stiffness" },
@@ -695,14 +744,17 @@ const weekFourToTwelve: WeekConfig[] = [
     transferImpact: "low",
     lowerStrengthItems: [
       { exerciseId: "trap-bar-deadlift", sets: 3, reps: "2 次", intensity: "medium", notes: "RPE 6–7，速度保留。" },
+      { exerciseId: "db-power-snatch", sets: 2, reps: "3 次/侧", side: "each", intensity: "medium", optional: true, notes: "测试前锐化，不制造酸痛。" },
       { exerciseId: "reverse-lunge", sets: 2, reps: "4 次", side: "each", intensity: "low" },
       { exerciseId: "single-leg-calf-isometric-hold", sets: 2, duration: "25 秒", side: "each", intensity: "low", moduleTag: "single-leg-stiffness" },
       { exerciseId: "box-jump", sets: 2, reps: "2–3 次", intensity: "low", jumpContacts: contacts(6, 10) }
     ],
     jumpItems: [
+      { exerciseId: "assist-squat-jump", sets: 2, reps: "4 次", intensity: "low", optional: true, notes: "轻快，不做疲劳。", jumpContacts: contacts(0, 8) },
       { exerciseId: "cmj", sets: 3, reps: "2 次", intensity: "medium", jumpContacts: contacts(6, 6) },
       { exerciseId: "approach-jump", sets: 3, reps: "1–2 次", intensity: "medium", jumpContacts: contacts(6, 8) },
-      { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", jumpContacts: contacts(16, 20) }
+      { exerciseId: "low-pogo", sets: 2, reps: "8–10 次", intensity: "low", jumpContacts: contacts(16, 20) },
+      { exerciseId: "depth-jump-less-contact", sets: 1, reps: "2 次", intensity: "medium", optional: true, notes: "只用于锐化；膝/肌腱提示或篮球高负荷时取消。", jumpContacts: contacts(0, 2, { maxIntent: true }) }
     ],
     transferItems: [
       { exerciseId: "two-step-single-leg-approach-jump", sets: 2, reps: "1 次/侧", side: "each", intensity: "low", jumpContacts: contacts(4, 4), moduleTag: "single-leg-stiffness" },

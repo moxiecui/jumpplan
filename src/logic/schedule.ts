@@ -2,7 +2,7 @@ import { trainingPlan } from "@/data/plan";
 import type { TrainingDay } from "@/types/training";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-export const DEFAULT_PLAN_START_DATE = "2026-06-07";
+export const DEFAULT_PLAN_START_DATE = "2026-07-19";
 export const PLAN_LENGTH_DAYS = trainingPlan.length;
 
 export function getPlanDate(dayNumber: number): string {

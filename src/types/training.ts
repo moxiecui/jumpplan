@@ -11,6 +11,8 @@ export type Intensity = "low" | "medium" | "high";
 
 export type ImpactLevel = "none" | "low" | "moderate" | "high" | "variable";
 
+export type ExerciseRiskTier = "low" | "moderate" | "high" | "advanced-only";
+
 export type EstimatedFatigue =
   | "very-low"
   | "low"
@@ -80,6 +82,19 @@ export type TrainingBlockType =
   | "optionalRecovery"
   | "notes";
 
+export type SessionUnitType =
+  | "strength-a"
+  | "strength-b"
+  | "power-a"
+  | "reactive-a"
+  | "single-leg-takeoff"
+  | "upper-body-core"
+  | "recovery"
+  | "basketball-skill"
+  | "pre-test-activation"
+  | "test"
+  | "review";
+
 export interface Exercise {
   id: string;
   nameZh: string;
@@ -95,6 +110,8 @@ export interface Exercise {
     | "upper-body"
     | "core"
     | "isometric"
+    | "power"
+    | "hamstring"
     | "basketball-skill";
   purpose: string;
   whyForUser: string;
@@ -112,6 +129,18 @@ export interface Exercise {
   youtubeUrl?: string;
   videoNote?: string;
   sourceNote?: string;
+  riskTier?: ExerciseRiskTier;
+  impactLevel?: ImpactLevel;
+  jumpContactContribution?: {
+    min: number;
+    max: number;
+    landingOnly?: boolean;
+    maxIntent?: boolean;
+  };
+  readinessGates?: string[];
+  safeAlternativeExerciseIds?: string[];
+  advancedOnly?: boolean;
+  screenshotDerived?: boolean;
 }
 
 export interface TrainingItem {
@@ -139,6 +168,92 @@ export interface TrainingBlock {
   type: TrainingBlockType;
   title: string;
   items: TrainingItem[];
+}
+
+export interface TrainingSessionUnit {
+  id: string;
+  type: SessionUnitType;
+  title: string;
+  blockNumber: 1 | 2 | 3 | 4;
+  priority: number;
+  impactLevel: ImpactLevel;
+  estimatedFatigue: Exclude<EstimatedFatigue, "variable">;
+  estimatedDurationMinutes?: {
+    min: number;
+    max: number;
+  };
+  plannedJumpContacts?: {
+    min: number;
+    max: number;
+  };
+  maxIntentContacts?: {
+    min: number;
+    max: number;
+  };
+  minimumRecoveryHours?: number;
+  exerciseBlocks: TrainingBlock[];
+  prerequisites?: string[];
+  blockReasons?: string[];
+  downgradeSessionUnitId?: string;
+  upgradeSessionUnitId?: string;
+  optional?: boolean;
+  postponeAllowed?: boolean;
+}
+
+export interface WeeklySessionTarget {
+  weekNumber: number;
+  blockNumber: 1 | 2 | 3 | 4;
+  title: string;
+  unitTargets: Partial<Record<SessionUnitType, { min: number; max: number; optional?: boolean }>>;
+  deload?: boolean;
+}
+
+export interface AdaptiveTrainingBlock {
+  blockNumber: 1 | 2 | 3 | 4;
+  weeks: [number, number, number];
+  title: string;
+  goals: string[];
+  rules: string[];
+}
+
+export interface JumpReadinessTest {
+  date: string;
+  attempts: number[];
+  measurementType: "jump-height-cm" | "touch-height-cm";
+  bestValue: number;
+  baselineValue?: number;
+  percentChangeFromBaseline?: number;
+  perceivedExplosiveness?: 1 | 2 | 3 | 4 | 5;
+  landingQuality?: 1 | 2 | 3 | 4 | 5;
+  invalid?: boolean;
+  painful?: boolean;
+  afterHardTraining?: boolean;
+  notes?: string;
+}
+
+export interface JumpReadinessResult {
+  level: "green" | "yellow" | "red" | "unknown";
+  percentChange?: number;
+  recommendation:
+    | "allow-high-intensity"
+    | "normal-session"
+    | "technical-only"
+    | "strength-only"
+    | "recovery-only";
+  reasons: string[];
+}
+
+export interface ExerciseSessionLog {
+  exerciseId: string;
+  sessionUnitId?: string;
+  date: string;
+  status?: TrainingItemCompletionStatus;
+  weight?: number;
+  rpe?: number;
+  jumpHeightCm?: number;
+  movementQuality?: 1 | 2 | 3 | 4 | 5;
+  readinessVariant?: "base" | "regressed" | "progressed" | "substituted";
+  notes?: string;
 }
 
 export interface TrainingDay {

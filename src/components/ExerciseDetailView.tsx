@@ -2,6 +2,8 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { ExerciseVideoSection } from "@/components/ExerciseVideoSection";
 import { RelatedTermsSection } from "@/components/RelatedTermsSection";
+import { getExerciseById } from "@/data/exercises";
+import { getSafeAlternativeExerciseIds } from "@/logic/advancedExerciseGates";
 import { findGlossaryTermsInText, getGlossaryEntriesByIds } from "@/logic/glossary";
 import type { Exercise } from "@/types/training";
 
@@ -20,7 +22,16 @@ const categoryLabels: Record<Exercise["category"], string> = {
   "upper-body": "上肢",
   core: "核心",
   isometric: "等长",
+  power: "爆发力",
+  hamstring: "腘绳肌",
   "basketball-skill": "篮球专项"
+};
+
+const riskTierLabels: NonNullable<Record<NonNullable<Exercise["riskTier"]>, string>> = {
+  low: "基础 / 低风险",
+  moderate: "中等进阶",
+  high: "高冲击 / 需把关",
+  "advanced-only": "Advanced-only / 可选"
 };
 
 function DetailList({ title, items }: { title: string; items?: string[] }) {
@@ -75,12 +86,16 @@ function getRelatedTermsForExercise(exercise: Exercise) {
 
 export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
   const relatedTerms = getRelatedTermsForExercise(exercise);
+  const alternatives = getSafeAlternativeExerciseIds(exercise)
+    .map((id) => getExerciseById(id))
+    .filter((item): item is Exercise => Boolean(item));
 
   return (
     <View style={styles.container}>
       <Text style={styles.nameZh}>{exercise.nameZh}</Text>
       {exercise.nameEn ? <Text style={styles.nameEn}>{exercise.nameEn}</Text> : null}
       <Text style={styles.category}>{categoryLabels[exercise.category]}</Text>
+      {exercise.riskTier ? <Text style={styles.riskTier}>{riskTierLabels[exercise.riskTier]}</Text> : null}
 
       <View style={styles.block}>
         <Text style={styles.blockTitle}>训练目的</Text>
@@ -97,6 +112,13 @@ export function ExerciseDetailView({ exercise }: ExerciseDetailViewProps) {
       <DetailList title="常见错误" items={exercise.commonMistakes} />
       <DetailList title="降低难度" items={exercise.regressions} />
       <DetailList title="提高难度" items={exercise.progressions} />
+      <DetailList title="Readiness 使用条件" items={exercise.readinessGates} />
+      {alternatives.length ? (
+        <View style={styles.block}>
+          <Text style={styles.blockTitle}>安全替代动作</Text>
+          <Text style={styles.paragraph}>{alternatives.map((item) => item.nameZh).join(" / ")}</Text>
+        </View>
+      ) : null}
       <DetailList title="疼痛 / 安全规则" items={exercise.painRules} />
       <RelatedTermsSection terms={relatedTerms} defaultExpanded />
       <ExerciseVideoSection exercise={exercise} />
@@ -128,6 +150,17 @@ const styles = StyleSheet.create({
     color: "#24292f",
     fontSize: 12,
     fontWeight: "700"
+  },
+  riskTier: {
+    alignSelf: "flex-start",
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "#fff8c5",
+    color: "#6e5500",
+    fontSize: 12,
+    fontWeight: "800"
   },
   block: {
     marginTop: 20,

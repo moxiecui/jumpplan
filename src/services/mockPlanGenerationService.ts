@@ -316,7 +316,9 @@ function buildDays(request: PlanGenerationRequest, length: PlanLength): Training
           ? 10
           : length === "21-days"
             ? 21
-            : 28;
+            : length === "4-weeks"
+              ? 28
+              : 84;
 
   if (tendonRisk || painHigh || painWorse) {
     return Array.from({ length: Math.min(count, 7) }, (_, index) => {

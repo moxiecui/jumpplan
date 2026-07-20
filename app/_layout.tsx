@@ -1,17 +1,21 @@
 import { Stack } from "expo-router";
 
+import { BodySignalsProvider } from "@/context/BodySignalsContext";
 import { ReadinessProvider } from "@/context/ReadinessContext";
 import { PerformanceProvider } from "@/context/PerformanceContext";
 import { PlanProgressProvider } from "@/context/PlanProgressContext";
+import { SessionProgressProvider } from "@/context/SessionProgressContext";
 import { TrainingLogProvider } from "@/context/TrainingLogContext";
 
 export default function RootLayout() {
   return (
     <ReadinessProvider>
-      <PerformanceProvider>
-        <PlanProgressProvider>
-          <TrainingLogProvider>
-            <Stack
+      <BodySignalsProvider>
+        <PerformanceProvider>
+          <PlanProgressProvider>
+            <SessionProgressProvider>
+              <TrainingLogProvider>
+                <Stack
           screenOptions={{
             headerStyle: { backgroundColor: "#f6f8fa" },
             headerTitleStyle: { fontWeight: "800" },
@@ -21,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="index" options={{ title: "JumpPlan" }} />
           <Stack.Screen name="today" options={{ title: "今日" }} />
           <Stack.Screen name="checkin" options={{ title: "今日状态" }} />
+          <Stack.Screen name="body-signals" options={{ title: "身体数据" }} />
+          <Stack.Screen name="jump-readiness" options={{ title: "Jump Readiness" }} />
           <Stack.Screen name="adaptive-plan" options={{ title: "调整计划" }} />
           <Stack.Screen name="glossary/index" options={{ title: "术语词典" }} />
           <Stack.Screen name="glossary/[id]" options={{ title: "术语详情" }} />
@@ -29,10 +35,12 @@ export default function RootLayout() {
           <Stack.Screen name="plan/index" options={{ title: "21天计划" }} />
           <Stack.Screen name="plan/[day]" options={{ title: "训练日" }} />
           <Stack.Screen name="exercise/[id]" options={{ title: "动作详情" }} />
-            </Stack>
-          </TrainingLogProvider>
-        </PlanProgressProvider>
-      </PerformanceProvider>
+                </Stack>
+              </TrainingLogProvider>
+            </SessionProgressProvider>
+          </PlanProgressProvider>
+        </PerformanceProvider>
+      </BodySignalsProvider>
     </ReadinessProvider>
   );
 }

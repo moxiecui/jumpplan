@@ -3,8 +3,12 @@ import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { getExerciseById } from "@/data/exercises";
 import { ExerciseVideoSection } from "@/components/ExerciseVideoSection";
+import { useBodySignals } from "@/context/BodySignalsContext";
 import { useTrainingLog } from "@/context/TrainingLogContext";
+import { getSafeAlternativeExerciseIds } from "@/logic/advancedExerciseGates";
+import { shouldBlockHighImpact, shouldBlockMaxJumpTesting, shouldBlockPAP } from "@/logic/bodySignalEvaluation";
 import { normalizeTrainingCopy } from "@/logic/trainingDisplay";
+import { isHighImpactExercise } from "@/logic/trainingAdjustment";
 import type { Exercise, Intensity, TrainingItem, TrainingItemCompletionStatus } from "@/types/training";
 
 interface ExerciseRowProps {
@@ -38,7 +42,16 @@ const categoryLabels: Record<Exercise["category"], string> = {
   "upper-body": "上肢",
   core: "核心",
   isometric: "等长",
+  power: "爆发力",
+  hamstring: "腘绳肌",
   "basketball-skill": "篮球专项"
+};
+
+const riskTierLabels: Record<NonNullable<Exercise["riskTier"]>, string> = {
+  low: "基础 / 低风险",
+  moderate: "中等进阶",
+  high: "高冲击 / 需把关",
+  "advanced-only": "Advanced-only / 可选"
 };
 
 const statusLabels: Record<TrainingItemCompletionStatus, string> = {
@@ -57,6 +70,49 @@ const regressionReasons = [
   "睡眠/状态差",
   "时间不够"
 ];
+
+function todayDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getBodySignalBlockNotice(item: TrainingItem, hasBodyBlock: boolean, hasPapBlock: boolean, hasMaxBlock: boolean) {
+  const id = item.exerciseId;
+  const text = `${id} ${item.notes ?? ""}`.toLowerCase();
+
+  if (!hasBodyBlock && !hasPapBlock && !hasMaxBlock) {
+    return undefined;
+  }
+
+  if (text.includes("pap") || id === "depth-jump-less-contact" || id === "db-squat-jump") {
+    return hasPapBlock
+      ? "根据今天身体数据，建议跳过 PAP / depth jump / 负重跳。替代：受控力量、Spanish squat 等长或恢复。"
+      : undefined;
+  }
+  if (id === "cmj" || id === "approach-jump" || id === "max-single-leg-approach-jump") {
+    return hasMaxBlock
+      ? "根据今天身体数据，建议不要做最大跳测试。替代：70–80% 技术跳或直接跳过。"
+      : undefined;
+  }
+  if (id.includes("pogo")) {
+    return hasBodyBlock
+      ? "根据今天身体数据，建议跳过此高冲击动作。替代：提踵等长、踝关节活动或轻步行。"
+      : undefined;
+  }
+  if (id.includes("depth")) {
+    return hasBodyBlock
+      ? "根据今天身体数据，建议跳过 depth jump / 失重落地。替代：landing stick、step-down 或浅等长。"
+      : undefined;
+  }
+  if (id === "nordic-curl" || id === "rdl" || id === "good-morning") {
+    return hasBodyBlock
+      ? "根据今天身体数据，腘绳肌或恢复状态不适合硬后侧链。替代：弹力带腿弯举、桥式或轻恢复。"
+      : undefined;
+  }
+
+  return hasBodyBlock && isHighImpactExercise(id, item.notes)
+    ? "根据今天身体数据，建议跳过此高冲击动作。"
+    : undefined;
+}
 
 const trackingFieldLabels: Record<NonNullable<Exercise["trackingFields"]>[number], string> = {
   durationSec: "保持秒数",
@@ -111,9 +167,14 @@ function DetailList({ title, items }: { title: string; items?: string[] }) {
 }
 
 function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
+  const alternatives = getSafeAlternativeExerciseIds(exercise)
+    .map((id) => getExerciseById(id))
+    .filter((item): item is Exercise => Boolean(item));
+
   return (
     <View style={styles.details}>
       <Text style={styles.category}>{categoryLabels[exercise.category]}</Text>
+      {exercise.riskTier ? <Text style={styles.riskTier}>{riskTierLabels[exercise.riskTier]}</Text> : null}
       {exercise.sourceNote ? <Text style={styles.sourceNote}>{exercise.sourceNote}</Text> : null}
 
       <View style={styles.detailBlock}>
@@ -133,6 +194,13 @@ function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
       <DetailList title="提高难度" items={exercise.progressions} />
       <DetailList title="什么时候退阶" items={exercise.regressionCriteria} />
       <DetailList title="什么时候进阶" items={exercise.progressionCriteria} />
+      <DetailList title="Readiness 使用条件" items={exercise.readinessGates} />
+      {alternatives.length ? (
+        <View style={styles.detailBlock}>
+          <Text style={styles.detailTitle}>安全替代动作</Text>
+          <Text style={styles.detailParagraph}>{alternatives.map((item) => item.nameZh).join(" / ")}</Text>
+        </View>
+      ) : null}
       {exercise.trackingFields?.length ? (
         <View style={styles.detailBlock}>
           <Text style={styles.detailTitle}>本次记录</Text>
@@ -149,6 +217,12 @@ function InlineExerciseDetails({ exercise }: { exercise: Exercise }) {
 
 export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowProps) {
   const { clearTrainingLogEntry, getTrainingLogEntry, upsertTrainingLogEntry } = useTrainingLog();
+  const { getBodySignals, getBodySignalBaseline } = useBodySignals();
+  const todaysBodySignals = getBodySignals(todayDate());
+  const todaysBaseline = getBodySignalBaseline(todayDate());
+  const hasBodyBlock = todaysBodySignals ? shouldBlockHighImpact(todaysBodySignals, todaysBaseline) : false;
+  const hasPapBlock = todaysBodySignals ? shouldBlockPAP(todaysBodySignals, todaysBaseline) : false;
+  const hasMaxBlock = todaysBodySignals ? shouldBlockMaxJumpTesting(todaysBodySignals, todaysBaseline) : false;
   const logId = logKey ?? item.exerciseId;
   const existingLogEntry = getTrainingLogEntry(logId);
   const [status, setStatus] = useState<TrainingItemCompletionStatus>(existingLogEntry?.status ?? "not-started");
@@ -160,6 +234,9 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
   );
   const exercise = getExerciseById(item.exerciseId);
   const completed = status === "completed";
+  const bodySignalBlockNotice = todaysBodySignals
+    ? getBodySignalBlockNotice(item, hasBodyBlock, hasPapBlock, hasMaxBlock)
+    : undefined;
 
   const toggleExpanded = () => {
     if (!exercise) {
@@ -284,6 +361,12 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
           </View>
           <Text style={styles.prescription}>{formatPrescription(item)}</Text>
           {item.notes ? <Text style={styles.notes}>{normalizeTrainingCopy(item.notes)}</Text> : null}
+          {bodySignalBlockNotice ? (
+            <View style={styles.bodyBlockNotice}>
+              <Text style={styles.bodyBlockTitle}>身体数据提醒</Text>
+              <Text style={styles.bodyBlockText}>{bodySignalBlockNotice}</Text>
+            </View>
+          ) : null}
           {item.jumpContacts ? (
             <Text style={styles.contactPlan}>
               计入跳跃接触：{item.jumpContacts.min}–{item.jumpContacts.max} 次
@@ -603,6 +686,17 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     marginBottom: 8
   },
+  riskTier: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#ddf4ff",
+    color: "#0969da",
+    fontSize: 12,
+    fontWeight: "900",
+    marginBottom: 8
+  },
   sourceNote: {
     alignSelf: "flex-start",
     paddingHorizontal: 9,
@@ -639,5 +733,24 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 13,
     color: "#9a6700"
+  },
+  bodyBlockNotice: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d29922",
+    backgroundColor: "#fff8c5"
+  },
+  bodyBlockTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#1f2328"
+  },
+  bodyBlockText: {
+    marginTop: 4,
+    fontSize: 13,
+    lineHeight: 19,
+    color: "#24292f"
   }
 });

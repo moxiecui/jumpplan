@@ -3,7 +3,7 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 import { getPlanDayNumberForDate, getTodayTrainingDay, PLAN_LENGTH_DAYS } from "@/logic/schedule";
 import type { TrainingDay } from "@/types/training";
 
-const STORAGE_KEY = "jumpplan-day-offset";
+const STORAGE_KEY = "jumpplan-day-offset-2026-07-19";
 
 interface PlanProgressContextValue {
   dayOffset: number;

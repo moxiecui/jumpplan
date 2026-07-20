@@ -4,11 +4,19 @@ import { dailyNutritionPlans, nutritionItems } from "@/data/nutrition";
 import { trainingPlan } from "@/data/plan";
 import { trainingCycles } from "@/data/macrocycle";
 import {
+  ADAPTIVE_MACROCYCLE_START_DATE,
+  adaptiveMigrationSummary,
+  trainingSessionUnits,
+  weeklySessionTargets
+} from "@/data/adaptiveProgram";
+import {
   singleLegProgressionLadder,
   singleLegStiffnessExerciseIds
 } from "@/data/singleLegStiffness";
+import { canUseAdvancedExercise, getSafeAlternativeExerciseIds } from "@/logic/advancedExerciseGates";
 import { buildRollingSevenDaySummaries } from "@/logic/jumpContacts";
 import { isHighImpactExercise } from "@/logic/trainingAdjustment";
+import type { SessionUnitType } from "@/types/training";
 
 const hardHamstringIds = new Set([
   "nordic-curl",
@@ -27,6 +35,34 @@ const continuousJumpIds = new Set([
   "continuous-lunge-jump",
   "continuous-squat-jump"
 ]);
+const advancedExerciseIds = [
+  "kettlebell-swing",
+  "kettlebell-swing-with-band",
+  "clean-pull",
+  "power-clean",
+  "clean-pull-to-power-clean",
+  "db-power-snatch",
+  "squat-jerk",
+  "assist-squat-jump",
+  "depth-jump-less-contact",
+  "depth-jump-to-vertical-jump-with-weight",
+  "concentric-jump-to-vertical-jump-with-weight",
+  "back-squat-on-bench",
+  "db-squat-jump",
+  "front-bulgarian-squat",
+  "full-range-lunge",
+  "hanging-abs-curl",
+  "band-hip-flexor",
+  "band-hamstring-curl",
+  "penultimate-jump",
+  "single-leg-snatch-with-body-control",
+  "russian-twist",
+  "good-morning",
+  "single-leg-tuck-jump",
+  "single-leg-double-tuck-jump"
+];
+const olympicLiftIds = new Set(["power-clean", "squat-jerk", "clean-pull-to-power-clean"]);
+const weightedDepthJumpId = "depth-jump-to-vertical-jump-with-weight";
 const screenshotMenuExerciseIds = [
   "tuck-jump",
   "continuous-tuck-jump",
@@ -61,7 +97,8 @@ const screenshotMenuExerciseIds = [
   "lunge-hold",
   "bulgarian-squat-hold",
   "single-leg-bridge",
-  "bridge"
+  "bridge",
+  ...advancedExerciseIds
 ];
 
 function unique(values: string[]) {
@@ -109,6 +146,30 @@ export function validateTrainingPlan() {
   const highImpactDays = trainingPlan
     .filter((day) => day.impactLevel === "high")
     .map((day) => day.day);
+  const scheduledExerciseEntries = trainingPlan.flatMap((day) =>
+    day.blocks.flatMap((block) =>
+      block.items.map((item) => ({
+        day,
+        block,
+        item,
+        exercise: exercises.find((exercise) => exercise.id === item.exerciseId)
+      }))
+    )
+  );
+  const sessionUnitExerciseEntries = trainingSessionUnits.flatMap((unit) =>
+    unit.exerciseBlocks.flatMap((block) =>
+      block.items.map((item) => ({
+        unit,
+        block,
+        item,
+        exercise: exercises.find((exercise) => exercise.id === item.exerciseId)
+      }))
+    )
+  );
+  const referencedSessionUnitExerciseIds = sessionUnitExerciseEntries.map(({ item }) => item.exerciseId);
+  const highImpactSessionTypes = new Set(
+    trainingSessionUnits.filter((unit) => unit.impactLevel === "high").map((unit) => unit.type)
+  );
 
   for (let index = 1; index < trainingPlan.length; index += 1) {
     const previous = trainingPlan[index - 1];
@@ -187,6 +248,65 @@ export function validateTrainingPlan() {
       day.blocks.some((block) => block.items.some((item) => continuousJumpIds.has(item.exerciseId)))
     )
     .map((day) => day.day);
+  const continuousPlyometricAboveAllowedContacts = scheduledExerciseEntries
+    .filter(({ item }) => continuousJumpIds.has(item.exerciseId))
+    .filter(({ item }) => (item.jumpContacts?.max ?? 0) > 12)
+    .map(({ day, item }) => `Day ${day.day}: ${item.exerciseId} ${item.jumpContacts?.max ?? 0} contacts`);
+  const weightedDepthJumpInCycleOneOrTestWeek = scheduledExerciseEntries
+    .filter(({ item }) => item.exerciseId === weightedDepthJumpId)
+    .filter(({ day }) => day.cycleNumber === 1 || day.weekNumber === 12 || day.type === "test")
+    .map(({ day }) => `Day ${day.day}`);
+  const mandatoryAdvancedOnlyExercises = scheduledExerciseEntries
+    .filter(({ exercise }) => exercise?.riskTier === "advanced-only" || exercise?.advancedOnly)
+    .filter(({ item }) => !item.optional)
+    .map(({ day, item }) => `Day ${day.day}: ${item.exerciseId}`);
+  const olympicLiftWithoutSafeAlternative = exercises
+    .filter((exercise) => olympicLiftIds.has(exercise.id))
+    .filter((exercise) => getSafeAlternativeExerciseIds(exercise).length === 0)
+    .map((exercise) => exercise.id);
+  const advancedExercisesIncludedByCycle = trainingCycles.map((cycle) => ({
+    cycleNumber: cycle.cycleNumber,
+    exerciseIds: unique(
+      scheduledExerciseEntries
+        .filter(({ day }) => day.cycleNumber === cycle.cycleNumber)
+        .filter(({ exercise }) => exercise?.riskTier === "high" || exercise?.riskTier === "advanced-only" || exercise?.category === "power")
+        .map(({ item }) => item.exerciseId)
+    )
+  }));
+  const advancedOnlyExercisesIncludedByCycle = trainingCycles.map((cycle) => ({
+    cycleNumber: cycle.cycleNumber,
+    exerciseIds: unique(
+      scheduledExerciseEntries
+        .filter(({ day }) => day.cycleNumber === cycle.cycleNumber)
+        .filter(({ exercise }) => exercise?.riskTier === "advanced-only" || exercise?.advancedOnly)
+        .map(({ item }) => item.exerciseId)
+    )
+  }));
+  const advancedExercisesBlockedByReadinessGates = unique(
+    scheduledExerciseEntries
+      .filter(({ exercise }) => exercise?.riskTier === "high" || exercise?.riskTier === "advanced-only" || exercise?.category === "power")
+      .flatMap(({ day, item, exercise }) => {
+        if (!exercise) {
+          return [];
+        }
+        const result = canUseAdvancedExercise({
+          readinessLevel: "yellow",
+          anteriorKneeSoreness: 3,
+          achillesStiffness: 0,
+          patellarPain: 0,
+          hamstringSoreness: 0,
+          rightFootExternalRotation: 1,
+          rightKneeTracking: 3,
+          landingQuality: 3,
+          movementQualityToday: 3,
+          basketballLoadLast24h: "moderate",
+          basketballLoadLast48h: "high",
+          isAdvancedOnly: exercise.riskTier === "advanced-only" || exercise.advancedOnly,
+          userEnabledAdvancedExercise: false
+        });
+        return result.allowed ? [] : [`Day ${day.day}: ${item.exerciseId} blocked (${result.reasons[0]})`];
+      })
+  );
   const kneeSensitiveDaysWithHighImpactJumps = trainingPlan
     .filter((day) => day.todayPriority === "knee-calm")
     .filter((day) =>
@@ -195,8 +315,58 @@ export function validateTrainingPlan() {
       )
     )
     .map((day) => day.day);
+  const highImpactSessionTargetViolations = weeklySessionTargets
+    .map((target) => ({
+      weekNumber: target.weekNumber,
+      highImpactMax: Object.entries(target.unitTargets).reduce(
+        (count, [type, value]) => count + (highImpactSessionTypes.has(type as SessionUnitType) ? value?.max ?? 0 : 0),
+        0
+      )
+    }))
+    .filter((target) => target.highImpactMax > 2)
+    .map((target) => `Week ${target.weekNumber}: ${target.highImpactMax} high-impact session targets`);
+  const basketballTargetViolations = weeklySessionTargets
+    .filter((target) => (target.unitTargets["basketball-skill"]?.max ?? 0) > 1)
+    .map((target) => `Week ${target.weekNumber}: basketball target max ${target.unitTargets["basketball-skill"]?.max}`);
+  const recoverySessionDurationProblems = trainingSessionUnits
+    .filter((unit) => unit.type === "recovery" || unit.type === "review")
+    .filter((unit) => (unit.estimatedDurationMinutes?.max ?? 0) > 35)
+    .map((unit) => `${unit.id}: ${unit.estimatedDurationMinutes?.max} min`);
+  const sessionUnitsMissingExerciseIds = unique(
+    referencedSessionUnitExerciseIds.filter((id) => !exerciseIds.has(id))
+  );
+  const sessionUnitsMissingYoutubeQuery = unique(
+    sessionUnitExerciseEntries
+      .filter(({ exercise }) => exercise && !exercise.youtubeSearchQuery)
+      .map(({ item }) => item.exerciseId)
+  );
+  const sessionUnitsMissingProgressionOrRegression = unique(
+    sessionUnitExerciseEntries
+      .filter(({ exercise }) => exercise && (!exercise.progressions?.length || !exercise.regressions?.length))
+      .map(({ item }) => item.exerciseId)
+  );
+  const sessionUnitAdvancedOnlyMandatory = sessionUnitExerciseEntries
+    .filter(({ exercise }) => exercise?.riskTier === "advanced-only" || exercise?.advancedOnly)
+    .filter(({ item }) => !item.optional)
+    .map(({ unit, item }) => `${unit.id}: ${item.exerciseId}`);
 
   return {
+    migrationSummary: adaptiveMigrationSummary,
+    adaptiveMacrocycleStartDate: ADAPTIVE_MACROCYCLE_START_DATE,
+    sessionUnitCount: trainingSessionUnits.length,
+    weeklySessionTargets: weeklySessionTargets.map((target) => ({
+      weekNumber: target.weekNumber,
+      blockNumber: target.blockNumber,
+      deload: Boolean(target.deload),
+      unitTargets: target.unitTargets
+    })),
+    highImpactSessionTargetViolations,
+    basketballTargetViolations,
+    recoverySessionDurationProblems,
+    sessionUnitsMissingExerciseIds,
+    sessionUnitsMissingYoutubeQuery,
+    sessionUnitsMissingProgressionOrRegression,
+    sessionUnitAdvancedOnlyMandatory,
     planDays: trainingPlan.length,
     cycles: trainingCycles.map((cycle) => ({
       cycleNumber: cycle.cycleNumber,
@@ -223,6 +393,13 @@ export function validateTrainingPlan() {
     hardNordicWithin48hOfBasketballOrTest,
     highImpactAfterBasketball,
     depthDropsInCycleOne,
+    continuousPlyometricAboveAllowedContacts,
+    weightedDepthJumpInCycleOneOrTestWeek,
+    mandatoryAdvancedOnlyExercises,
+    olympicLiftWithoutSafeAlternative,
+    advancedExercisesIncludedByCycle,
+    advancedOnlyExercisesIncludedByCycle,
+    advancedExercisesBlockedByReadinessGates,
     continuousJumpDrillsBeforeCycleThree,
     kneeSensitiveDaysWithHighImpactJumps,
     possibleMaximumJumpsAfterVariableBasketball: trainingPlan
@@ -258,6 +435,8 @@ export function validateTrainingPlan() {
     newSingleLegExerciseIds: singleLegStiffnessExerciseIds,
     missingSingleLegExerciseIds: singleLegStiffnessExerciseIds.filter((id) => !exerciseIds.has(id)),
     screenshotMenuExerciseIds,
+    advancedExerciseIds,
+    missingAdvancedExerciseIds: advancedExerciseIds.filter((id) => !exerciseIds.has(id)),
     missingScreenshotMenuExerciseIds: screenshotMenuExerciseIds.filter((id) => !exerciseIds.has(id)),
     singleLegExercisesMissingProgressionSets: singleLegStiffnessExerciseIds.filter((id) => {
       const exercise = exercises.find((item) => item.id === id);

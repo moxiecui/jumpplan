@@ -225,6 +225,14 @@ const july20Session = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:0
 const planViewDayTwoSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 2);
 assert(july20Session.session.id === planViewDayTwoSession.id, "Today and Plan resolve the same session for July 20");
 
+const july20SkippedSession = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"), 1);
+const planViewDayThreeSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 3);
+assert(july20SkippedSession.session.id === planViewDayThreeSession.id, "skip-today offset must move adaptive session resolver to Day 3");
+
+const july20PreviousSession = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"), -1);
+const planViewDayOneSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 1);
+assert(july20PreviousSession.session.id === planViewDayOneSession.id, "go-back offset must move adaptive session resolver to Day 1");
+
 const resolvedCycleOneIds = Array.from({ length: 21 }, (_, index) =>
   resolveTrainingSessionForDate(new Date(`${getAdaptiveDateForMacrocycleDay(index + 1)}T12:00:00`))
 );

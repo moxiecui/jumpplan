@@ -88,7 +88,7 @@ function getHoursSinceLast(
 
 export default function TodayScreen() {
   const router = useRouter();
-  const { currentDay: day } = usePlanProgress();
+  const { currentDay: day, currentDayNumber, dayOffset } = usePlanProgress();
   const {
     completedSessionUnits,
     completeSessionUnit,
@@ -111,7 +111,10 @@ export default function TodayScreen() {
   const previousBasketballLog = day.day > 2 ? getBasketballLog(getPlanDate(day.day - 2)) : undefined;
   const [showAdjustedPlan, setShowAdjustedPlan] = useState(false);
   const [showRecommendedSession, setShowRecommendedSession] = useState(true);
-  const resolvedSession = useMemo(() => resolveTrainingSessionForDate(new Date(`${planDate}T12:00:00`)), [planDate]);
+  const resolvedSession = useMemo(
+    () => resolveTrainingSessionForDate(new Date(`${planDate}T12:00:00`), dayOffset),
+    [dayOffset, planDate]
+  );
   const plannedUnit = resolvedSession.session;
   const adjustedDay = useMemo(
     () => (readinessEntry ? applyAdjustmentToDay(day, readinessEntry.adjustment) : day),
@@ -304,7 +307,8 @@ export default function TodayScreen() {
           <Text style={styles.debugText}>Resolved session ID：{plannedUnit.id}</Text>
           <Text style={styles.debugText}>Source：{resolvedSession.source}</Text>
           <Text style={styles.debugText}>Block / Week：{resolvedSession.blockNumber} / {resolvedSession.weekNumber}</Text>
-          <Text style={styles.debugText}>Macro Day：{resolvedSession.macrocycleDay} · 计划日期：{getAdaptiveDateForMacrocycleDay(resolvedSession.macrocycleDay)}</Text>
+          <Text style={styles.debugText}>Macro Day：{resolvedSession.macrocycleDay} · 当前显示：Day {currentDayNumber}</Text>
+          <Text style={styles.debugText}>计划日期：{getAdaptiveDateForMacrocycleDay(resolvedSession.macrocycleDay)} · dayOffset：{dayOffset}</Text>
           <Text style={styles.debugText}>localStorage plan version：{resolvedSession.localStoragePlanVersion}</Text>
           <Text style={styles.debugText}>legacy override detected：{legacyOverrideDetected ? "yes" : "no"}</Text>
         </View>

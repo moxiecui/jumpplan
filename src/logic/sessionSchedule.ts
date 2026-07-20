@@ -15,11 +15,11 @@ function startDate() {
   return new Date(`${ADAPTIVE_MACROCYCLE_START_DATE}T00:00:00`);
 }
 
-export function getAdaptiveMacrocycleDayForDate(date = new Date()) {
+export function getAdaptiveMacrocycleDayForDate(date = new Date(), dayOffset = 0) {
   const start = startDate();
   const current = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const diff = Math.floor((current.getTime() - start.getTime()) / MS_PER_DAY);
-  return Math.min(Math.max(diff + 1, 1), 84);
+  return Math.min(Math.max(diff + dayOffset + 1, 1), 84);
 }
 
 export function getAdaptiveDateForMacrocycleDay(macrocycleDay: number) {
@@ -53,8 +53,8 @@ export function markAdaptivePlanVersionMigrated() {
   window.localStorage.setItem(ADAPTIVE_PLAN_VERSION_STORAGE_KEY, ADAPTIVE_PLAN_VERSION);
 }
 
-export function resolveTrainingSessionForDate(date = new Date()): ResolvedTrainingSession {
-  const macrocycleDay = getAdaptiveMacrocycleDayForDate(date);
+export function resolveTrainingSessionForDate(date = new Date(), dayOffset = 0): ResolvedTrainingSession {
+  const macrocycleDay = getAdaptiveMacrocycleDayForDate(date, dayOffset);
   const weekNumber = Math.min(12, Math.floor((macrocycleDay - 1) / 7) + 1);
   const blockNumber = Math.ceil(weekNumber / 3) as 1 | 2 | 3 | 4;
   const assignment = cycleOneSessionAssignments.find((entry) => entry.macrocycleDay === macrocycleDay);

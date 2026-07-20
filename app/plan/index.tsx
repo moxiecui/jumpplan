@@ -125,11 +125,11 @@ function getSessionExerciseNames(unit: (typeof cycleOneScheduledSessions)[number
 
 export default function PlanScreen() {
   const router = useRouter();
-  const { currentDay } = usePlanProgress();
+  const { currentDay, dayOffset } = usePlanProgress();
   const { completedSessionUnits, currentAdaptiveWeek, currentBlock, currentBlockTitle } = useSessionProgress();
   const [activeFilter, setActiveFilter] = useState<PlanFilter>("all");
   const [activeView, setActiveView] = useState<PlanView>("session-units");
-  const todayResolvedSession = useMemo(() => resolveTrainingSessionForDate(new Date()), []);
+  const todayResolvedSession = useMemo(() => resolveTrainingSessionForDate(new Date(), dayOffset), [dayOffset]);
   const currentWeekTarget = weeklySessionTargets.find((target) => target.weekNumber === currentAdaptiveWeek);
   const completedTypeCounts = completedSessionUnits.reduce<Partial<Record<SessionUnitType, number>>>((counts, entry) => {
     counts[entry.sessionType] = (counts[entry.sessionType] ?? 0) + 1;

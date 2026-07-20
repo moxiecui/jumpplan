@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
 import { getAdaptiveBlock, getSessionUnit } from "@/data/adaptiveProgram";
+import { usePlanProgress } from "@/context/PlanProgressContext";
 import { markAdaptivePlanVersionMigrated, resolveTrainingSessionForDate } from "@/logic/sessionSchedule";
 import type { JumpReadinessResult, JumpReadinessTest, TrainingSessionUnit } from "@/types/training";
 
@@ -33,11 +34,12 @@ interface SessionProgressContextValue {
 const SessionProgressContext = createContext<SessionProgressContextValue | undefined>(undefined);
 
 export function SessionProgressProvider({ children }: { children: ReactNode }) {
+  const { dayOffset } = usePlanProgress();
   const [completedSessionUnits, setCompletedSessionUnits] = useState<CompletedSessionUnitEntry[]>([]);
   const [jumpReadinessEntries, setJumpReadinessEntries] = useState<
     { test: JumpReadinessTest; result: JumpReadinessResult }[]
   >([]);
-  const resolvedToday = resolveTrainingSessionForDate();
+  const resolvedToday = resolveTrainingSessionForDate(new Date(), dayOffset);
   const currentAdaptiveDay = resolvedToday.macrocycleDay;
   const currentAdaptiveWeek = resolvedToday.weekNumber;
   const currentBlock = resolvedToday.blockNumber;

@@ -1,6 +1,7 @@
-import { createContext, ReactNode, useContext, useMemo, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
-import { ADAPTIVE_MACROCYCLE_START_DATE, getAdaptiveBlock, getSessionUnit } from "@/data/adaptiveProgram";
+import { getAdaptiveBlock, getSessionUnit } from "@/data/adaptiveProgram";
+import { markAdaptivePlanVersionMigrated, resolveTrainingSessionForDate } from "@/logic/sessionSchedule";
 import type { JumpReadinessResult, JumpReadinessTest, TrainingSessionUnit } from "@/types/training";
 
 export interface CompletedSessionUnitEntry {
@@ -25,26 +26,26 @@ interface SessionProgressContextValue {
   currentAdaptiveWeek: number;
   currentBlock: 1 | 2 | 3 | 4;
   currentBlockTitle: string;
+  localStoragePlanVersion: string;
+  legacyOverrideDetected: boolean;
 }
 
 const SessionProgressContext = createContext<SessionProgressContextValue | undefined>(undefined);
-
-function daysSinceStart() {
-  const start = new Date(`${ADAPTIVE_MACROCYCLE_START_DATE}T00:00:00`);
-  const now = new Date();
-  const current = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  return Math.max(0, Math.floor((current.getTime() - start.getTime()) / 86400000));
-}
 
 export function SessionProgressProvider({ children }: { children: ReactNode }) {
   const [completedSessionUnits, setCompletedSessionUnits] = useState<CompletedSessionUnitEntry[]>([]);
   const [jumpReadinessEntries, setJumpReadinessEntries] = useState<
     { test: JumpReadinessTest; result: JumpReadinessResult }[]
   >([]);
-  const currentAdaptiveDay = Math.min(84, daysSinceStart() + 1);
-  const currentAdaptiveWeek = Math.min(12, Math.floor((currentAdaptiveDay - 1) / 7) + 1);
-  const currentBlock = Math.ceil(currentAdaptiveWeek / 3) as 1 | 2 | 3 | 4;
+  const resolvedToday = resolveTrainingSessionForDate();
+  const currentAdaptiveDay = resolvedToday.macrocycleDay;
+  const currentAdaptiveWeek = resolvedToday.weekNumber;
+  const currentBlock = resolvedToday.blockNumber;
   const currentBlockTitle = getAdaptiveBlock(currentBlock).title;
+
+  useEffect(() => {
+    markAdaptivePlanVersionMigrated();
+  }, []);
 
   const value = useMemo<SessionProgressContextValue>(
     () => ({
@@ -83,9 +84,20 @@ export function SessionProgressProvider({ children }: { children: ReactNode }) {
       currentAdaptiveDay,
       currentAdaptiveWeek,
       currentBlock,
-      currentBlockTitle
+      currentBlockTitle,
+      localStoragePlanVersion: resolvedToday.localStoragePlanVersion,
+      legacyOverrideDetected: resolvedToday.legacyOverrideDetected
     }),
-    [completedSessionUnits, currentAdaptiveDay, currentAdaptiveWeek, currentBlock, currentBlockTitle, jumpReadinessEntries]
+    [
+      completedSessionUnits,
+      currentAdaptiveDay,
+      currentAdaptiveWeek,
+      currentBlock,
+      currentBlockTitle,
+      jumpReadinessEntries,
+      resolvedToday.legacyOverrideDetected,
+      resolvedToday.localStoragePlanVersion
+    ]
   );
 
   return <SessionProgressContext.Provider value={value}>{children}</SessionProgressContext.Provider>;

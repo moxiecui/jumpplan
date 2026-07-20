@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { adaptiveTrainingBlocks, trainingSessionUnits, weeklySessionTargets } from "@/data/adaptiveProgram";
+import { cycleOneScheduledSessions, weeklySessionTargets } from "@/data/adaptiveProgram";
 import { trainingPlan } from "@/data/plan";
 import { trainingCycles } from "@/data/macrocycle";
 import { getExerciseById } from "@/data/exercises";
@@ -14,6 +14,7 @@ import {
   getTrainingDayTypeLabel,
   impactLevelLabels
 } from "@/logic/trainingDisplay";
+import { getAdaptiveDateForMacrocycleDay, resolveTrainingSessionForDate } from "@/logic/sessionSchedule";
 import type { SessionUnitType, TrainingDay, TrainingDayType } from "@/types/training";
 
 type PlanFilter = TrainingDayType | "upper-body" | "core" | "isometric" | "all";
@@ -31,7 +32,7 @@ const filterOptions: { value: PlanFilter; label: string }[] = [
 ];
 
 const viewOptions: { value: PlanView; label: string }[] = [
-  { value: "session-units", label: "推荐单元" },
+  { value: "session-units", label: "Cycle 1 日程" },
   { value: "targets", label: "本周目标" },
   { value: "cycle", label: "固定计划" },
   { value: "macrocycle", label: "12周宏周期" },
@@ -90,12 +91,45 @@ function getAdvancedSummary(day: TrainingDay) {
   return `进阶选项：${exercises.length} 个 · 可选 ${optionalCount} 个${advancedOnlyCount ? ` · Advanced-only ${advancedOnlyCount} 个` : ""}`;
 }
 
+function getSessionFilterType(type: SessionUnitType): TrainingDayType | "upper-body" | "core" | "isometric" {
+  if (type === "strength-a" || type === "strength-b") {
+    return "strength";
+  }
+
+  if (type === "basketball-skill") {
+    return "basketball";
+  }
+
+  if (type === "upper-body-core") {
+    return "upper-body";
+  }
+
+  if (type === "recovery" || type === "review") {
+    return "recovery";
+  }
+
+  if (type === "test") {
+    return "test";
+  }
+
+  return "jump";
+}
+
+function getSessionExerciseNames(unit: (typeof cycleOneScheduledSessions)[number]) {
+  return unit.exerciseBlocks
+    .flatMap((block) => block.items)
+    .map((item) => getExerciseById(item.exerciseId)?.nameZh ?? item.exerciseId)
+    .slice(0, 6)
+    .join("、");
+}
+
 export default function PlanScreen() {
   const router = useRouter();
   const { currentDay } = usePlanProgress();
   const { completedSessionUnits, currentAdaptiveWeek, currentBlock, currentBlockTitle } = useSessionProgress();
   const [activeFilter, setActiveFilter] = useState<PlanFilter>("all");
   const [activeView, setActiveView] = useState<PlanView>("session-units");
+  const todayResolvedSession = useMemo(() => resolveTrainingSessionForDate(new Date()), []);
   const currentWeekTarget = weeklySessionTargets.find((target) => target.weekNumber === currentAdaptiveWeek);
   const completedTypeCounts = completedSessionUnits.reduce<Partial<Record<SessionUnitType, number>>>((counts, entry) => {
     counts[entry.sessionType] = (counts[entry.sessionType] ?? 0) + 1;
@@ -118,6 +152,23 @@ export default function PlanScreen() {
         return viewMatch && matchesFilter(day, activeFilter);
       }),
     [activeFilter, activeView, currentDay.cycleNumber]
+  );
+  const visibleCycleOneSessions = useMemo(
+    () =>
+      cycleOneScheduledSessions.filter((unit) => {
+        if (activeFilter === "all") {
+          return true;
+        }
+
+        if (activeFilter === "core" || activeFilter === "isometric") {
+          return unit.exerciseBlocks.some((block) =>
+            block.items.some((item) => getExerciseById(item.exerciseId)?.category === activeFilter)
+          );
+        }
+
+        return getSessionFilterType(unit.type) === activeFilter;
+      }),
+    [activeFilter]
   );
 
   return (
@@ -158,34 +209,39 @@ export default function PlanScreen() {
 
       {activeView === "session-units" ? (
         <View>
-          {adaptiveTrainingBlocks.map((block) => (
-            <View key={block.blockNumber} style={styles.cycleCard}>
-              <Text style={styles.cycleTitle}>Block {block.blockNumber} · Week {block.weeks.join(" / ")}</Text>
-              <Text style={styles.cycleName}>{block.title}</Text>
-              {block.goals.slice(0, 4).map((goal) => (
-                <Text key={goal} style={styles.goal}>• {goal}</Text>
+          <View style={styles.cycleCard}>
+            <Text style={styles.cycleTitle}>当前日期解析</Text>
+            <Text style={styles.cycleName}>{todayResolvedSession.session.title}</Text>
+            <Text style={styles.loadMeta}>
+              Macro Day {todayResolvedSession.macrocycleDay} · Session ID：{todayResolvedSession.session.id} · 来源：{todayResolvedSession.source}
+            </Text>
+            <Text style={styles.goal}>Today 和 Plan 使用同一个日期解析器；状态建议只做临时降级，不覆盖底层日程。</Text>
+          </View>
+
+          {visibleCycleOneSessions.map((unit) => (
+            <View key={unit.id} style={styles.sessionUnitCard}>
+              <View style={styles.dayHeader}>
+                <Text style={styles.dayNumber}>
+                  Day {unit.progressionMetadata?.macrocycleDay ?? "?"} · Week {unit.progressionMetadata?.weekNumber ?? 1}
+                </Text>
+                <Text style={styles.dayType}>{sessionTypeLabels[unit.type]}</Text>
+              </View>
+              <Text style={styles.phase}>
+                {getAdaptiveDateForMacrocycleDay(unit.progressionMetadata?.macrocycleDay ?? 1)} · {unit.progressionMetadata?.stage ?? "base"}
+              </Text>
+              <Text style={styles.dayTitle}>{unit.title}</Text>
+              {unit.purpose ? <Text style={styles.goal}>{unit.purpose}</Text> : null}
+              <Text style={styles.loadMeta}>
+                强度：{unit.plannedIntensity ?? "low"} · 冲击：{impactLevelLabels[unit.impactLevel]} · 疲劳：{estimatedFatigueLabels[unit.estimatedFatigue]}
+                {unit.plannedJumpContacts ? ` · 跳跃 ${unit.plannedJumpContacts.min}–${unit.plannedJumpContacts.max}` : ""}
+              </Text>
+              <Text style={styles.loadMeta}>主要动作：{getSessionExerciseNames(unit)}</Text>
+              {unit.recoverySubstitutionUnitId ? (
+                <Text style={styles.loadMeta}>恢复替代：{unit.recoverySubstitutionUnitId}</Text>
+              ) : null}
+              {unit.progressionMetadata?.notes.slice(0, 2).map((note) => (
+                <Text key={note} style={styles.goal}>• {note}</Text>
               ))}
-              {trainingSessionUnits
-                .filter((unit) => unit.blockNumber === block.blockNumber)
-                .map((unit) => (
-                  <View key={unit.id} style={styles.sessionUnitCard}>
-                    <View style={styles.dayHeader}>
-                      <Text style={styles.dayNumber}>{sessionTypeLabels[unit.type]}</Text>
-                      <Text style={styles.dayType}>{unit.optional ? "可选" : "推荐池"}</Text>
-                    </View>
-                    <Text style={styles.dayTitle}>{unit.title}</Text>
-                    <Text style={styles.loadMeta}>
-                      冲击：{impactLevelLabels[unit.impactLevel]} · 疲劳：{estimatedFatigueLabels[unit.estimatedFatigue]}
-                      {unit.plannedJumpContacts ? ` · 跳跃 ${unit.plannedJumpContacts.min}–${unit.plannedJumpContacts.max}` : ""}
-                    </Text>
-                    {unit.blockReasons?.slice(0, 3).map((reason) => (
-                      <Text key={reason} style={styles.goal}>• {reason}</Text>
-                    ))}
-                    {unit.downgradeSessionUnitId ? (
-                      <Text style={styles.loadMeta}>可降级为：{unit.downgradeSessionUnitId}</Text>
-                    ) : null}
-                  </View>
-                ))}
             </View>
           ))}
         </View>

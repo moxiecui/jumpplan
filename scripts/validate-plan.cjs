@@ -35,6 +35,15 @@ const { validateTrainingPlan } = require("../src/logic/planValidation.ts");
 const { evaluateJumpReadiness } = require("../src/logic/jumpReadiness.ts");
 const { recommendNextSession } = require("../src/logic/nextSessionRecommendation.ts");
 const { getRightSideVolumeGuidance } = require("../src/logic/rightSideVolume.ts");
+const { cycleOneScheduledSessions } = require("../src/data/adaptiveProgram.ts");
+const {
+  getAdaptiveDateForMacrocycleDay,
+  resolveTrainingSessionForDate
+} = require("../src/logic/sessionSchedule.ts");
+const {
+  getCycleOneDaySummary,
+  validateCycleVariation
+} = require("../src/logic/cycleVariationValidation.ts");
 
 function assert(condition, message) {
   if (!condition) {
@@ -162,7 +171,65 @@ const normalRecommendation = recommendNextSession({
   basketballLoadLast24h: "none",
   basketballLoadLast48h: "none"
 });
-assert(normalRecommendation.recommendedSessionUnitId === "b1-strength-a", "first adaptive session should be Strength A");
+assert(normalRecommendation.recommendedSessionUnitId.includes("strength-a"), "first adaptive recommendation should be Strength A");
+
+function sessionExerciseSignature(session) {
+  return session.exerciseBlocks
+    .flatMap((block) => block.items.map((item) => item.exerciseId))
+    .join("|");
+}
+
+function sessionVolume(session) {
+  const multiplier = session.progressionMetadata?.volumeMultiplier ?? 1;
+  return multiplier * session.exerciseBlocks.reduce(
+    (sum, block) => sum + block.items.reduce((blockSum, item) => blockSum + (item.sets ?? 1), 0),
+    0
+  );
+}
+
+const cycleOneTypes = new Set(cycleOneScheduledSessions.map((session) => session.type));
+assert(cycleOneTypes.size >= 5, "Cycle 1 must contain at least five distinct session-unit types");
+
+for (let index = 1; index < cycleOneScheduledSessions.length; index += 1) {
+  assert(
+    sessionExerciseSignature(cycleOneScheduledSessions[index - 1]) !== sessionExerciseSignature(cycleOneScheduledSessions[index]),
+    `Cycle 1 consecutive days ${index} and ${index + 1} must not have identical exercise lists`
+  );
+}
+
+const day1 = cycleOneScheduledSessions.find((session) => session.id === "c1d01-strength-a");
+const day8 = cycleOneScheduledSessions.find((session) => session.id === "c1d08-strength-a-progression");
+const day3 = cycleOneScheduledSessions.find((session) => session.id === "c1d03-low-plyo-landing");
+const day10 = cycleOneScheduledSessions.find((session) => session.id === "c1d10-low-plyo-single-leg-control");
+const week2Volume = cycleOneScheduledSessions
+  .filter((session) => session.progressionMetadata?.weekNumber === 2)
+  .reduce((sum, session) => sum + sessionVolume(session), 0);
+const week3Volume = cycleOneScheduledSessions
+  .filter((session) => session.progressionMetadata?.weekNumber === 3)
+  .reduce((sum, session) => sum + sessionVolume(session), 0);
+assert(day8.progressionMetadata.volumeMultiplier > day1.progressionMetadata.volumeMultiplier, "Week 2 Strength A progresses Week 1");
+assert((day10.plannedJumpContacts?.max ?? 0) > (day3.plannedJumpContacts?.max ?? 0), "Week 2 low plyo progresses Week 1 contacts");
+assert(week3Volume < week2Volume * 0.75, "Week 3 volume must be lower than Week 2");
+
+const mutationTarget = cycleOneScheduledSessions[0].exerciseBlocks[0].items[0];
+const originalMutationValue = mutationTarget.exerciseId;
+const neighborExerciseId = cycleOneScheduledSessions[1].exerciseBlocks[0].items[0].exerciseId;
+mutationTarget.exerciseId = "__mutation-test__";
+assert(
+  cycleOneScheduledSessions[1].exerciseBlocks[0].items[0].exerciseId === neighborExerciseId,
+  "modifying one generated day must not mutate another day"
+);
+mutationTarget.exerciseId = originalMutationValue;
+
+const july20Session = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"));
+const planViewDayTwoSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 2);
+assert(july20Session.session.id === planViewDayTwoSession.id, "Today and Plan resolve the same session for July 20");
+
+const resolvedCycleOneIds = Array.from({ length: 21 }, (_, index) =>
+  resolveTrainingSessionForDate(new Date(`${getAdaptiveDateForMacrocycleDay(index + 1)}T12:00:00`))
+);
+assert(new Set(resolvedCycleOneIds.map((resolved) => resolved.session.id)).size >= 5, "missing readiness data must not collapse Cycle 1 to one fallback");
+assert(resolvedCycleOneIds.every((resolved) => !resolved.fallbackUsed), "Cycle 1 dates must resolve to generated sessions without fallback");
 
 assert(
   getRightSideVolumeGuidance({ impactLevel: "high", rightKneeTracking: 5 }).maxExtraTechnicalSets === 0,
@@ -178,7 +245,16 @@ assert(adjusted !== trainingPlan[0], "adjustment returns a new day");
 assert(trainingPlan[0].blocks[1].items.some((item) => item.exerciseId === "back-squat-on-bench"), "original day remains unchanged");
 
 const report = validateTrainingPlan();
+const variationReport = validateCycleVariation();
 assert(report.adaptiveMacrocycleStartDate === "2026-07-19", "adaptive macrocycle starts July 19");
+assert(variationReport.consecutiveIdenticalExerciseIds.length === 0, "Cycle 1 must not have identical consecutive exercise lists");
+assert(variationReport.daysSharingSameObjectReference.length === 0, "Cycle 1 generated days must not share mutable object references");
+assert(variationReport.duplicateSessionIds.length === 0, "Cycle 1 must not have duplicate session IDs");
+assert(variationReport.weeksWithFewerThanThreeDistinctSessionTypes.length === 0, "Cycle 1 weeks need at least three session-unit types");
+assert(variationReport.recoveryDaysContainingHighImpactExercises.length === 0, "Cycle 1 recovery days must not contain high-impact exercises");
+assert(variationReport.deloadWeekVolumeNotLowerThanWeekTwo.length === 0, "Cycle 1 deload week must be lower than Week 2");
+assert(variationReport.everyDateResolvingToSameFallbackSession.length === 0, "Cycle 1 dates must not all resolve to one fallback session");
+assert(variationReport.fallbackResolvedDates.length === 0, "Cycle 1 generated schedule must not use fallback sessions");
 assert(report.highImpactSessionTargetViolations.length === 0, "session-unit targets must cap high-impact days at two weekly");
 assert(report.basketballTargetViolations.length === 0, "basketball target max must stay 0-1 weekly");
 assert(report.recoverySessionDurationProblems.length === 0, "recovery session units must stay under 35 minutes");
@@ -206,4 +282,4 @@ assert(report.singleLegExercisesMissingTrackingFields.length === 0, "new single-
 assert(report.exercisesMissingYoutubeQuery.length === 0, "all exercises need YouTube search queries");
 assert(report.duplicateExerciseIds.length === 0, "duplicate exercise IDs");
 
-console.log(JSON.stringify({ checks: "passed", report }, null, 2));
+console.log(JSON.stringify({ checks: "passed", cycleOneDaySummary: getCycleOneDaySummary(), variationReport, report }, null, 2));

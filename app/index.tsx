@@ -22,6 +22,7 @@ import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { usePlanProgress } from "@/context/PlanProgressContext";
 import { useSessionProgress } from "@/context/SessionProgressContext";
+import { getAdaptiveDateForMacrocycleDay, resolveTrainingSessionForDate } from "@/logic/sessionSchedule";
 import { getSessionUnit, weeklySessionTargets } from "@/data/adaptiveProgram";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
@@ -57,6 +58,7 @@ const priorityLabels: Record<NonNullable<TrainingDay["todayPriority"]>, string> 
   test: "测试",
   recovery: "恢复"
 };
+const showDeveloperDebug = process.env.NODE_ENV !== "production";
 
 const sessionTypeLabels: Record<SessionUnitType, string> = {
   "strength-a": "力量 A",
@@ -95,6 +97,7 @@ export default function TodayScreen() {
     currentBlock,
     currentBlockTitle,
     getCompletedSessionUnitIdsLast14Days,
+    legacyOverrideDetected,
     latestJumpReadinessResult
   } = useSessionProgress();
   const { getReadinessEntry } = useReadiness();
@@ -108,6 +111,8 @@ export default function TodayScreen() {
   const previousBasketballLog = day.day > 2 ? getBasketballLog(getPlanDate(day.day - 2)) : undefined;
   const [showAdjustedPlan, setShowAdjustedPlan] = useState(false);
   const [showRecommendedSession, setShowRecommendedSession] = useState(true);
+  const resolvedSession = useMemo(() => resolveTrainingSessionForDate(new Date(`${planDate}T12:00:00`)), [planDate]);
+  const plannedUnit = resolvedSession.session;
   const adjustedDay = useMemo(
     () => (readinessEntry ? applyAdjustmentToDay(day, readinessEntry.adjustment) : day),
     [day, readinessEntry]
@@ -233,9 +238,11 @@ export default function TodayScreen() {
         </Text>
         <Text style={styles.recommendationTitle}>{currentBlockTitle}</Text>
         <Text style={styles.recommendationSubtitle}>
-          下一节推荐：{recommendation.title}
+          今日计划：{plannedUnit.title}
         </Text>
         <View style={styles.recommendationMetaRow}>
+          <Text style={styles.recommendationBadge}>来源：{resolvedSession.source}</Text>
+          <Text style={styles.recommendationBadge}>Session ID：{plannedUnit.id}</Text>
           <Text style={styles.recommendationBadge}>
             {recommendation.level === "normal"
               ? "正常执行"
@@ -243,15 +250,20 @@ export default function TodayScreen() {
                 ? "降级/调整"
                 : "恢复-only"}
           </Text>
-          {recommendedUnit ? (
+          {plannedUnit ? (
             <>
-              <Text style={styles.recommendationBadge}>{sessionTypeLabels[recommendedUnit.type]}</Text>
+              <Text style={styles.recommendationBadge}>{sessionTypeLabels[plannedUnit.type]}</Text>
               <Text style={styles.recommendationBadge}>
-                冲击：{recommendedUnit.impactLevel === "high" ? "高" : recommendedUnit.impactLevel === "moderate" ? "中" : recommendedUnit.impactLevel === "low" ? "低" : "无"}
+                冲击：{plannedUnit.impactLevel === "high" ? "高" : plannedUnit.impactLevel === "moderate" ? "中" : plannedUnit.impactLevel === "low" ? "低" : "无"}
               </Text>
             </>
           ) : null}
         </View>
+        {recommendation.recommendedSessionUnitId !== plannedUnit.id ? (
+          <Text style={styles.modificationText}>
+            状态建议：{recommendedUnit?.title ?? recommendation.title}。这是临时建议，不会覆盖今日底层计划。
+          </Text>
+        ) : null}
         {recommendation.rationale.slice(0, 3).map((reason) => (
           <Text key={reason} style={styles.recommendationText}>• {reason}</Text>
         ))}
@@ -264,7 +276,7 @@ export default function TodayScreen() {
             onPress={() => setShowRecommendedSession((current) => !current)}
           >
             <Text style={styles.recommendationActionText}>
-              {showRecommendedSession ? "收起推荐训练" : "展开推荐训练"}
+              {showRecommendedSession ? "收起今日计划" : "展开今日计划"}
             </Text>
           </Pressable>
           <Pressable style={styles.recommendationAction} onPress={() => router.push("/jump-readiness" as never)}>
@@ -285,24 +297,38 @@ export default function TodayScreen() {
         ))}
       </View>
 
-      {showRecommendedSession && recommendedUnit ? (
+      {showDeveloperDebug ? (
+        <View style={styles.debugCard}>
+          <Text style={styles.debugTitle}>开发调试</Text>
+          <Text style={styles.debugText}>当前日期：{todayDate()}</Text>
+          <Text style={styles.debugText}>Resolved session ID：{plannedUnit.id}</Text>
+          <Text style={styles.debugText}>Source：{resolvedSession.source}</Text>
+          <Text style={styles.debugText}>Block / Week：{resolvedSession.blockNumber} / {resolvedSession.weekNumber}</Text>
+          <Text style={styles.debugText}>Macro Day：{resolvedSession.macrocycleDay} · 计划日期：{getAdaptiveDateForMacrocycleDay(resolvedSession.macrocycleDay)}</Text>
+          <Text style={styles.debugText}>localStorage plan version：{resolvedSession.localStoragePlanVersion}</Text>
+          <Text style={styles.debugText}>legacy override detected：{legacyOverrideDetected ? "yes" : "no"}</Text>
+        </View>
+      ) : null}
+
+      {showRecommendedSession ? (
         <View style={styles.recommendedSessionCard}>
-          <Text style={styles.recommendedSessionTitle}>{recommendedUnit.title}</Text>
+          <Text style={styles.recommendedSessionTitle}>{plannedUnit.title}</Text>
           <Text style={styles.recommendedSessionMeta}>
-            预计 {recommendedUnit.estimatedDurationMinutes?.min ?? 20}–{recommendedUnit.estimatedDurationMinutes?.max ?? 45} 分钟
-            {recommendedUnit.plannedJumpContacts
-              ? ` · 跳跃 ${recommendedUnit.plannedJumpContacts.min}–${recommendedUnit.plannedJumpContacts.max}`
+            预计 {plannedUnit.estimatedDurationMinutes?.min ?? 20}–{plannedUnit.estimatedDurationMinutes?.max ?? 45} 分钟
+            {plannedUnit.plannedJumpContacts
+              ? ` · 跳跃 ${plannedUnit.plannedJumpContacts.min}–${plannedUnit.plannedJumpContacts.max}`
               : ""}
           </Text>
-          {recommendedUnit.blockReasons?.map((reason) => (
+          {plannedUnit.purpose ? <Text style={styles.recommendationText}>{plannedUnit.purpose}</Text> : null}
+          {plannedUnit.progressionMetadata?.notes.map((reason) => (
             <Text key={reason} style={styles.recommendationText}>• {reason}</Text>
           ))}
-          {recommendedUnit.exerciseBlocks.map((block, index) => (
-            <DaySection key={`${recommendedUnit.id}-${block.type}-${index}`} block={block} dayLabel={recommendedUnit.title} />
+          {plannedUnit.exerciseBlocks.map((block, index) => (
+            <DaySection key={`${plannedUnit.id}-${block.type}-${index}`} block={block} dayLabel={plannedUnit.title} />
           ))}
           <Pressable
             style={styles.completeSessionButton}
-            onPress={() => completeSessionUnit(recommendedUnit.id, recommendation.level)}
+            onPress={() => completeSessionUnit(plannedUnit.id, recommendation.level)}
           >
             <Text style={styles.completeSessionButtonText}>标记这节训练已完成</Text>
           </Pressable>
@@ -914,5 +940,24 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#57606a",
     fontWeight: "900"
+  },
+  debugCard: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#d0d7de",
+    backgroundColor: "#f6f8fa"
+  },
+  debugTitle: {
+    fontSize: 13,
+    fontWeight: "900",
+    color: "#57606a"
+  },
+  debugText: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 17,
+    color: "#57606a"
   }
 });

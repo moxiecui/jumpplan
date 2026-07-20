@@ -172,11 +172,14 @@ export interface TrainingBlock {
 
 export interface TrainingSessionUnit {
   id: string;
+  sessionUnitId?: string;
   type: SessionUnitType;
   title: string;
+  purpose?: string;
   blockNumber: 1 | 2 | 3 | 4;
   priority: number;
   impactLevel: ImpactLevel;
+  plannedIntensity?: "low" | "low-moderate" | "moderate" | "moderate-high" | "high";
   estimatedFatigue: Exclude<EstimatedFatigue, "variable">;
   estimatedDurationMinutes?: {
     min: number;
@@ -196,8 +199,31 @@ export interface TrainingSessionUnit {
   blockReasons?: string[];
   downgradeSessionUnitId?: string;
   upgradeSessionUnitId?: string;
+  recoverySubstitutionUnitId?: string;
   optional?: boolean;
   postponeAllowed?: boolean;
+  source?: "template" | "generated" | "migrated" | "fallback";
+  progressionMetadata?: {
+    macrocycleDay?: number;
+    weekNumber?: number;
+    dayInCycle?: number;
+    stage: "base" | "progression" | "deload" | "assessment" | "review";
+    volumeMultiplier?: number;
+    intensityNote?: string;
+    notes: string[];
+  };
+}
+
+export interface ResolvedTrainingSession {
+  date: string;
+  macrocycleDay: number;
+  weekNumber: number;
+  blockNumber: 1 | 2 | 3 | 4;
+  session: TrainingSessionUnit;
+  source: "generated" | "migrated" | "adaptive-substitution" | "fallback";
+  localStoragePlanVersion: string;
+  fallbackUsed: boolean;
+  legacyOverrideDetected: boolean;
 }
 
 export interface WeeklySessionTarget {

@@ -39,6 +39,8 @@ export interface DailyPainAndMovementSignals {
   anteriorKneeSoreness?: number;
   achillesStiffness?: number;
   patellarPain?: number;
+  leftMedialAnklePain?: number;
+  pogoPainRepThreshold?: number;
   hamstringSoreness?: number;
   calfTightness?: number;
   generalDoms?: number;

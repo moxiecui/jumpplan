@@ -160,6 +160,11 @@ export interface TrainingItem {
     landingOnly?: boolean;
     maxIntent?: boolean;
   };
+  elasticContacts?: {
+    min: number;
+    max: number;
+    painGated?: boolean;
+  };
   isometricPurpose?: IsometricPurpose;
   moduleTag?: "single-leg-stiffness";
 }
@@ -177,6 +182,8 @@ export interface TrainingSessionUnit {
   title: string;
   purpose?: string;
   blockNumber: 1 | 2 | 3 | 4;
+  cycleNumber?: 1 | 2 | 3 | 4;
+  dayNumber?: number;
   priority: number;
   impactLevel: ImpactLevel;
   plannedIntensity?: "low" | "low-moderate" | "moderate" | "moderate-high" | "high";
@@ -186,6 +193,10 @@ export interface TrainingSessionUnit {
     max: number;
   };
   plannedJumpContacts?: {
+    min: number;
+    max: number;
+  };
+  plannedElasticContacts?: {
     min: number;
     max: number;
   };
@@ -200,6 +211,13 @@ export interface TrainingSessionUnit {
   downgradeSessionUnitId?: string;
   upgradeSessionUnitId?: string;
   recoverySubstitutionUnitId?: string;
+  leftAnkleModificationRules?: string[];
+  substitutions?: {
+    trigger: string;
+    removeExerciseIds?: string[];
+    addExerciseIds?: string[];
+    note: string;
+  }[];
   optional?: boolean;
   postponeAllowed?: boolean;
   source?: "template" | "generated" | "migrated" | "fallback";

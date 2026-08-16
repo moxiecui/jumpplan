@@ -1,9 +1,9 @@
 import {
   ADAPTIVE_MACROCYCLE_START_DATE,
   ADAPTIVE_PLAN_VERSION,
-  cycleOneSessionAssignments,
   getPreferredSessionUnit,
-  getSessionUnit
+  getSessionUnit,
+  scheduledSessionAssignments
 } from "@/data/adaptiveProgram";
 import type { ResolvedTrainingSession } from "@/types/training";
 
@@ -57,7 +57,7 @@ export function resolveTrainingSessionForDate(date = new Date(), dayOffset = 0):
   const macrocycleDay = getAdaptiveMacrocycleDayForDate(date, dayOffset);
   const weekNumber = Math.min(12, Math.floor((macrocycleDay - 1) / 7) + 1);
   const blockNumber = Math.ceil(weekNumber / 3) as 1 | 2 | 3 | 4;
-  const assignment = cycleOneSessionAssignments.find((entry) => entry.macrocycleDay === macrocycleDay);
+  const assignment = scheduledSessionAssignments.find((entry) => entry.macrocycleDay === macrocycleDay);
   const generatedSession = assignment ? getSessionUnit(assignment.sessionUnitId) : undefined;
   const fallbackSession = getPreferredSessionUnit("recovery", blockNumber);
   const session = generatedSession ?? fallbackSession;

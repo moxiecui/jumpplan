@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 
-import { cycleOneScheduledSessions, weeklySessionTargets } from "@/data/adaptiveProgram";
+import { cycleTwoWeekSummaries, scheduledTrainingSessions, weeklySessionTargets } from "@/data/adaptiveProgram";
 import { trainingPlan } from "@/data/plan";
 import { trainingCycles } from "@/data/macrocycle";
 import { getExerciseById } from "@/data/exercises";
@@ -32,7 +32,7 @@ const filterOptions: { value: PlanFilter; label: string }[] = [
 ];
 
 const viewOptions: { value: PlanView; label: string }[] = [
-  { value: "session-units", label: "Cycle 1 日程" },
+  { value: "session-units", label: "生成日程" },
   { value: "targets", label: "本周目标" },
   { value: "cycle", label: "固定计划" },
   { value: "macrocycle", label: "12周宏周期" },
@@ -115,7 +115,7 @@ function getSessionFilterType(type: SessionUnitType): TrainingDayType | "upper-b
   return "jump";
 }
 
-function getSessionExerciseNames(unit: (typeof cycleOneScheduledSessions)[number]) {
+function getSessionExerciseNames(unit: (typeof scheduledTrainingSessions)[number]) {
   return unit.exerciseBlocks
     .flatMap((block) => block.items)
     .map((item) => getExerciseById(item.exerciseId)?.nameZh ?? item.exerciseId)
@@ -153,9 +153,9 @@ export default function PlanScreen() {
       }),
     [activeFilter, activeView, currentDay.cycleNumber]
   );
-  const visibleCycleOneSessions = useMemo(
+  const visibleScheduledSessions = useMemo(
     () =>
-      cycleOneScheduledSessions.filter((unit) => {
+      scheduledTrainingSessions.filter((unit) => {
         if (activeFilter === "all") {
           return true;
         }
@@ -218,11 +218,21 @@ export default function PlanScreen() {
             <Text style={styles.goal}>Today 和 Plan 使用同一个日期解析器；状态建议只做临时降级，不覆盖底层日程。</Text>
           </View>
 
-          {visibleCycleOneSessions.map((unit) => (
+          <View style={styles.cycleCard}>
+            <Text style={styles.cycleTitle}>Cycle 2 · Strength → Power Conversion</Text>
+            <Text style={styles.goal}>左内侧踝负荷管理：Pogo 使用 microdose；疼痛 &gt;=3/10 时取消弹性训练。</Text>
+            {cycleTwoWeekSummaries.map((summary) => (
+              <Text key={summary.weekNumber} style={styles.loadMeta}>
+                {summary.title}：{summary.summary}
+              </Text>
+            ))}
+          </View>
+
+          {visibleScheduledSessions.map((unit) => (
             <View key={unit.id} style={styles.sessionUnitCard}>
               <View style={styles.dayHeader}>
                 <Text style={styles.dayNumber}>
-                  Day {unit.progressionMetadata?.macrocycleDay ?? "?"} · Week {unit.progressionMetadata?.weekNumber ?? 1}
+                  Day {unit.progressionMetadata?.macrocycleDay ?? "?"} · Cycle {unit.cycleNumber ?? 1} · Week {unit.progressionMetadata?.weekNumber ?? 1}
                 </Text>
                 <Text style={styles.dayType}>{sessionTypeLabels[unit.type]}</Text>
               </View>
@@ -234,11 +244,15 @@ export default function PlanScreen() {
               <Text style={styles.loadMeta}>
                 强度：{unit.plannedIntensity ?? "low"} · 冲击：{impactLevelLabels[unit.impactLevel]} · 疲劳：{estimatedFatigueLabels[unit.estimatedFatigue]}
                 {unit.plannedJumpContacts ? ` · 跳跃 ${unit.plannedJumpContacts.min}–${unit.plannedJumpContacts.max}` : ""}
+                {unit.plannedElasticContacts ? ` · 弹性接触 ${unit.plannedElasticContacts.min}–${unit.plannedElasticContacts.max}` : ""}
               </Text>
               <Text style={styles.loadMeta}>主要动作：{getSessionExerciseNames(unit)}</Text>
               {unit.recoverySubstitutionUnitId ? (
                 <Text style={styles.loadMeta}>恢复替代：{unit.recoverySubstitutionUnitId}</Text>
               ) : null}
+              {unit.leftAnkleModificationRules?.slice(0, 2).map((rule) => (
+                <Text key={rule} style={styles.goal}>左踝规则：{rule}</Text>
+              ))}
               {unit.progressionMetadata?.notes.slice(0, 2).map((note) => (
                 <Text key={note} style={styles.goal}>• {note}</Text>
               ))}

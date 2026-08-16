@@ -232,8 +232,21 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
   const [actualJumpContacts, setActualJumpContacts] = useState(
     existingLogEntry?.actualJumpContacts !== undefined ? String(existingLogEntry.actualJumpContacts) : ""
   );
+  const [completedElasticContacts, setCompletedElasticContacts] = useState(
+    existingLogEntry?.completedElasticContacts !== undefined ? String(existingLogEntry.completedElasticContacts) : ""
+  );
+  const [leftMedialAnklePain, setLeftMedialAnklePain] = useState(
+    existingLogEntry?.leftMedialAnklePain !== undefined ? String(existingLogEntry.leftMedialAnklePain) : ""
+  );
+  const [pogoPainRepThreshold, setPogoPainRepThreshold] = useState(
+    existingLogEntry?.pogoPainRepThreshold !== undefined ? String(existingLogEntry.pogoPainRepThreshold) : ""
+  );
+  const [painAppearedAtRep, setPainAppearedAtRep] = useState(
+    existingLogEntry?.painAppearedAtRep !== undefined ? String(existingLogEntry.painAppearedAtRep) : ""
+  );
   const exercise = getExerciseById(item.exerciseId);
   const completed = status === "completed";
+  const showElasticLog = Boolean(item.elasticContacts || item.exerciseId.includes("pogo"));
   const bodySignalBlockNotice = todaysBodySignals
     ? getBodySignalBlockNotice(item, hasBodyBlock, hasPapBlock, hasMaxBlock)
     : undefined;
@@ -262,12 +275,20 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
       reasons: nextStatus === "regressed" && reasons.length ? reasons : undefined,
       note: nextStatus === "skipped" && note.trim() ? note.trim() : undefined,
       actualJumpContacts: actualJumpContacts.trim() ? Math.max(0, Number(actualJumpContacts) || 0) : undefined,
+      completedElasticContacts: completedElasticContacts.trim()
+        ? Math.max(0, Number(completedElasticContacts) || 0)
+        : undefined,
       maxIntentContacts: item.jumpContacts?.maxIntent && actualJumpContacts.trim()
         ? Math.max(0, Number(actualJumpContacts) || 0)
         : undefined,
       landingOnlyContacts: item.jumpContacts?.landingOnly && actualJumpContacts.trim()
         ? Math.max(0, Number(actualJumpContacts) || 0)
-        : undefined
+        : undefined,
+      leftMedialAnklePain: leftMedialAnklePain.trim() ? Math.max(0, Number(leftMedialAnklePain) || 0) : undefined,
+      pogoPainRepThreshold: pogoPainRepThreshold.trim()
+        ? Math.max(0, Number(pogoPainRepThreshold) || 0)
+        : undefined,
+      painAppearedAtRep: painAppearedAtRep.trim() ? Math.max(0, Number(painAppearedAtRep) || 0) : undefined
     });
   };
 
@@ -318,8 +339,67 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
       reasons: nextStatus === "regressed" && selectedReasons.length ? selectedReasons : undefined,
       note: nextStatus === "skipped" && skipNote.trim() ? skipNote.trim() : undefined,
       actualJumpContacts: numericValue,
+      completedElasticContacts: completedElasticContacts.trim()
+        ? Math.max(0, Number(completedElasticContacts) || 0)
+        : undefined,
       maxIntentContacts: item.jumpContacts?.maxIntent ? numericValue : undefined,
-      landingOnlyContacts: item.jumpContacts?.landingOnly ? numericValue : undefined
+      landingOnlyContacts: item.jumpContacts?.landingOnly ? numericValue : undefined,
+      leftMedialAnklePain: leftMedialAnklePain.trim() ? Math.max(0, Number(leftMedialAnklePain) || 0) : undefined,
+      pogoPainRepThreshold: pogoPainRepThreshold.trim()
+        ? Math.max(0, Number(pogoPainRepThreshold) || 0)
+        : undefined,
+      painAppearedAtRep: painAppearedAtRep.trim() ? Math.max(0, Number(painAppearedAtRep) || 0) : undefined
+    });
+  };
+
+  const updateElasticLogField = (
+    setter: (value: string) => void,
+    field: "completedElasticContacts" | "leftMedialAnklePain" | "pogoPainRepThreshold" | "painAppearedAtRep",
+    value: string
+  ) => {
+    const nextValue = value.replace(/[^\d]/g, "");
+    setter(nextValue);
+    const nextStatus = status === "not-started" ? "completed" : status;
+    if (nextStatus !== status) {
+      setStatus(nextStatus);
+    }
+
+    const values = {
+      completedElasticContacts,
+      leftMedialAnklePain,
+      pogoPainRepThreshold,
+      painAppearedAtRep,
+      [field]: nextValue
+    };
+
+    upsertTrainingLogEntry({
+      id: logId,
+      exerciseId: item.exerciseId,
+      exerciseName: exercise?.nameZh ?? `未知动作: ${item.exerciseId}`,
+      status: nextStatus,
+      dayLabel,
+      blockTitle,
+      reasons: nextStatus === "regressed" && selectedReasons.length ? selectedReasons : undefined,
+      note: nextStatus === "skipped" && skipNote.trim() ? skipNote.trim() : undefined,
+      actualJumpContacts: actualJumpContacts.trim() ? Math.max(0, Number(actualJumpContacts) || 0) : undefined,
+      completedElasticContacts: values.completedElasticContacts.trim()
+        ? Math.max(0, Number(values.completedElasticContacts) || 0)
+        : undefined,
+      maxIntentContacts: item.jumpContacts?.maxIntent && actualJumpContacts.trim()
+        ? Math.max(0, Number(actualJumpContacts) || 0)
+        : undefined,
+      landingOnlyContacts: item.jumpContacts?.landingOnly && actualJumpContacts.trim()
+        ? Math.max(0, Number(actualJumpContacts) || 0)
+        : undefined,
+      leftMedialAnklePain: values.leftMedialAnklePain.trim()
+        ? Math.max(0, Number(values.leftMedialAnklePain) || 0)
+        : undefined,
+      pogoPainRepThreshold: values.pogoPainRepThreshold.trim()
+        ? Math.max(0, Number(values.pogoPainRepThreshold) || 0)
+        : undefined,
+      painAppearedAtRep: values.painAppearedAtRep.trim()
+        ? Math.max(0, Number(values.painAppearedAtRep) || 0)
+        : undefined
     });
   };
 
@@ -375,6 +455,12 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
               {item.jumpContacts.maxIntent ? " · 最大意图" : ""}
             </Text>
           ) : null}
+          {item.elasticContacts ? (
+            <Text style={styles.contactPlan}>
+              计划弹性接触：{item.elasticContacts.min}–{item.elasticContacts.max} 次
+              {item.elasticContacts.painGated ? " · 疼痛门控" : ""}
+            </Text>
+          ) : null}
           <View style={styles.statusRow}>
             <Text style={[styles.statusPill, styles[`status-${status}`]]}>{statusLabels[status]}</Text>
             {exercise ? (
@@ -408,6 +494,54 @@ export function ExerciseRow({ item, logKey, dayLabel, blockTitle }: ExerciseRowP
               keyboardType="numeric"
               placeholder="输入次数"
             />
+          </View>
+        ) : null}
+        {showElasticLog ? (
+          <View style={styles.contactInputGroup}>
+            <View style={styles.contactInputRow}>
+              <Text style={styles.contactInputLabel}>完成弹性接触</Text>
+              <TextInput
+                style={styles.contactInput}
+                value={completedElasticContacts}
+                onChangeText={(value) => updateElasticLogField(setCompletedElasticContacts, "completedElasticContacts", value)}
+                keyboardType="numeric"
+                placeholder="次数"
+              />
+            </View>
+            <View style={styles.contactInputRow}>
+              <Text style={styles.contactInputLabel}>左内侧踝疼痛 0–10</Text>
+              <TextInput
+                style={styles.contactInput}
+                value={leftMedialAnklePain}
+                onChangeText={(value) => updateElasticLogField(setLeftMedialAnklePain, "leftMedialAnklePain", value)}
+                keyboardType="numeric"
+                placeholder="0"
+              />
+            </View>
+            {item.exerciseId.includes("pogo") ? (
+              <>
+                <View style={styles.contactInputRow}>
+                  <Text style={styles.contactInputLabel}>Pogo 疼痛阈值</Text>
+                  <TextInput
+                    style={styles.contactInput}
+                    value={pogoPainRepThreshold}
+                    onChangeText={(value) => updateElasticLogField(setPogoPainRepThreshold, "pogoPainRepThreshold", value)}
+                    keyboardType="numeric"
+                    placeholder="第几次"
+                  />
+                </View>
+                <View style={styles.contactInputRow}>
+                  <Text style={styles.contactInputLabel}>疼痛出现在第几次</Text>
+                  <TextInput
+                    style={styles.contactInput}
+                    value={painAppearedAtRep}
+                    onChangeText={(value) => updateElasticLogField(setPainAppearedAtRep, "painAppearedAtRep", value)}
+                    keyboardType="numeric"
+                    placeholder="可选"
+                  />
+                </View>
+              </>
+            ) : null}
           </View>
         ) : null}
         {status === "regressed" ? (
@@ -584,6 +718,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10
+  },
+  contactInputGroup: {
+    marginTop: 2
   },
   contactInputLabel: {
     flex: 1,

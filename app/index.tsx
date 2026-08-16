@@ -259,6 +259,11 @@ export default function TodayScreen() {
               <Text style={styles.recommendationBadge}>
                 冲击：{plannedUnit.impactLevel === "high" ? "高" : plannedUnit.impactLevel === "moderate" ? "中" : plannedUnit.impactLevel === "low" ? "低" : "无"}
               </Text>
+              {plannedUnit.plannedElasticContacts ? (
+                <Text style={styles.recommendationBadge}>
+                  弹性：{plannedUnit.plannedElasticContacts.min}–{plannedUnit.plannedElasticContacts.max}
+                </Text>
+              ) : null}
             </>
           ) : null}
         </View>
@@ -324,6 +329,14 @@ export default function TodayScreen() {
               : ""}
           </Text>
           {plannedUnit.purpose ? <Text style={styles.recommendationText}>{plannedUnit.purpose}</Text> : null}
+          {plannedUnit.leftAnkleModificationRules?.slice(0, 3).map((rule) => (
+            <Text key={rule} style={styles.modificationText}>左踝规则：{rule}</Text>
+          ))}
+          {plannedUnit.substitutions?.slice(0, 2).map((substitution) => (
+            <Text key={substitution.trigger} style={styles.modificationText}>
+              替代：{substitution.trigger} 时，{substitution.note}
+            </Text>
+          ))}
           {plannedUnit.progressionMetadata?.notes.map((reason) => (
             <Text key={reason} style={styles.recommendationText}>• {reason}</Text>
           ))}

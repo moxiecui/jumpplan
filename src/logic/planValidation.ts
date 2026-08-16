@@ -14,6 +14,7 @@ import {
   singleLegStiffnessExerciseIds
 } from "@/data/singleLegStiffness";
 import { canUseAdvancedExercise, getSafeAlternativeExerciseIds } from "@/logic/advancedExerciseGates";
+import { validateCycle2Plan } from "@/logic/cycleTwoValidation";
 import { validateCycleVariation } from "@/logic/cycleVariationValidation";
 import { buildRollingSevenDaySummaries } from "@/logic/jumpContacts";
 import { isHighImpactExercise } from "@/logic/trainingAdjustment";
@@ -352,10 +353,12 @@ export function validateTrainingPlan() {
     .map(({ unit, item }) => `${unit.id}: ${item.exerciseId}`);
 
   const cycleVariationReport = validateCycleVariation();
+  const cycleTwoValidationReport = validateCycle2Plan();
 
   return {
     migrationSummary: adaptiveMigrationSummary,
     cycleVariationReport,
+    cycleTwoValidationReport,
     adaptiveMacrocycleStartDate: ADAPTIVE_MACROCYCLE_START_DATE,
     sessionUnitCount: trainingSessionUnits.length,
     weeklySessionTargets: weeklySessionTargets.map((target) => ({

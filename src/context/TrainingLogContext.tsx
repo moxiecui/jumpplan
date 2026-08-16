@@ -12,8 +12,12 @@ export interface TrainingLogEntry {
   reasons?: string[];
   note?: string;
   actualJumpContacts?: number;
+  completedElasticContacts?: number;
   maxIntentContacts?: number;
   landingOnlyContacts?: number;
+  leftMedialAnklePain?: number;
+  pogoPainRepThreshold?: number;
+  painAppearedAtRep?: number;
   updatedAt: string;
 }
 

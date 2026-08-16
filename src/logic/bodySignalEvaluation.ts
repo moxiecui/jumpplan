@@ -170,7 +170,8 @@ export function evaluatePainOverride(pain: DailyPainAndMovementSignals): Readine
   const worstPain = Math.max(
     pain.anteriorKneeSoreness ?? 0,
     pain.achillesStiffness ?? 0,
-    pain.patellarPain ?? 0
+    pain.patellarPain ?? 0,
+    pain.leftMedialAnklePain ?? 0
   );
 
   if (worstPain >= 4) {
@@ -179,6 +180,7 @@ export function evaluatePainOverride(pain: DailyPainAndMovementSignals): Readine
   if (
     worstPain >= 3 ||
     (pain.hamstringSoreness ?? 0) >= 4 ||
+    (pain.pogoPainRepThreshold !== undefined && pain.pogoPainRepThreshold <= 12) ||
     (pain.movementQualityToday ?? 5) <= 2 ||
     (pain.rightFootExternalRotation ?? 0) >= 2 ||
     (pain.rightKneeTracking ?? 5) <= 2
@@ -196,7 +198,8 @@ function hasAnyTendonOrKneeWarning(pain?: DailyPainAndMovementSignals) {
   return (
     (pain.anteriorKneeSoreness ?? 0) >= 2 ||
     (pain.achillesStiffness ?? 0) >= 2 ||
-    (pain.patellarPain ?? 0) >= 2
+    (pain.patellarPain ?? 0) >= 2 ||
+    (pain.leftMedialAnklePain ?? 0) >= 2
   );
 }
 
@@ -307,6 +310,32 @@ export function generateTrainingReminders(
         triggeredBy: ["pain >=3 or movement quality warning"],
         blockedExerciseIds: highImpactBlockedExerciseIds,
         suggestedAlternativeIds: highImpactAlternatives
+      })
+    );
+  }
+
+  if (
+    pain &&
+    ((pain.leftMedialAnklePain ?? 0) >= 3 ||
+      (pain.pogoPainRepThreshold !== undefined && pain.pogoPainRepThreshold <= 12))
+  ) {
+    reminders.push(
+      buildReminder({
+        date,
+        level: (pain.leftMedialAnklePain ?? 0) > 3 ? "stop" : "warning",
+        title: "左内侧踝：取消 Pogo / 反应弹性",
+        message: "低幅 Pogo 如果在第 12 次左右开始痛，Cycle 2 不进阶。今天取消 Pogo、depth jump、单脚 Pogo 和单脚反应跳，改做小腿等长、慢速提踵和轻量足踝控制。",
+        recommendedAction: (pain.leftMedialAnklePain ?? 0) > 3 ? "recovery-only" : "remove-high-impact",
+        triggeredBy: ["left medial ankle pain", "pogo pain threshold"],
+        blockedExerciseIds: [
+          "low-pogo",
+          "single-leg-low-pogo",
+          "low-pogo-test",
+          "depth-jump-less-contact",
+          "single-leg-depth-drop",
+          "two-step-single-leg-approach-jump"
+        ],
+        suggestedAlternativeIds: ["bent-knee-calf-isometric", "slow-calf-raise", "ankle-knee-wall"]
       })
     );
   }

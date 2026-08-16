@@ -28,6 +28,8 @@ type PainField =
   | "anteriorKneeSoreness"
   | "achillesStiffness"
   | "patellarPain"
+  | "leftMedialAnklePain"
+  | "pogoPainRepThreshold"
   | "hamstringSoreness"
   | "movementQualityToday";
 type BasketballField = "durationMinutes" | "sessionRpe";
@@ -49,6 +51,8 @@ const painLabels: Record<PainField, string> = {
   anteriorKneeSoreness: "膝前侧 / 髌骨上方酸痛",
   achillesStiffness: "跟腱晨僵",
   patellarPain: "髌腱疼痛",
+  leftMedialAnklePain: "左内侧踝疼痛",
+  pogoPainRepThreshold: "Pogo 疼痛阈值（第几次）",
   hamstringSoreness: "腘绳肌酸痛",
   movementQualityToday: "今日动作质量"
 };
@@ -129,6 +133,8 @@ export default function BodySignalsScreen() {
     anteriorKneeSoreness: "0",
     achillesStiffness: "0",
     patellarPain: "0",
+    leftMedialAnklePain: "0",
+    pogoPainRepThreshold: "",
     hamstringSoreness: "0",
     movementQualityToday: "4"
   });
@@ -169,6 +175,8 @@ export default function BodySignalsScreen() {
       anteriorKneeSoreness: parseOptional(painValues.anteriorKneeSoreness) ?? 0,
       achillesStiffness: parseOptional(painValues.achillesStiffness) ?? 0,
       patellarPain: parseOptional(painValues.patellarPain) ?? 0,
+      leftMedialAnklePain: parseOptional(painValues.leftMedialAnklePain) ?? 0,
+      pogoPainRepThreshold: parseOptional(painValues.pogoPainRepThreshold),
       hamstringSoreness: parseOptional(painValues.hamstringSoreness) ?? 0,
       movementQualityToday: toScore(parseOptional(painValues.movementQualityToday), 1, 5) as 1 | 2 | 3 | 4 | 5
     };

@@ -118,8 +118,8 @@ async function main() {
         summaryText
       },
       plan: {
-        has21DayTitle: planText.includes("21天计划"),
-        hasOpenHint: planText.includes("查看训练 ›"),
+        hasPlanTitle: planText.includes("12周 JumpPlan"),
+        hasGeneratedSession: planText.includes("Session ID：") && planText.includes("Cycle 2 · Strength"),
         horizontalOverflow: planOverflow
       },
       errors
@@ -135,8 +135,8 @@ async function main() {
       !results.today.hasCompactNav ||
       results.today.horizontalOverflow ||
       !results.today.detailsVisible ||
-      !results.plan.has21DayTitle ||
-      !results.plan.hasOpenHint ||
+      !results.plan.hasPlanTitle ||
+      !results.plan.hasGeneratedSession ||
       results.plan.horizontalOverflow ||
       results.errors.length > 0;
 

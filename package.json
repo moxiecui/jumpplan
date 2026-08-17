@@ -10,7 +10,7 @@
     "web": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli start --web",
     "tsc": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/typescript/bin/tsc --noEmit",
     "test:ui": ".tools\\node-v22.16.0-win-x64\\node.exe scripts/ui-smoke-test.cjs",
-    "export:web": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli export -p web && .tools\\node-v22.16.0-win-x64\\node.exe .tools/copy-gh-pages-404.js",
+    "export:web": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/expo/bin/cli export -p web --clear && .tools\\node-v22.16.0-win-x64\\node.exe .tools/copy-gh-pages-404.js",
     "predeploy": "npm run export:web",
     "deploy": ".tools\\node-v22.16.0-win-x64\\node.exe node_modules/gh-pages/bin/gh-pages.js --nojekyll -d dist --repo https://github.com/moxiecui/jumpplan.git --git E:/Repositories/jumplan/.tools/PortableGit/bin/git.exe"
   },

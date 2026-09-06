@@ -31,11 +31,17 @@ const { evaluateDailyReadiness } = require("../src/logic/readinessScore.ts");
 const { applyAdjustmentToDay, applyDay11PapDowngrade } = require("../src/logic/trainingAdjustment.ts");
 const { classifyBasketballLoad, shouldDowngradePap } = require("../src/logic/basketballLoad.ts");
 const { getTodayTrainingDay } = require("../src/logic/schedule.ts");
+const { formatLocalDate, getMillisecondsUntilNextLocalMidnight } = require("../src/logic/localDate.ts");
 const { validateTrainingPlan } = require("../src/logic/planValidation.ts");
 const { evaluateJumpReadiness } = require("../src/logic/jumpReadiness.ts");
 const { recommendNextSession } = require("../src/logic/nextSessionRecommendation.ts");
 const { getRightSideVolumeGuidance } = require("../src/logic/rightSideVolume.ts");
-const { cycleOneScheduledSessions, cycleTwoScheduledSessions } = require("../src/data/adaptiveProgram.ts");
+const {
+  cycleOneScheduledSessions,
+  cycleTwoScheduledSessions,
+  cycleThreeScheduledSessions,
+  scheduledSessionAssignments
+} = require("../src/data/adaptiveProgram.ts");
 const {
   shouldBlockCycleTwoElastic,
   shouldProgressCycleTwoPogo
@@ -81,11 +87,23 @@ const calm = {
 };
 
 assert(trainingPlan.length === 84, "plan must contain 84 macrocycle days");
-assert(getTodayTrainingDay(new Date("2026-07-19T12:00:00")).day === 1, "July 19 must be Day 1");
-assert(getTodayTrainingDay(new Date("2026-07-25T12:00:00")).day === 7, "July 25 must be Day 7");
-assert(getTodayTrainingDay(new Date("2026-08-08T12:00:00")).day === 21, "August 8 must be Day 21");
-assert(getTodayTrainingDay(new Date("2026-08-09T12:00:00")).day === 22, "August 9 must be Day 22");
-assert(getTodayTrainingDay(new Date("2026-10-10T12:00:00")).day === 84, "October 10 must be Day 84");
+assert(
+  formatLocalDate(new Date(2026, 8, 5, 23, 59, 59, 999)) === "2026-09-05",
+  "local date must stay on the current day until local midnight"
+);
+assert(
+  formatLocalDate(new Date(2026, 8, 6, 0, 0, 0, 0)) === "2026-09-06",
+  "local date must advance at local midnight"
+);
+assert(
+  getMillisecondsUntilNextLocalMidnight(new Date(2026, 8, 5, 23, 59, 59, 0)) === 1000,
+  "midnight refresh timer must target the next local midnight"
+);
+assert(getTodayTrainingDay(new Date("2026-07-26T12:00:00")).day === 1, "July 26 must be Day 1");
+assert(getTodayTrainingDay(new Date("2026-08-01T12:00:00")).day === 7, "August 1 must be Day 7");
+assert(getTodayTrainingDay(new Date("2026-08-15T12:00:00")).day === 21, "August 15 must be Day 21");
+assert(getTodayTrainingDay(new Date("2026-08-16T12:00:00")).day === 22, "August 16 must be Day 22");
+assert(getTodayTrainingDay(new Date("2026-10-17T12:00:00")).day === 84, "October 17 must be Day 84");
 assert(classifyBasketballLoad({ durationMinutes: 80, sessionRpe: 8, fullCourt: true, repeatedMaxJumps: false }) === "high", "basketball high-load classification");
 assert(shouldDowngradePap({ previousBasketballLoad: "moderate" }), "Day 11 PAP must downgrade after moderate basketball");
 assert(applyDay11PapDowngrade(trainingPlan[10], "test").maxIntentJumpContacts.max === 0, "Day 11 downgrade removes max intent");
@@ -229,17 +247,17 @@ assert(
 );
 mutationTarget.exerciseId = originalMutationValue;
 
-const july20Session = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"));
+const july27Session = resolveTrainingSessionForDate(new Date("2026-07-27T12:00:00"));
 const planViewDayTwoSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 2);
-assert(july20Session.session.id === planViewDayTwoSession.id, "Today and Plan resolve the same session for July 20");
+assert(july27Session.session.id === planViewDayTwoSession.id, "Today and Plan resolve the same session for July 27");
 
-const july20SkippedSession = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"), 1);
+const july27SkippedSession = resolveTrainingSessionForDate(new Date("2026-07-27T12:00:00"), 1);
 const planViewDayThreeSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 3);
-assert(july20SkippedSession.session.id === planViewDayThreeSession.id, "skip-today offset must move adaptive session resolver to Day 3");
+assert(july27SkippedSession.session.id === planViewDayThreeSession.id, "skip-today offset must move adaptive session resolver to Day 3");
 
-const july20PreviousSession = resolveTrainingSessionForDate(new Date("2026-07-20T12:00:00"), -1);
+const july27PreviousSession = resolveTrainingSessionForDate(new Date("2026-07-27T12:00:00"), -1);
 const planViewDayOneSession = cycleOneScheduledSessions.find((session) => session.progressionMetadata?.macrocycleDay === 1);
-assert(july20PreviousSession.session.id === planViewDayOneSession.id, "go-back offset must move adaptive session resolver to Day 1");
+assert(july27PreviousSession.session.id === planViewDayOneSession.id, "go-back offset must move adaptive session resolver to Day 1");
 
 const resolvedCycleOneIds = Array.from({ length: 21 }, (_, index) =>
   resolveTrainingSessionForDate(new Date(`${getAdaptiveDateForMacrocycleDay(index + 1)}T12:00:00`))
@@ -289,8 +307,8 @@ assert(
 );
 cycleTwoMutationTarget.exerciseId = cycleTwoOriginalMutationValue;
 
-const aug9Session = resolveTrainingSessionForDate(new Date("2026-08-09T12:00:00"));
-assert(aug9Session.session.id === day22.id, "Today and Plan resolve Day 22 to the same Cycle 2 session");
+const aug16Session = resolveTrainingSessionForDate(new Date("2026-08-16T12:00:00"));
+assert(aug16Session.session.id === day22.id, "Today and Plan resolve Day 22 to the same Cycle 2 session");
 
 const resolvedCycleTwoIds = Array.from({ length: 21 }, (_, index) =>
   resolveTrainingSessionForDate(new Date(`${getAdaptiveDateForMacrocycleDay(index + 22)}T12:00:00`))
@@ -314,7 +332,7 @@ assert(trainingPlan[0].blocks[1].items.some((item) => item.exerciseId === "back-
 const report = validateTrainingPlan();
 const variationReport = validateCycleVariation();
 const cycleTwoReport = validateCycle2Plan();
-assert(report.adaptiveMacrocycleStartDate === "2026-07-19", "adaptive macrocycle starts July 19");
+assert(report.adaptiveMacrocycleStartDate === "2026-07-26", "adaptive macrocycle starts July 26");
 assert(variationReport.consecutiveIdenticalExerciseIds.length === 0, "Cycle 1 must not have identical consecutive exercise lists");
 assert(variationReport.daysSharingSameObjectReference.length === 0, "Cycle 1 generated days must not share mutable object references");
 assert(variationReport.duplicateSessionIds.length === 0, "Cycle 1 must not have duplicate session IDs");
@@ -339,6 +357,20 @@ assert(cycleTwoReport.optionalBasketballMissingRecoverySubstitution.length === 0
 assert(cycleTwoReport.missingExerciseIds.length === 0, "Cycle 2 references missing exercise IDs");
 assert(cycleTwoReport.exercisesMissingYoutubeQuery.length === 0, "Cycle 2 exercise IDs need YouTube queries");
 assert(cycleTwoReport.fallbackResolvedDates.length === 0, "Cycle 2 generated schedule must not use fallback sessions");
+assert(cycleThreeScheduledSessions.length === 21, "Cycle 3 must contain 21 scheduled sessions");
+assert(new Set(cycleThreeScheduledSessions.map((session) => session.id)).size === 21, "Cycle 3 must have 21 unique session IDs");
+assert(
+  Array.from({ length: 21 }, (_, index) => index + 43).every((day) =>
+    scheduledSessionAssignments.some((assignment) => assignment.macrocycleDay === day)
+  ),
+  "Cycle 3 Day 43-63 must all have scheduled assignments"
+);
+assert(
+  Array.from({ length: 21 }, (_, index) =>
+    resolveTrainingSessionForDate(new Date(`${getAdaptiveDateForMacrocycleDay(index + 43)}T12:00:00`))
+  ).every((resolved) => resolved.source === "generated" && !resolved.fallbackUsed),
+  "Cycle 3 generated schedule must not use fallback sessions"
+);
 assert(report.highImpactSessionTargetViolations.length === 0, "session-unit targets must cap high-impact days at two weekly");
 assert(report.basketballTargetViolations.length === 0, "basketball target max must stay 0-1 weekly");
 assert(report.recoverySessionDurationProblems.length === 0, "recovery session units must stay under 35 minutes");

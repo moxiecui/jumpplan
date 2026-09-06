@@ -4,6 +4,7 @@ import type {
   SubjectiveReadinessInput,
   TrainingDayType
 } from "@/types/training";
+import { formatLocalDate } from "@/logic/localDate";
 
 interface Baseline {
   restingHeartRate?: number;
@@ -18,7 +19,7 @@ interface EvaluationParams {
 }
 
 function defaultDate(oura?: OuraDailyReadinessInput, subjective?: SubjectiveReadinessInput) {
-  return oura?.date ?? subjective?.date ?? new Date().toISOString().slice(0, 10);
+  return oura?.date ?? subjective?.date ?? formatLocalDate();
 }
 
 function baseAdjustment(

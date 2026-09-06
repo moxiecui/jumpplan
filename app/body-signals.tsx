@@ -5,6 +5,7 @@ import { BodySignalsCard } from "@/components/BodySignalsCard";
 import { TrainingReminderCard } from "@/components/TrainingReminderCard";
 import { useBodySignals } from "@/context/BodySignalsContext";
 import { generateTrainingReminders } from "@/logic/bodySignalEvaluation";
+import { formatLocalDate } from "@/logic/localDate";
 import { mockOuraService, mockWhoopService, mockWithingsService } from "@/services/wearableIntegrations";
 import type {
   BasketballLoadSignals,
@@ -71,7 +72,7 @@ const baselineLabels: Record<BaselineField, string> = {
 };
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 function parseOptional(rawValue: string): number | undefined {

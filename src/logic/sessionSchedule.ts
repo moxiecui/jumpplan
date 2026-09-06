@@ -5,6 +5,7 @@ import {
   getSessionUnit,
   scheduledSessionAssignments
 } from "@/data/adaptiveProgram";
+import { formatLocalDate } from "@/logic/localDate";
 import type { ResolvedTrainingSession } from "@/types/training";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -26,7 +27,7 @@ export function getAdaptiveDateForMacrocycleDay(macrocycleDay: number) {
   const start = startDate();
   const date = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   date.setDate(date.getDate() + Math.max(0, macrocycleDay - 1));
-  return date.toISOString().slice(0, 10);
+  return formatLocalDate(date);
 }
 
 function readPlanVersion() {
@@ -67,7 +68,7 @@ export function resolveTrainingSessionForDate(date = new Date(), dayOffset = 0):
   }
 
   return {
-    date: date.toISOString().slice(0, 10),
+    date: formatLocalDate(date),
     macrocycleDay,
     weekNumber,
     blockNumber,

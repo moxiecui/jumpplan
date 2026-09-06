@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
 
+import { useLocalToday } from "@/hooks/useLocalToday";
 import { getPlanDayNumberForDate, getTodayTrainingDay, PLAN_LENGTH_DAYS } from "@/logic/schedule";
 import type { TrainingDay } from "@/types/training";
 
@@ -44,7 +45,9 @@ function clampOffset(offset: number, calendarDayNumber: number) {
 const PlanProgressContext = createContext<PlanProgressContextValue | undefined>(undefined);
 
 export function PlanProgressProvider({ children }: { children: ReactNode }) {
-  const calendarDayNumber = getPlanDayNumberForDate();
+  const localToday = useLocalToday();
+  const currentDate = useMemo(() => new Date(`${localToday}T12:00:00`), [localToday]);
+  const calendarDayNumber = getPlanDayNumberForDate(currentDate);
   const [dayOffset, setDayOffset] = useState(() =>
     clampOffset(readStoredOffset(), calendarDayNumber)
   );
@@ -54,8 +57,8 @@ export function PlanProgressProvider({ children }: { children: ReactNode }) {
     writeStoredOffset(safeDayOffset);
   }, [safeDayOffset]);
 
-  const currentDayNumber = getPlanDayNumberForDate(new Date(), safeDayOffset);
-  const currentDay = getTodayTrainingDay(new Date(), safeDayOffset);
+  const currentDayNumber = getPlanDayNumberForDate(currentDate, safeDayOffset);
+  const currentDay = getTodayTrainingDay(currentDate, safeDayOffset);
 
   const value = useMemo<PlanProgressContextValue>(
     () => ({

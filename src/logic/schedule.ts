@@ -1,8 +1,9 @@
 import { trainingPlan } from "@/data/plan";
+import { formatLocalDate } from "@/logic/localDate";
 import type { TrainingDay } from "@/types/training";
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-export const DEFAULT_PLAN_START_DATE = "2026-07-19";
+export const DEFAULT_PLAN_START_DATE = "2026-07-26";
 export const PLAN_LENGTH_DAYS = trainingPlan.length;
 
 export function getPlanDate(dayNumber: number): string {
@@ -10,7 +11,7 @@ export function getPlanDate(dayNumber: number): string {
   const startDate = new Date(`${startDateValue}T00:00:00`);
   const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
   date.setDate(date.getDate() + Math.max(0, dayNumber - 1));
-  return date.toISOString().slice(0, 10);
+  return formatLocalDate(date);
 }
 
 export function getTrainingDay(day: number): TrainingDay | undefined {

@@ -10,12 +10,13 @@ import {
   groupNutritionItemsByTiming,
   isTrainingActiveForNutrition
 } from "@/logic/nutrition";
+import { formatLocalDate } from "@/logic/localDate";
 import { getNutritionScheduleForTrainingTime } from "@/logic/nutritionSchedule";
 
 const defaultTrainingTime = "18:00"; // TODO: move to app settings when settings exist.
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 export default function NutritionScreen() {

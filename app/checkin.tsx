@@ -5,6 +5,7 @@ import { ReadinessIntelligenceCard } from "@/components/ReadinessIntelligenceCar
 import { BasketballLoadLogger } from "@/components/BasketballLoadLogger";
 import { usePlanProgress } from "@/context/PlanProgressContext";
 import { useReadiness } from "@/context/ReadinessContext";
+import { formatLocalDate } from "@/logic/localDate";
 import { evaluateDailyReadiness } from "@/logic/readinessScore";
 import type {
   BasketballLoadLevel,
@@ -79,7 +80,7 @@ const baselineLabels: Record<BaselineField, { label: string; min: number; max: n
 };
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 function clamp(value: number, min: number, max: number) {

@@ -33,13 +33,14 @@ import {
 import { getBasketballLoadWarning } from "@/logic/basketballLoad";
 import { evaluateBasketballLoad, generateTrainingReminders } from "@/logic/bodySignalEvaluation";
 import { getWeeklySessionProgress, recommendNextSession } from "@/logic/nextSessionRecommendation";
+import { formatLocalDate } from "@/logic/localDate";
 import { getPlanDate } from "@/logic/schedule";
 import { applyAdjustmentToDay, applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 import type { SessionUnitType, TrainingDay } from "@/types/training";
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 const phaseLabels = {

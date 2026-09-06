@@ -7,6 +7,7 @@ import { useBodySignals } from "@/context/BodySignalsContext";
 import { useTrainingLog } from "@/context/TrainingLogContext";
 import { getSafeAlternativeExerciseIds } from "@/logic/advancedExerciseGates";
 import { shouldBlockHighImpact, shouldBlockMaxJumpTesting, shouldBlockPAP } from "@/logic/bodySignalEvaluation";
+import { formatLocalDate } from "@/logic/localDate";
 import { normalizeTrainingCopy } from "@/logic/trainingDisplay";
 import { isHighImpactExercise } from "@/logic/trainingAdjustment";
 import type { Exercise, Intensity, TrainingItem, TrainingItemCompletionStatus } from "@/types/training";
@@ -72,7 +73,7 @@ const regressionReasons = [
 ];
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 function getBodySignalBlockNotice(item: TrainingItem, hasBodyBlock: boolean, hasPapBlock: boolean, hasMaxBlock: boolean) {

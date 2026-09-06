@@ -4,10 +4,11 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import { useBodySignals } from "@/context/BodySignalsContext";
 import { useSessionProgress } from "@/context/SessionProgressContext";
 import { calculateRollingJumpBaseline, evaluateJumpReadiness } from "@/logic/jumpReadiness";
+import { formatLocalDate } from "@/logic/localDate";
 import type { JumpReadinessTest } from "@/types/training";
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 function parseNumber(value: string) {

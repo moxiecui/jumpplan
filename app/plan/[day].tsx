@@ -17,13 +17,14 @@ import { useReadiness } from "@/context/ReadinessContext";
 import { usePerformance } from "@/context/PerformanceContext";
 import { getRelatedGlossaryTermsForDay } from "@/data/glossary";
 import { isSingleLegStiffnessItem } from "@/data/singleLegStiffness";
+import { formatLocalDate } from "@/logic/localDate";
 import { getPlanDate, getTrainingDay } from "@/logic/schedule";
 import { applyDay11PapDowngrade } from "@/logic/trainingAdjustment";
 import { getTrainingDayTypeLabel, normalizeTrainingCopy } from "@/logic/trainingDisplay";
 import type { TrainingDay } from "@/types/training";
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 const phaseLabels = {

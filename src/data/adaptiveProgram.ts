@@ -2,13 +2,15 @@ import type {
   AdaptiveTrainingBlock,
   SessionUnitType,
   TrainingBlock,
+  TrainingDay,
   TrainingItem,
   TrainingSessionUnit,
   WeeklySessionTarget
 } from "@/types/training";
+import { trainingPlan } from "@/data/plan";
 
-export const ADAPTIVE_MACROCYCLE_START_DATE = "2026-07-19";
-export const ADAPTIVE_PLAN_VERSION = "cycle2-ankle-safe-session-schedule-v1";
+export const ADAPTIVE_MACROCYCLE_START_DATE = "2026-07-26";
+export const ADAPTIVE_PLAN_VERSION = "cycle3-scheduled-session-plan-v1";
 export const LEGACY_FIXED_PLAN_LABEL = "Legacy Fixed Plan";
 
 function item(exerciseId: string, params: Omit<TrainingItem, "exerciseId"> = {}): TrainingItem {
@@ -1102,9 +1104,100 @@ export const cycleTwoScheduledSessions: TrainingSessionUnit[] = [
   createGeneratedSession({ id: "c2d42-full-review-transition", type: "review", title: "Day 42 Full Review + Transition Decision", purpose: "复盘 Cycle 2 并决定 Cycle 3 是否进入反应弹性或踝安全爆发 block。", macrocycleDay: 42, weekNumber: 6, blockNumber: 2, cycleNumber: 2, stage: "review", plannedIntensity: "low", impactLevel: "none", estimatedFatigue: "very-low", duration: { min: 15, max: 30 }, plannedJumpContacts: { min: 0, max: 0 }, plannedElasticContacts: { min: 0, max: 0 }, priority: 40, exerciseBlocks: cycleTwoReviewBlocks(["如果低 Pogo 仍在第 12 次前疼痛，Cycle 3 改为踝安全爆发 block。", "如果连续两次弹性课无痛，允许谨慎推进。"]), leftAnkleModificationRules: ["无训练压力。"], volumeMultiplier: 0.4, notes: ["Transition decision only."] })
 ];
 
+function getCycleThreeSessionType(day: TrainingDay): SessionUnitType {
+  switch (day.type) {
+    case "jump":
+      return "reactive-a";
+    case "strength":
+      return day.upperBodyIncluded ? "upper-body-core" : "strength-a";
+    case "basketball":
+      return "basketball-skill";
+    case "skill":
+      return "single-leg-takeoff";
+    case "test":
+      return "test";
+    case "recovery":
+    case "rest":
+      return "recovery";
+  }
+}
+
+function getCycleThreePriority(day: TrainingDay) {
+  switch (day.todayPriority) {
+    case "elasticity":
+      return 100;
+    case "strength":
+      return 90;
+    case "basketball-transfer":
+      return 85;
+    case "test":
+      return 80;
+    case "right-foot-control":
+      return 75;
+    case "knee-calm":
+      return 60;
+    case "recovery":
+    default:
+      return 40;
+  }
+}
+
+function getCycleThreeStage(day: TrainingDay): NonNullable<TrainingSessionUnit["progressionMetadata"]>["stage"] {
+  if (day.type === "test") {
+    return "assessment";
+  }
+
+  if (day.dayInCycle > 14) {
+    return "deload";
+  }
+
+  return day.dayInCycle > 7 ? "progression" : "base";
+}
+
+function toCycleThreeScheduledSession(day: TrainingDay): TrainingSessionUnit {
+  return {
+    id: `c3d${String(day.macrocycleDay).padStart(2, "0")}-${day.type}`,
+    sessionUnitId: `c3d${String(day.macrocycleDay).padStart(2, "0")}-${day.type}`,
+    type: getCycleThreeSessionType(day),
+    title: `Day ${day.macrocycleDay} ${day.title}`,
+    purpose: day.goal,
+    blockNumber: 3,
+    cycleNumber: 3,
+    dayNumber: day.macrocycleDay,
+    priority: getCycleThreePriority(day),
+    impactLevel: day.impactLevel,
+    plannedIntensity:
+      day.estimatedFatigue === "very-low" || day.estimatedFatigue === "low"
+        ? "low"
+        : day.estimatedFatigue === "variable"
+          ? "low-moderate"
+          : day.estimatedFatigue,
+    estimatedFatigue: day.estimatedFatigue === "variable" ? "low" : day.estimatedFatigue,
+    estimatedDurationMinutes: day.estimatedDurationMinutes,
+    plannedJumpContacts: day.plannedJumpContacts,
+    maxIntentContacts: day.maxIntentJumpContacts,
+    minimumRecoveryHours: day.impactLevel === "high" ? 48 : undefined,
+    exerciseBlocks: clonedBlocks(day.blocks),
+    blockReasons: day.performanceFocus,
+    progressionMetadata: {
+      macrocycleDay: day.macrocycleDay,
+      weekNumber: day.weekNumber,
+      dayInCycle: day.dayInCycle,
+      stage: getCycleThreeStage(day),
+      notes: [day.readinessRule, ...(day.conditionalRules ?? [])].filter((note): note is string => Boolean(note))
+    },
+    source: "generated"
+  };
+}
+
+export const cycleThreeScheduledSessions: TrainingSessionUnit[] = trainingPlan
+  .filter((day) => day.cycleNumber === 3)
+  .map(toCycleThreeScheduledSession);
+
 export const scheduledTrainingSessions: TrainingSessionUnit[] = [
   ...cycleOneScheduledSessions,
-  ...cycleTwoScheduledSessions
+  ...cycleTwoScheduledSessions,
+  ...cycleThreeScheduledSessions
 ];
 
 const generatedCycleTwoSupportSessions: TrainingSessionUnit[] = [

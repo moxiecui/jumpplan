@@ -10,6 +10,7 @@ import { useTrainingLog } from "@/context/TrainingLogContext";
 import { adaptiveMigrationSummary } from "@/data/adaptiveProgram";
 import { trainingPlan } from "@/data/plan";
 import { generateTrainingReminders } from "@/logic/bodySignalEvaluation";
+import { formatLocalDate } from "@/logic/localDate";
 import { mockPlanGenerationService } from "@/services/mockPlanGenerationService";
 import type {
   GeneratedAdaptivePlan,
@@ -35,7 +36,7 @@ const lengthOptions: { value: PlanLength; label: string }[] = [
 ];
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDate();
 }
 
 function parseList(value: string) {

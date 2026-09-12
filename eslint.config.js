@@ -6,6 +6,14 @@ module.exports = [
   },
   ...expoConfig,
   {
+    files: ["app/**/*.tsx", "src/training/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [{ group: ["@/context/*", "@/data/plan", "@/data/adaptiveProgram", "@/logic/readiness*", "@/logic/nextSessionRecommendation", "@/logic/sessionSchedule", "@/logic/trainingAdjustment"], message: "旧计划与建议仅供历史兼容；正常执行必须使用src/training中的统一流程。" }]
+      }]
+    }
+  },
+  {
     rules: {
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/static-components": "off"

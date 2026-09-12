@@ -1,3 +1,4 @@
+import { teachingById, teachingInventory } from './exerciseTeaching';
 import type { Exercise } from "@/types/training";
 
 const defaultVideoNote =
@@ -1260,37 +1261,7 @@ function createMenuExercise({
         : isCore
           ? "这个动作来自训练菜单动作库，用来提高起跳、落地和篮球对抗时的躯干传力。"
           : "这个动作来自训练菜单动作库，用来改善动作控制和恢复质量。",
-    instructions: isJump
-      ? [
-          "先完成完整热身，并确认膝前侧、跟腱和髌腱疼痛不超过 1–2/10。",
-          "每组次数少，组间充分休息，保持每次起跳和落地质量。",
-          "落地要安静，右脚保持三点支撑，右膝对准第二、三脚趾。",
-          "高度、速度或连续次数下降时停止，不用完成预设总量。"
-        ]
-      : [
-          "先用轻重量或自重找到稳定动作轨迹。",
-          "保持脚三点支撑、骨盆稳定和自然呼吸。",
-          category === "power" ? "每次都要快、干净、有余量；动作慢下来就停止。" : "用 RPE 6–8 完成，避免力竭和动作变形。",
-          "如果右脚外旋、右膝内扣或膝前侧不适增加，立刻降级。"
-        ],
-    keyCues: isJump
-      ? ["少量高质量。", "落地安静。", "右脚不外八。", "膝盖对脚尖。", "疲劳前停止。"]
-      : ["脚三点支撑。", "膝盖走正。", "骨盆稳定。", "动作慢而可控。", "不要憋气。"],
-    commonMistakes: isJump
-      ? ["把动作做成 conditioning。", "连续跳到落地变响。", "膝盖内扣还继续。", "篮球高负荷后硬加跳跃。", "用截图里的训练量直接照搬。"]
-      : ["重量太重导致动作变形。", "右脚外旋逃避。", "膝盖向内掉。", "为了完成次数忍痛。", "做到明显酸痛影响篮球或弹跳。"],
-    regressions: isJump
-      ? ["低幅 Pogo。", "Snap-down 定住。", "低箱版本。", "70–85% 技术跳。", "膝敏感时改等长或恢复。"]
-      : ["自重版本。", "扶墙或降低幅度。", "减少组数。", "改等长保持。", "改双侧版本。"],
-    progressions: isJump
-      ? ["增加到计划内接触次数上限。", "提高到 85–90% 强度。", "加入助跑或方向变化。", "只在动作质量稳定后进入单脚或连续版本。"]
-      : ["增加 2.5–5% 负重。", "增加顶部或底部停顿。", "增加一组低到中等技术组。", "进阶到单腿或轻爆发版本。"],
-    painRules: [
-      "膝前侧、跟腱或髌腱疼痛 >=3/10 时取消动态跳跃或深膝角版本。",
-      "疼痛在热身中变差时，当天降级为恢复或受控力量。",
-      highImpact ? "这是高冲击动作，只能低量使用，不能做成高次数体能训练。" : "保持低到中等刺激，第二天症状增加就减半或跳过。",
-      resolvedRiskTier === "advanced-only" ? "这是 advanced-only 动作；必须绿色状态、疼痛 <=1/10、右膝轨迹和落地质量 >=4/5、前 48 小时无高篮球负荷，并且你确认技术/设备安全才考虑。" : "动作质量不稳定时先退阶。"
-    ],
+    instructions: [], keyCues: [], commonMistakes: [], regressions: [], progressions: [], painRules: [],
     glossaryTermIds: isJump
       ? ["plyometric", "ground-contact-time", "tripod-foot", "readiness"]
       : ["rpe", "force-transfer", "tripod-foot", "readiness"],
@@ -1407,11 +1378,22 @@ const screenshotMenuExercises: Exercise[] = [
 
 const allExerciseDefinitions = [...exerciseDefinitions, ...screenshotMenuExercises];
 
-export const exercises: Exercise[] = allExerciseDefinitions.map((exercise) => ({
-  ...exercise,
-  youtubeSearchQuery: exercise.youtubeSearchQuery ?? youtubeSearchQueriesByExerciseId[exercise.id],
-  videoNote: getVideoNote(exercise)
+export const auditedOriginalIds = allExerciseDefinitions.map(e => e.id);
+const additions: Exercise[] = teachingInventory.filter(t => !auditedOriginalIds.includes(t.id)).map(t => ({
+ id:t.id,nameZh:t.variant,category: (['pull-up','lat-pulldown'].includes(t.id)?'upper-body':['two-step-double-leg-approach-jump','single-leg-forward-hop-stick','alternating-bounds'].includes(t.id)?'plyometric':t.id==='stationary-ball-handling'?'basketball-skill':'recovery'),purpose:t.variant,whyForUser:'具体变式教学；是否执行取决于今日评估',instructions:[],keyCues:[],commonMistakes:[],youtubeSearchQuery:t.id.replaceAll('-',' ')
 }));
+const renamed: Record<string,string> = {'clean-pull':'翻举拉','continuous-squat-jump':'连续反向纵跳','back-squat-on-bench':'轻触箱背蹲','front-bulgarian-squat':'前脚垫高保加利亚分腿蹲','low-pogo-test':'Pogo已有反应记录','low-landing-stick':'低幅双脚跳后定住'};
+export const exercises: Exercise[] = [...allExerciseDefinitions,...additions].map(exercise => {
+ const t=teachingById[exercise.id];
+ if(!t) throw new Error('动作缺少审查状态：'+exercise.id);
+ return {...exercise,nameZh:renamed[exercise.id]??exercise.nameZh,
+ category:exercise.id==='band-hip-flexor'?'hip':exercise.category,
+ purpose:t.variant,whyForUser:'动作教学不代表当前适用，是否执行与剂量仅由今天页确定。',
+ instructions:t.steps,keyCues:t.keyPoints,commonMistakes:t.mistakes,
+ regressions:[],progressions:[],painRules:[],progressionCriteria:[],regressionCriteria:[],readinessGates:[],safeAlternativeExerciseIds:[],
+ jumpContactContribution:undefined,
+ youtubeSearchQuery:exercise.youtubeSearchQuery??youtubeSearchQueriesByExerciseId[exercise.id],videoNote:getVideoNote(exercise)};
+});
 
 export function getExerciseById(id: string): Exercise | undefined {
   return exercises.find((exercise) => exercise.id === id);

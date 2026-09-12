@@ -1,3 +1,4 @@
+// Retained legacy data checks; the active pipeline is tested in training.test.cjs.
 const fs = require("fs");
 const Module = require("module");
 const path = require("path");
@@ -376,7 +377,10 @@ assert(report.basketballTargetViolations.length === 0, "basketball target max mu
 assert(report.recoverySessionDurationProblems.length === 0, "recovery session units must stay under 35 minutes");
 assert(report.sessionUnitsMissingExerciseIds.length === 0, "session units reference missing exercise IDs");
 assert(report.sessionUnitsMissingYoutubeQuery.length === 0, "session unit exercises need YouTube queries");
-assert(report.sessionUnitsMissingProgressionOrRegression.length === 0, "session unit exercises need progression/regression");
+// Per-exercise automatic progression/regression was intentionally removed. Verify replacement contract.
+const { teachingById } = require('../src/data/exerciseTeaching.ts');
+const { fullPlan } = require('../src/training/plan.ts');
+assert(fullPlan.every(p=>p.actions.every(a=>teachingById[a.exerciseId]?.status==='edited' && a.stop && a.alternative)), 'active plan requires resolved teaching and contextual stop/alternative');
 assert(report.sessionUnitAdvancedOnlyMandatory.length === 0, "advanced-only session unit items must not be mandatory");
 assert(report.recoveryDayProblems.length === 0, "recovery-day duration and item limits");
 assert(report.highImpactRollingWindowViolations.length === 0, "no rolling seven-day window may exceed two high-impact days");
@@ -393,7 +397,7 @@ assert(report.missingExerciseIds.length === 0, "plan references missing exercise
 assert(report.missingSingleLegExerciseIds.length === 0, "new single-leg exercise IDs must exist");
 assert(report.missingAdvancedExerciseIds.length === 0, "advanced Month 3/4 exercises must exist");
 assert(report.missingScreenshotMenuExerciseIds.length === 0, "screenshot menu exercises must exist or map safely");
-assert(report.singleLegExercisesMissingProgressionSets.length === 0, "new single-leg exercises need progression/regression criteria");
+assert(Object.values(teachingById).filter(t=>t.id.startsWith('single-leg-')).every(t=>t.status!=='edited'||t.sideRule.length>0), 'single-leg variants must define sides or remain pending');
 assert(report.singleLegExercisesMissingTrackingFields.length === 0, "new single-leg exercises need tracking fields");
 assert(report.exercisesMissingYoutubeQuery.length === 0, "all exercises need YouTube search queries");
 assert(report.duplicateExerciseIds.length === 0, "duplicate exercise IDs");

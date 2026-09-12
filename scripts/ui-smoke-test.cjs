@@ -78,16 +78,32 @@ async function main() {
       await visible('一次怎么数：1次离地并落回=1跳+1落地。');
       await page.getByRole('button',{name:'动作说明、视频与替代',exact:true}).click();
       assert.equal(JSON.stringify((await data()).sessions[0]),preDetail);
+      const kept = JSON.stringify((await data()).sessions[0]);
+      await page.getByRole('button',{name:'暂时离开训练（保留记录）',exact:true}).click();
+      await visible('继续本节训练'); assert.equal(JSON.stringify((await data()).sessions[0]),kept);
+      await page.reload(); await visible('继续本节训练');
+      await page.getByRole('button',{name:'继续本节训练',exact:true}).click();await visible('训练中');
+      assert.equal(JSON.stringify((await data()).sessions[0]),kept);
       const before = JSON.stringify((await data()).sessions[0].snapshot);
       await page.goto(url + 'checkin'); await page.getByRole('radio', { name: '整体疲劳（1低–5高）：5', exact: true }).click(); await page.goto(url);
       assert.equal(JSON.stringify((await data()).sessions[0].snapshot), before);
     });
     await check('symptom stop removes all remaining actions; finish does not count stimulus', async () => {
+      await page.getByRole('button',{name:'继续本节训练',exact:true}).click();
       await page.getByRole('button', { name: '疼痛上升 / 动作改变 · 立即停止', exact: true }).click(); await visible('已停止，不必补齐');
       assert.equal(await page.getByRole('button', { name: '完成本组并保存', exact: true }).count(), 0);
       await page.getByRole('button', { name: '结束并记录本节', exact: true }).click();
       assert.equal((await data()).sessions.length, 1); assert.equal((await data()).sessions[0].symptomStopped, true);
       assert.equal(await page.getByRole('button', { name: '结束并记录本节', exact: true }).count(), 0);
+      const ended = JSON.stringify((await data()).sessions[0]);
+      await page.getByRole('button',{name:'返回今天',exact:true}).last().click();
+      await visible('查看 / 补充训练反馈');assert.equal(await page.getByText('训练后简短反馈',{exact:true}).count(),0);
+      await page.reload();await visible('查看 / 补充训练反馈');assert.equal(JSON.stringify((await data()).sessions[0]),ended);
+      await page.getByRole('button',{name:'查看 / 补充训练反馈',exact:true}).click();await visible('训练后简短反馈');
+      await page.getByRole('tab',{name:'今天',exact:true}).click();await visible('查看 / 补充训练反馈');
+      assert.equal(JSON.stringify((await data()).sessions[0]),ended);
+      await page.screenshot({path:path.join(out,'mobile-exit-fixed.png'),fullPage:true});
+      checks.push({name:'active pause/resume and ended feedback exit/reopen/reload/today tab preserve records and timer',passed:true});
     });
     await check('history and week browsing do not change progression; one-date override isolated', async () => {
       await page.getByRole('tab', { name: '计划', exact: true }).click(); await visible('第 4 / 12 周 · 力量转爆发');
